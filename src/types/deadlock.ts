@@ -1,0 +1,159 @@
+export type Language = 'de' | 'en';
+export type ItemSlot = 'weapon' | 'vitality' | 'spirit';
+export type DamageProfile = 'bullet' | 'equal' | 'spirit';
+export type GameStage = 'lane' | 'mid' | 'late';
+export type EnemyModifier = 'tanky' | 'healing' | 'cc' | 'melee';
+export type CounterStance = 'offense' | 'defense';
+
+export type CounterRole =
+  | 'Shutdown'
+  | 'Burst'
+  | 'Survival'
+  | 'Anti-Gun'
+  | 'Anti-Spirit'
+  | 'Anti-Heal'
+  | 'Anti-Melee'
+  | 'Shred'
+  | 'Cleanse'
+  | 'Control';
+
+export type ThreatMechanic =
+  | 'rapid_fire'
+  | 'on_hit_procs'
+  | 'bullet_ult'
+  | 'channeled_ult'
+  | 'airborne'
+  | 'high_mobility'
+  | 'fragile_glass_cannon'
+  | 'cleanseable_debuff'
+  | 'telegraphed_burst'
+  | 'hard_cc'
+  | 'ability_spam'
+  | 'sustained_spirit'
+  | 'heavy_healing'
+  | 'melee_brawler'
+  | 'buff_shield_stacker'
+  | 'close_range_dive'
+  | 'long_range_poke';
+
+export interface DeadlockHero {
+  id: number;
+  className: string;
+  name: string;
+  nameDe?: string;
+  role: string;
+  iconCard: string;
+  iconSmall: string;
+  minimapIcon: string;
+  metaDamage?: DamageProfile;
+  metaWeaponPct?: number;
+}
+
+export interface DeadlockItem {
+  id: number;
+  className: string;
+  name: string;
+  nameDe?: string;
+  slot: ItemSlot;
+  tier: number;
+  cost: number;
+  isActive: boolean;
+  icon: string;
+  summary: string;
+}
+
+export interface DeadlockSnapshot {
+  syncedAt: string;
+  source: string;
+  heroes: DeadlockHero[];
+  items: DeadlockItem[];
+}
+
+export interface PlayerAffinity {
+  damageStyle: 'gun' | 'spirit' | 'hybrid';
+  range: 'close' | 'mid' | 'long';
+  fastFirerate: boolean;
+  spiritProccer: boolean;
+  supportive?: boolean;
+}
+
+export interface HeroProfile {
+  className: string;
+  defaultDamage: DamageProfile;
+  defaultModifiers: EnemyModifier[];
+  threats: ThreatMechanic[];
+  playerAffinity: PlayerAffinity;
+  threatHeadline: string;
+}
+
+export interface HeroCounterOverride {
+  itemClassName: string;
+  bonus: number;
+  stages?: GameStage[];
+  roleOverride?: CounterRole;
+  tip: string;
+}
+
+export interface CounterItemRule {
+  className: string;
+  stance: CounterStance;
+  role: CounterRole;
+  /** Which game stages this item shines in (1.0 = prime, lower = off-curve) */
+  stageFit: Record<GameStage, number>;
+  /** How strongly it counters specific damage profiles */
+  damageCounters?: Partial<Record<DamageProfile, number>>;
+  /** How strongly it counters the 4 user toggles */
+  modifierCounters?: Partial<Record<EnemyModifier, number>>;
+  /** How strongly it counters intrinsic hero threat mechanics */
+  threatCounters?: Partial<Record<ThreatMechanic, number>>;
+  /** Requirements/synergies with YOUR hero's kit */
+  playerSynergy?: {
+    preferDamageStyle?: 'gun' | 'spirit';
+    preferFastFirerate?: boolean;
+    preferSpiritProccer?: boolean;
+    preferRange?: 'close' | 'mid' | 'long';
+    penalizeLongRange?: boolean;
+    penalizeNonSpiritProccer?: boolean;
+    penalizeSlowFirerate?: boolean;
+    preferSupportive?: boolean;
+  };
+  /** Concise default "Why" explanation */
+  why: string;
+  /** Concise default "When to use" micro-tip */
+  whenToUse: string;
+  /** Optional targeted tips when specific threat/modifier triggered this item */
+  contextTips?: Partial<Record<ThreatMechanic | EnemyModifier, string>>;
+}
+
+export interface MatchupInput {
+  myHeroClass: string | null;
+  enemyHeroClass: string;
+  stage: GameStage;
+  damageProfile: DamageProfile;
+  modifiers: EnemyModifier[];
+  activeSlotsFull: boolean;
+  language?: Language;
+}
+
+export interface CounterRecommendation {
+  item: DeadlockItem;
+  stance: CounterStance;
+  rank: number;
+  score: number;
+  tierLabel: 'Best Counter' | 'Core Counter' | 'Strong Pick';
+  role: CounterRole;
+  why: string;
+  whenToUse: string;
+  synergyNote: string | null;
+  isHeroSpecific: boolean;
+}
+
+export interface RecommendationResult {
+  offense: CounterRecommendation[];
+  defense: CounterRecommendation[];
+  recommendations: CounterRecommendation[];
+  recommendedStance: 'offense' | 'defense' | 'balanced';
+  stanceReason: string;
+  hiddenActiveCount: number;
+  enemyThreatHeadline: string;
+}
