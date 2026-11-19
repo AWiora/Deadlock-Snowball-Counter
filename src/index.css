@@ -1346,18 +1346,29 @@ button {
 }
 
 .when-to-use {
-  display: inline-flex;
+  display: flex;
   align-items: flex-start;
-  gap: 5px;
+  gap: 6px;
   font-size: var(--text-sub);
-  line-height: 1.38;
+  line-height: 1.42;
   color: var(--text-secondary);
+}
+
+.when-to-use-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.when-to-use-label {
+  color: var(--text-parchment);
+  font-weight: 700;
 }
 
 .when-icon {
   color: var(--brass);
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 .synergy-pill {
@@ -2496,24 +2507,24 @@ button {
 
 .hero-ability-chip {
   position: relative;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
   background: rgba(14, 16, 21, 0.94);
-  border: 1px solid rgba(235, 224, 200, 0.14);
+  border: 1px solid rgba(235, 224, 200, 0.16);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px;
+  padding: 4px;
   overflow: hidden;
   cursor: help;
   transition: border-color 0.14s ease, transform 0.14s ease, background-color 0.14s ease;
 }
 
 .hero-ability-strip--compact .hero-ability-chip {
-  width: 24px;
-  height: 24px;
-  padding: 2.5px;
+  width: 28px;
+  height: 28px;
+  padding: 3px;
 }
 
 .hero-ability-chip--ult {
@@ -2537,7 +2548,7 @@ button {
 }
 
 .hero-ability-fallback {
-  font-size: 0.62rem;
+  font-size: 0.66rem;
   font-weight: 700;
   color: var(--text-parchment);
 }
@@ -2546,80 +2557,80 @@ button {
   position: absolute;
   bottom: 0;
   right: 0;
-  min-width: 11px;
-  height: 11px;
-  padding: 0 2.5px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
   border-top-left-radius: 4px;
-  background: rgba(10, 11, 14, 0.88);
-  color: var(--text-secondary);
-  font-size: 0.54rem;
-  font-weight: 700;
-  line-height: 11px;
+  background: rgba(8, 9, 12, 0.92);
+  color: var(--text-parchment);
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 14px;
   text-align: center;
   pointer-events: none;
 }
 
 .hero-ability-chip--ult .hero-ability-key {
-  background: rgba(34, 25, 11, 0.92);
+  background: rgba(34, 25, 11, 0.95);
   color: var(--brass-bright);
 }
 
-/* ==================== STRUCTURED COUNTER TARGET CHIPS ==================== */
+/* ==================== STRUCTURED COUNTER TARGETS (CHIPS = ABILITIES ONLY) ==================== */
 .counter-targets-stack {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin: 4px 0 2px;
+  gap: 6px;
+  margin: 5px 0 3px;
 }
 
 .counter-target-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 5px 8px;
+  gap: 6px 9px;
 }
 
 .counter-action-groups {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 5px 10px;
+  gap: 6px 12px;
 }
 
 .counter-action-group {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 6px;
 }
 
 .counter-action-verb {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
-.counter-action-chips {
+.counter-action-targets {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 6px;
 }
 
 .counter-ability-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 2px 8px 2px 3px;
-  border-radius: 7px;
-  background: rgba(20, 22, 28, 0.92);
-  border: 1px solid rgba(235, 224, 200, 0.18);
+  gap: 8px;
+  padding: 3px 10px 3px 3px;
+  border-radius: 8px;
+  background: rgba(20, 22, 28, 0.94);
+  border: 1px solid rgba(235, 224, 200, 0.2);
   color: var(--text-parchment);
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.84rem;
+  font-weight: 650;
   line-height: 1.25;
   cursor: help;
   transition: border-color 0.14s ease, background-color 0.14s ease, transform 0.14s ease;
@@ -2633,14 +2644,14 @@ button {
 }
 
 .counter-ability-chip--ult {
-  border-color: rgba(214, 165, 86, 0.48);
+  border-color: rgba(214, 165, 86, 0.52);
   background: rgba(214, 165, 86, 0.11);
 }
 
 .counter-ability-chip--own {
-  border-color: rgba(116, 178, 255, 0.45);
+  border-color: rgba(116, 178, 255, 0.48);
   background: rgba(116, 178, 255, 0.12);
-  color: #d6e9ff;
+  color: #dcecff;
 }
 
 .counter-ability-chip--own:hover,
@@ -2651,25 +2662,25 @@ button {
 
 .counter-ability-chip-icon-wrap {
   position: relative;
-  width: 21px;
-  height: 21px;
-  border-radius: 5px;
-  background: rgba(10, 11, 15, 0.94);
-  border: 1px solid rgba(235, 224, 200, 0.12);
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: rgba(10, 11, 15, 0.96);
+  border: 1px solid rgba(235, 224, 200, 0.14);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
+  padding: 3px;
   overflow: hidden;
   flex-shrink: 0;
 }
 
 .counter-ability-chip--ult .counter-ability-chip-icon-wrap {
-  border-color: rgba(214, 165, 86, 0.42);
+  border-color: rgba(214, 165, 86, 0.48);
 }
 
 .counter-ability-chip--own .counter-ability-chip-icon-wrap {
-  border-color: rgba(116, 178, 255, 0.4);
+  border-color: rgba(116, 178, 255, 0.42);
 }
 
 .counter-ability-chip-icon {
@@ -2681,7 +2692,7 @@ button {
 }
 
 .counter-ability-chip-fallback {
-  font-size: 0.56rem;
+  font-size: 0.66rem;
   font-weight: 700;
   color: var(--text-parchment);
 }
@@ -2690,80 +2701,70 @@ button {
   position: absolute;
   bottom: 0;
   right: 0;
-  min-width: 10px;
-  height: 10px;
-  padding: 0 2px;
-  border-top-left-radius: 3px;
-  background: rgba(9, 10, 13, 0.92);
-  color: var(--text-secondary);
-  font-size: 0.52rem;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-top-left-radius: 4px;
+  background: rgba(8, 9, 12, 0.94);
+  color: var(--text-parchment);
+  font-size: 0.66rem;
   font-weight: 800;
-  line-height: 10px;
+  line-height: 14px;
   text-align: center;
   pointer-events: none;
 }
 
 .counter-ability-chip--ult .counter-ability-chip-slot {
-  background: rgba(34, 25, 11, 0.94);
+  background: rgba(34, 25, 11, 0.96);
   color: var(--brass-bright);
 }
 
 .counter-ability-chip--own .counter-ability-chip-slot {
-  background: rgba(16, 30, 48, 0.94);
-  color: #badbff;
+  background: rgba(16, 30, 48, 0.96);
+  color: #cbe4ff;
 }
 
 .counter-ability-chip-name {
   white-space: nowrap;
 }
 
-.counter-mechanic-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 8px;
-  border-radius: 7px;
-  font-size: 0.76rem;
-  font-weight: 600;
-  line-height: 1.25;
-  white-space: nowrap;
-}
-
-.counter-mechanic-chip--modifier {
-  background: rgba(217, 136, 72, 0.14);
-  border: 1px solid rgba(232, 160, 96, 0.38);
-  color: #ffd3a8;
-}
-
-.counter-mechanic-chip--damage {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(235, 224, 200, 0.18);
+/* Non-ability targets: clean highlighted typography (no competing box/pill) */
+.counter-mechanic-text {
+  font-size: 0.86rem;
+  font-weight: 650;
+  line-height: 1.3;
   color: var(--text-parchment);
 }
 
-.counter-mechanic-chip--threat {
-  background: rgba(214, 165, 86, 0.1);
-  border: 1px solid rgba(214, 165, 86, 0.3);
+.counter-mechanic-text--modifier {
+  color: #ffd3a8;
+}
+
+.counter-mechanic-text--damage {
+  color: var(--text-parchment);
+}
+
+.counter-mechanic-text--threat {
   color: #efe1c4;
 }
 
-.counter-mechanic-chip--own {
-  background: rgba(116, 178, 255, 0.12);
-  border: 1px solid rgba(116, 178, 255, 0.4);
-  color: #d6e9ff;
+.counter-mechanic-sep {
+  color: var(--text-muted);
+  font-weight: 700;
 }
 
 .kit-boost-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
-  padding-bottom: 4px;
+  gap: 7px;
+  padding-bottom: 5px;
   border-bottom: 1px dashed rgba(116, 178, 255, 0.22);
 }
 
 .kit-boost-hero-avatar {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 5px;
   object-fit: cover;
   border: 1px solid rgba(116, 178, 255, 0.55);
@@ -2771,7 +2772,7 @@ button {
 }
 
 .kit-boost-verb {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -2779,15 +2780,257 @@ button {
   white-space: nowrap;
 }
 
-.kit-boost-axis-pill {
+.kit-boost-ability-fallback {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #dcecff;
+}
+
+.kit-boost-axis-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #9ec8ff;
+  white-space: nowrap;
+}
+
+/* ==================== IN-GAME ITEM HOVER TOOLTIP ==================== */
+.item-tooltip-trigger {
+  cursor: help;
+  outline: none;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.item-tooltip-trigger:hover,
+.item-tooltip-trigger:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 2px rgba(214, 165, 86, 0.45);
+}
+
+.item-tooltip-popover {
+  position: fixed;
+  z-index: 130;
+  width: 344px;
+  max-width: calc(100vw - 24px);
+  border-radius: 12px;
+  background: rgba(15, 17, 22, 0.98);
+  border: 1px solid rgba(235, 224, 200, 0.22);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.78);
+  pointer-events: none;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.item-tooltip-popover--top {
+  transform: translate(-50%, -100%);
+}
+
+.item-tooltip-popover--bottom {
+  transform: translate(-50%, 0);
+}
+
+.item-tooltip-popover--weapon {
+  border-color: var(--weapon-border);
+}
+
+.item-tooltip-popover--vitality {
+  border-color: var(--vitality-border);
+}
+
+.item-tooltip-popover--spirit {
+  border-color: var(--spirit-border);
+}
+
+.item-tooltip-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 13px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.item-tooltip-popover--weapon .item-tooltip-header {
+  background: linear-gradient(135deg, rgba(226, 134, 46, 0.26), rgba(15, 17, 22, 0.92));
+}
+
+.item-tooltip-popover--vitality .item-tooltip-header {
+  background: linear-gradient(135deg, rgba(96, 184, 84, 0.26), rgba(15, 17, 22, 0.92));
+}
+
+.item-tooltip-popover--spirit .item-tooltip-header {
+  background: linear-gradient(135deg, rgba(164, 102, 232, 0.26), rgba(15, 17, 22, 0.92));
+}
+
+.item-tooltip-title-wrap {
+  min-width: 0;
+}
+
+.item-tooltip-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-parchment);
+  line-height: 1.15;
+}
+
+.item-tooltip-sub {
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.item-tooltip-type-tag--active {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 196, 102, 0.16);
+  border: 1px solid rgba(255, 196, 102, 0.4);
+  color: #ffd089;
+}
+
+.item-tooltip-cost {
   display: inline-flex;
   align-items: center;
-  padding: 2px 7px;
-  border-radius: 99px;
-  font-size: 0.68rem;
+  gap: 3px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
   font-weight: 700;
-  background: rgba(116, 178, 255, 0.18);
-  border: 1px solid rgba(116, 178, 255, 0.42);
-  color: #cbe4ff;
+  color: #8ee8d8;
+  flex-shrink: 0;
+}
+
+.item-tooltip-sections {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-tooltip-section {
+  padding: 10px 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.item-tooltip-section:last-child {
+  border-bottom: none;
+}
+
+.item-tooltip-section--innate {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.item-tooltip-section-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.item-tooltip-section-label {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.item-tooltip-section-label--active {
+  background: rgba(255, 196, 102, 0.16);
+  color: #ffd089;
+}
+
+.item-tooltip-section-label--passive {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cfd5e0;
+}
+
+.item-tooltip-cd {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #b9c3d4;
+}
+
+.item-tooltip-desc {
+  margin: 0;
+  font-size: 0.79rem;
+  line-height: 1.45;
+  color: #e4dfd4;
+}
+
+.item-tooltip-innate-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 10px;
+}
+
+.item-tooltip-stat-grid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.item-tooltip-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.item-tooltip-section--innate .item-tooltip-stat {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 5px;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.item-tooltip-stat--highlight {
+  background: rgba(214, 165, 86, 0.11);
+  border-color: rgba(214, 165, 86, 0.34);
+}
+
+.item-tooltip-section--innate .item-tooltip-stat--highlight {
+  background: transparent;
+  border: none;
+}
+
+.item-tooltip-stat-val {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-parchment);
   white-space: nowrap;
+}
+
+.item-tooltip-stat--highlight .item-tooltip-stat-val {
+  color: var(--brass-bright);
+}
+
+.item-tooltip-stat-label {
+  font-size: 0.71rem;
+  color: var(--text-secondary);
+  line-height: 1.25;
+}
+
+.item-tooltip-upgrade {
+  padding: 7px 13px;
+  background: rgba(114, 224, 206, 0.08);
+  border-top: 1px solid rgba(114, 224, 206, 0.22);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #9cebe0;
 }

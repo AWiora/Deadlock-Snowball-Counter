@@ -1424,4 +1424,31 @@ describe('Deadlock counter recommendation engine', () => {
       ),
     ).toBe(true);
   });
+
+  it('provides clean EN and DE in-game item tooltips for all curated counter and kit-amplifier items', () => {
+    const allClassNames = new Set([
+      ...COUNTER_ITEM_RULES.map((r) => r.className),
+      ...KIT_AMPLIFIER_RULES.map((r) => r.className),
+    ]);
+
+    for (const cls of allClassNames) {
+      const item = itemsByClass.get(cls);
+      expect(item, `Missing item ${cls}`).toBeDefined();
+      expect(item?.tooltipEn?.length, `Missing tooltipEn on ${cls}`).toBeGreaterThan(0);
+      expect(item?.tooltipDe?.length, `Missing tooltipDe on ${cls}`).toBeGreaterThan(0);
+
+      for (const sec of [...(item?.tooltipEn ?? []), ...(item?.tooltipDe ?? [])]) {
+        for (const st of sec.stats) {
+          expect(st.value, `Unformatted token on ${cls}`).not.toContain('{');
+          expect(st.value, `Duplicate meter unit on ${cls}`).not.toMatch(/mm\b/i);
+          expect(st.label.length, `Empty stat label on ${cls}`).toBeGreaterThan(0);
+        }
+      }
+    }
+
+    const knockdown = itemsByClass.get('upgrade_target_stun')!;
+    expect(knockdown.cooldown).toBe('35s');
+    expect(knockdown.tooltipEn?.some((s) => s.type === 'innate' && s.stats.length > 0)).toBe(true);
+    expect(knockdown.tooltipEn?.some((s) => s.type === 'active' && Boolean(s.desc))).toBe(true);
+  });
 });

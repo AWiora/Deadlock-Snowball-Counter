@@ -1,5 +1,5 @@
-import { Check, Coins, Copy, Sparkles, Target, Zap } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Check, Coins, Copy, Zap } from 'lucide-react';
+import { Fragment, useMemo, useState } from 'react';
 import { getHeroDisplayName, getItemDisplayName, UI_TEXT } from '../i18n/translations';
 import type {
   CounterActionGroup,
@@ -10,6 +10,7 @@ import type {
 } from '../types/deadlock';
 import { getAbilityDisplayName } from '../utils/abilities';
 import { AbilityTooltip } from './AbilityTooltip';
+import { ItemTooltip } from './ItemTooltip';
 import { RichAbilityText } from './RichAbilityText';
 
 interface CounterCardProps {
@@ -26,6 +27,13 @@ interface AbilityChipProps {
   uiLang: Language;
   inGameLang: Language;
   variant?: 'enemy' | 'own';
+}
+
+function cleanDisplayUseTip(text: string, isActive: boolean): string {
+  if (isActive) return text;
+  const stripped = text.replace(/^(?:Passive|Passiv)\s*[—–:-]\s*/i, '');
+  if (!stripped || stripped === text) return text;
+  return stripped.charAt(0).toUpperCase() + stripped.slice(1);
 }
 
 function CounterAbilityChip({
@@ -78,24 +86,36 @@ function renderActionGroups(
       {groups.map((group, gIdx) => (
         <span key={`${group.verb}-${gIdx}`} className="counter-action-group">
           <span className="counter-action-verb">{group.verbLabel}</span>
-          <span className="counter-action-chips">
-            {group.targets.map((chip, cIdx) =>
-              chip.kind === 'ability' ? (
-                <CounterAbilityChip
-                  key={`${chip.heroClass}-${chip.ability.className}-${cIdx}`}
-                  ability={chip.ability}
-                  uiLang={uiLang}
-                  inGameLang={inGameLang}
-                />
-              ) : (
-                <span
-                  key={`${chip.label}-${cIdx}`}
-                  className={`counter-mechanic-chip counter-mechanic-chip--${chip.tone ?? 'threat'}`}
-                >
-                  {chip.label}
-                </span>
-              ),
-            )}
+          <span className="counter-action-targets">
+            {group.targets.map((chip, cIdx) => {
+              const prevChip = cIdx > 0 ? group.targets[cIdx - 1] : null;
+              const needsDot =
+                chip.kind === 'mechanic' && prevChip && prevChip.kind === 'mechanic';
+              if (chip.kind === 'ability') {
+                return (
+                  <CounterAbilityChip
+                    key={`${chip.heroClass}-${chip.ability.className}-${cIdx}`}
+                    ability={chip.ability}
+                    uiLang={uiLang}
+                    inGameLang={inGameLang}
+                  />
+                );
+              }
+              return (
+                <Fragment key={`${chip.label}-${cIdx}`}>
+                  {needsDot && (
+                    <span className="counter-mechanic-sep" aria-hidden="true">
+                      ·
+                    </span>
+                  )}
+                  <span
+                    className={`counter-mechanic-text counter-mechanic-text--${chip.tone ?? 'threat'}`}
+                  >
+                    {chip.label}
+                  </span>
+                </Fragment>
+              );
+            })}
           </span>
         </span>
       ))}
@@ -105,7 +125,7 @@ function renderActionGroups(
 
 /**
  * Splits a Kit-Amplifier's merged enemy action groups into clean per-enemy rows
- * when 2-3 enemies are selected, so every countered enemy displays its own avatar + chips.
+ * when 2-3 enemies are selected, so every countered enemy displays its own avatar + targets.
  */
 function splitKitGroupsByHero(
   heroClasses: string[],
@@ -175,12 +195,9 @@ export function CounterCard({
   const {
     item,
     rank,
-    role,
     why,
     reasons,
     whenToUse,
-    synergyNote,
-    isHeroSpecific,
     isKitAmplifier,
     kitAmplifier,
     counteredEnemies,
@@ -193,6 +210,7 @@ export function CounterCard({
   const locale = language === 'de' ? 'de-DE' : 'en-US';
   const formattedCost = item.cost.toLocaleString(locale);
   const showEnemyPrefix = totalSelectedEnemies > 1;
+  const displayWhenToUse = cleanDisplayUseTip(whenToUse, item.isActive);
 
   const cardContextHeroes = useMemo(() => {
     const list: DeadlockHero[] = [];
@@ -209,8 +227,6 @@ export function CounterCard({
     if (!isKitAmplifier) addHero(myHero);
     return list;
   }, [isKitAmplifier, myHero, counteredEnemies, heroesByClass]);
-
-  const myHeroList = useMemo(() => (myHero ? [myHero] : []), [myHero]);
 
   const handleCopyName = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -269,7 +285,13 @@ export function CounterCard({
     >
       <div className="counter-card-stripe" aria-hidden="true" />
 
-      <div className={`item-icon-frame item-icon-frame--${item.slot}`}>
+      <ItemTooltip
+        item={item}
+        uiLang={language}
+        inGameLang={effectiveInGameLang}
+        upgradeHint={upgradeHint}
+        className={`item-icon-frame item-icon-frame--${item.slot}`}
+      >
         <span className={`icon-rank-corner ${isTop ? 'icon-rank-corner--top' : ''}`}>
           #{rank}
         </span>
@@ -278,14 +300,10 @@ export function CounterCard({
         ) : (
           <span className="item-icon-fallback">{itemName.slice(0, 2)}</span>
         )}
-        <span
-          className={`item-act-pill ${
-            item.isActive ? 'item-act-pill--active' : 'item-act-pill--passive'
-          }`}
-        >
-          {item.isActive ? t.activeTag : t.passiveTag}
-        </span>
-      </div>
+        {item.isActive && (
+          <span className="item-act-pill item-act-pill--active">{t.activeTag}</span>
+        )}
+      </ItemTooltip>
 
       <div className="counter-card-body">
         <div className="counter-card-top">
@@ -311,49 +329,7 @@ export function CounterCard({
           </div>
         </div>
 
-        {/* Always-visible compact shop & matchup badges */}
-        <div className="counter-inline-badges">
-          <span className={`slot-badge slot-badge--${item.slot}`}>
-            {t.slots[item.slot]}
-          </span>
-          <span className="role-badge">{t.roles[role]}</span>
-          {isHeroSpecific && (
-            <span className="hard-counter-badge" title={t.hardCounterTitle}>
-              <Target size={10} />
-              {t.hardCounterBadge}
-            </span>
-          )}
-          {isKitAmplifier && (
-            <span className="kit-synergy-badge" title={t.kitSynergyTitle}>
-              <Sparkles size={10} />
-              {t.kitSynergyBadge}
-            </span>
-          )}
-          {totalSelectedEnemies > 1 && counteredEnemies && (
-            <span
-              className={`multi-counter-badge ${
-                isMultiHit ? 'multi-counter-badge--hit' : ''
-              }`}
-            >
-              {t.countersMultiBadge(counteredEnemies.length, totalSelectedEnemies)}
-            </span>
-          )}
-          {upgradeHint && (
-            <span className="upgrade-path-badge">
-              {upgradeHint.direction === 'from'
-                ? t.upgradeFromBadge(
-                    upgradeHint.itemName,
-                    upgradeHint.cost.toLocaleString(locale),
-                  )
-                : t.upgradeToBadge(
-                    upgradeHint.itemName,
-                    upgradeHint.cost.toLocaleString(locale),
-                  )}
-            </span>
-          )}
-        </div>
-
-        {/* Structured counter targets: [Kit Boost Header] + [Verb + Ability/Mechanic Chips] */}
+        {/* Structured counter targets: [Kit Boost Header] + [Verb + Ability Chips / Mechanic Text] */}
         {hasStructuredReasons ? (
           <div className="counter-targets-stack">
             {isKitAmplifier && kitAmplifier && (
@@ -375,11 +351,11 @@ export function CounterCard({
                     variant="own"
                   />
                 ) : (
-                  <span className="counter-mechanic-chip counter-mechanic-chip--own">
+                  <span className="kit-boost-ability-fallback">
                     {kitAmplifier.abilityName}
                   </span>
                 )}
-                <span className="kit-boost-axis-pill">{kitAmplifier.boostLabel}</span>
+                <span className="kit-boost-axis-text">{kitAmplifier.boostLabel}</span>
               </div>
             )}
 
@@ -421,27 +397,18 @@ export function CounterCard({
         )}
 
         <div className="counter-footer-row">
-          <span className="when-to-use">
-            <Zap size={12} className="when-icon" />
-            <strong>{t.useLabel}</strong>{' '}
-            <RichAbilityText
-              text={whenToUse}
-              heroes={cardContextHeroes}
-              uiLang={language}
-              inGameLang={effectiveInGameLang}
-            />
-          </span>
-          {!isKitAmplifier && synergyNote && (
-            <span className="synergy-pill">
-              <Sparkles size={11} />
+          <div className="when-to-use">
+            <Zap size={13} className="when-icon" />
+            <span className="when-to-use-text">
+              <strong className="when-to-use-label">{t.useLabel}</strong>{' '}
               <RichAbilityText
-                text={synergyNote}
-                heroes={myHeroList}
+                text={displayWhenToUse}
+                heroes={cardContextHeroes}
                 uiLang={language}
                 inGameLang={effectiveInGameLang}
               />
             </span>
-          )}
+          </div>
         </div>
       </div>
     </article>

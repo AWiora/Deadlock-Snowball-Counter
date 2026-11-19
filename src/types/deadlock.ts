@@ -87,6 +87,20 @@ export interface DeadlockHero {
   counterLifts?: Partial<Record<string, number>>;
 }
 
+export interface DeadlockItemStat {
+  label: string;
+  value: string;
+  important?: boolean;
+  elevated?: boolean;
+}
+
+export interface DeadlockItemTooltipSection {
+  type: 'innate' | 'passive' | 'active';
+  desc?: string;
+  cooldown?: string;
+  stats: DeadlockItemStat[];
+}
+
 export interface DeadlockItem {
   id: number;
   className: string;
@@ -98,6 +112,9 @@ export interface DeadlockItem {
   isActive: boolean;
   icon: string;
   summary: string;
+  cooldown?: string;
+  tooltipEn?: DeadlockItemTooltipSection[];
+  tooltipDe?: DeadlockItemTooltipSection[];
 }
 
 export interface DeadlockSnapshot {

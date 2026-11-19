@@ -3,12 +3,14 @@ import type {
   DeadlockAbility,
   DeadlockHero,
   DeadlockItem,
+  DeadlockItemStat,
+  DeadlockItemTooltipSection,
   DeadlockSnapshot,
   ItemSlot,
 } from '../types/deadlock';
 
 const API_BASE = 'https://api.deadlock-api.com/v1/assets';
-const CACHE_KEY = 'deadlock_counter_helper_assets_v5';
+const CACHE_KEY = 'deadlock_counter_helper_assets_v6';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 const ABILITY_DESC_FALLBACK: Record<string, { en: string; de: string }> = {
@@ -31,6 +33,8 @@ export function getBundledSnapshot(): DeadlockSnapshot {
 function cleanHtml(html?: string | null): string {
   if (!html) return '';
   return html
+    .replace(/\u00AD/g, '')
+    .replace(/\u00A0/g, ' ')
     .replace(/<svg[\s\S]*?<\/svg>/gi, '')
     .replace(/<img[^>]*>/gi, '')
     .replace(/<br\s*\/?>/gi, ' ')
@@ -39,6 +43,135 @@ function cleanHtml(html?: string | null): string {
     .replace(/\s+([.,:;!?])/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function formatPropertyValue(prop: Record<string, any> | undefined): string | null {
+  if (!prop || prop.value === undefined || prop.value === null) return null;
+  let raw = String(prop.value).replace(/\u00A0/g, ' ').trim();
+  if (!raw) return null;
+  if (prop.disable_value !== undefined && raw === String(prop.disable_value)) return null;
+  const num = Number.parseFloat(raw);
+  if (!Number.isNaN(num) && (num === 0 || raw === '-1' || raw === '-1.0')) return null;
+
+  let prefix = String(prop.prefix ?? '').replace(/\u00A0/g, ' ').trim();
+  if (prefix === '{s:sign}') {
+    prefix = !Number.isNaN(num) && num > 0 && !raw.startsWith('+') && !raw.startsWith('-') ? '+' : '';
+  } else if (prefix.includes('{')) {
+    prefix = '';
+  }
+
+  let postfix = String(prop.postfix ?? '').replace(/\u00AD/g, '').replace(/\u00A0/g, ' ').trim();
+  if (postfix.includes('{')) postfix = '';
+
+  if (postfix && raw.toLowerCase().endsWith(postfix.toLowerCase())) {
+    postfix = '';
+  } else if (postfix.toLowerCase().startsWith('m/') && raw.toLowerCase().endsWith('m')) {
+    raw = raw.slice(0, -1);
+  }
+
+  const spacer = postfix && postfix.length > 2 && !postfix.startsWith('%') ? ' ' : '';
+  return `${prefix}${raw}${spacer}${postfix}`.trim();
+}
+
+function extractItemCooldown(it: Record<string, any> | undefined): string | undefined {
+  const cd = it?.properties?.AbilityCooldown;
+  if (!cd || cd.value === undefined || cd.value === null) return undefined;
+  const num = Number.parseFloat(String(cd.value));
+  if (Number.isNaN(num) || num <= 0) return undefined;
+  return `${Number.isInteger(num) ? num : String(cd.value)}s`;
+}
+
+function extractItemSummary(it: Record<string, any>): string {
+  const direct = cleanHtml(
+    it.description?.active || it.description?.passive || it.description?.desc,
+  );
+  if (direct) return direct.slice(0, 220);
+
+  const sectionTexts: string[] = [];
+  for (const sec of it.tooltip_sections ?? []) {
+    for (const attr of sec.section_attributes ?? []) {
+      if (attr?.loc_string && !String(attr.loc_string).startsWith('#')) {
+        const cleaned = cleanHtml(attr.loc_string);
+        if (cleaned) sectionTexts.push(cleaned);
+      }
+    }
+  }
+  return sectionTexts.join(' ').slice(0, 220);
+}
+
+function extractItemTooltip(it: Record<string, any> | undefined): DeadlockItemTooltipSection[] | undefined {
+  if (!it) return undefined;
+  const props = it.properties ?? {};
+  const itemCd = extractItemCooldown(it);
+  const sections: DeadlockItemTooltipSection[] = [];
+
+  for (const sec of it.tooltip_sections ?? []) {
+    const rawType = String(sec.section_type || '').toLowerCase();
+    const type: DeadlockItemTooltipSection['type'] =
+      rawType === 'active' ? 'active' : rawType === 'passive' ? 'passive' : 'innate';
+    const descParts: string[] = [];
+    const stats: DeadlockItemStat[] = [];
+    const seenKeys = new Set<string>();
+    let sectionCooldown: string | undefined;
+
+    const addProp = (key: string, flags: { important?: boolean; elevated?: boolean }) => {
+      if (!key || seenKeys.has(key)) return;
+      seenKeys.add(key);
+      const p = props[key];
+      if (!p) return;
+      if (key === 'AbilityCooldown') {
+        const cdVal = formatPropertyValue(p);
+        if (cdVal) sectionCooldown = cdVal;
+        return;
+      }
+      const value = formatPropertyValue(p);
+      const label = cleanHtml(p.label || p.postvalue_label || '');
+      if (!value || !label || label.startsWith('#')) return;
+      stats.push({
+        label,
+        value,
+        ...(flags.important ? { important: true } : {}),
+        ...(flags.elevated ? { elevated: true } : {}),
+      });
+    };
+
+    for (const attr of sec.section_attributes ?? []) {
+      if (attr?.loc_string && !String(attr.loc_string).startsWith('#')) {
+        const cleaned = cleanHtml(attr.loc_string);
+        if (cleaned) descParts.push(cleaned);
+      }
+      for (const k of attr?.elevated_properties ?? []) addProp(k, { elevated: true });
+      for (const k of attr?.important_properties ?? []) addProp(k, { important: true });
+      for (const k of attr?.properties ?? []) addProp(k, {});
+    }
+
+    const desc = descParts.join(' ').trim() || undefined;
+    if (!sectionCooldown && type !== 'innate' && itemCd) {
+      sectionCooldown = itemCd;
+    }
+    if (desc || stats.length > 0) {
+      sections.push({
+        type,
+        ...(desc ? { desc } : {}),
+        ...(sectionCooldown ? { cooldown: sectionCooldown } : {}),
+        stats,
+      });
+    }
+  }
+
+  if (sections.length === 0) {
+    const fallbackDesc = extractItemSummary(it);
+    if (fallbackDesc) {
+      sections.push({
+        type: it.is_active_item ? 'active' : 'passive',
+        desc: fallbackDesc,
+        ...(itemCd ? { cooldown: itemCd } : {}),
+        stats: [],
+      });
+    }
+  }
+
+  return sections.length > 0 ? sections : undefined;
 }
 
 function extractAbilityDesc(rawAbility: Record<string, any> | undefined, lang: 'en' | 'de'): string {
@@ -132,12 +265,12 @@ export async function fetchLiveDeadlockData(): Promise<{
       : [];
 
     const deHeroByClass = new Map(rawHeroesDe.map((h) => [h.class_name, h.name as string]));
-    const deItemByClass = new Map(rawItemsDe.map((i) => [i.class_name, i.name as string]));
+    const deItemByClass = new Map(rawItemsDe.map((i) => [i.class_name, i]));
     const enAbilityByClass = new Map(rawAbilitiesEn.map((a) => [a.class_name, a]));
     const deAbilityByClass = new Map(rawAbilitiesDe.map((a) => [a.class_name, a]));
-    const snapHeroByClass = new Map(
-      getBundledSnapshot().heroes.map((h) => [h.className, h]),
-    );
+    const snap = getBundledSnapshot();
+    const snapHeroByClass = new Map(snap.heroes.map((h) => [h.className, h]));
+    const snapItemByClass = new Map(snap.items.map((i) => [i.className, i]));
 
     const heroes: DeadlockHero[] = rawHeroesEn
       .filter((h) => !h.disabled && h.player_selectable !== false)
@@ -188,20 +321,28 @@ export async function fetchLiveDeadlockData(): Promise<{
           it.cost <= 7000 &&
           ['weapon', 'vitality', 'spirit'].includes(it.item_slot_type),
       )
-      .map((it) => ({
-        id: it.id,
-        className: it.class_name,
-        name: it.name,
-        nameDe: deItemByClass.get(it.class_name) || it.name,
-        slot: it.item_slot_type as ItemSlot,
-        tier: it.item_tier,
-        cost: it.cost,
-        isActive: Boolean(it.is_active_item),
-        icon: it.shop_image_webp || it.shop_image || it.image_webp || it.image || '',
-        summary: cleanHtml(
-          it.description?.active || it.description?.passive || it.description?.desc,
-        ).slice(0, 220),
-      }))
+      .map((it) => {
+        const itDe = deItemByClass.get(it.class_name);
+        const snapItem = snapItemByClass.get(it.class_name);
+        const cooldown = extractItemCooldown(it) ?? snapItem?.cooldown;
+        const tooltipEn = extractItemTooltip(it) ?? snapItem?.tooltipEn;
+        const tooltipDe = extractItemTooltip(itDe) ?? snapItem?.tooltipDe ?? tooltipEn;
+        return {
+          id: it.id,
+          className: it.class_name,
+          name: it.name,
+          nameDe: (itDe?.name as string | undefined) || it.name,
+          slot: it.item_slot_type as ItemSlot,
+          tier: it.item_tier,
+          cost: it.cost,
+          isActive: Boolean(it.is_active_item),
+          icon: it.shop_image_webp || it.shop_image || it.image_webp || it.image || '',
+          summary: extractItemSummary(it) || snapItem?.summary || '',
+          ...(cooldown ? { cooldown } : {}),
+          ...(tooltipEn ? { tooltipEn } : {}),
+          ...(tooltipDe ? { tooltipDe } : {}),
+        };
+      })
       .sort((a, b) => a.slot.localeCompare(b.slot) || a.cost - b.cost || a.name.localeCompare(b.name));
 
     if (heroes.length < 20 || items.length < 80) {
