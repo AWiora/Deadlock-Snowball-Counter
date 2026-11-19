@@ -18,6 +18,29 @@ export type CounterRole =
   | 'Cleanse'
   | 'Control';
 
+export type CounterActionVerb =
+  | 'cancels'
+  | 'grounds'
+  | 'cleanses'
+  | 'parries'
+  | 'blocks'
+  | 'absorbs'
+  | 'reflects'
+  | 'silences'
+  | 'disarms'
+  | 'cuts_heal'
+  | 'shortens'
+  | 'shreds'
+  | 'punishes'
+  | 'controls'
+  | 'weakens'
+  | 'escapes'
+  | 'sustains'
+  | 'mitigates'
+  | 'strips'
+  | 'bursts'
+  | 'counters';
+
 export type ThreatMechanic =
   | 'rapid_fire'
   | 'on_hit_procs'
@@ -156,12 +179,33 @@ export interface HeroProfile {
   threatHeadline: string;
 }
 
+export interface HeroAbilityThreatTag {
+  /** Official Deadlock ability slot (1-4) on this hero */
+  slot: 1 | 2 | 3 | 4;
+  /** Threat mechanics directly produced by this ability */
+  threats: ThreatMechanic[];
+  /** Optional explicit modifiers this ability directly embodies */
+  modifiers?: EnemyModifier[];
+  /** False when this ability's debuff cannot be purged by Dispel Magic (ultimates are also skipped by default) */
+  cleanseable?: boolean;
+  /** True when this ability deals parryable melee damage (for Rebuttal) */
+  parryableMelee?: boolean;
+}
+
 export interface HeroCounterOverride {
   itemClassName: string;
   bonus: number;
   stages?: GameStage[];
   roleOverride?: CounterRole;
   tip: string;
+  /** Optional explicit countered ability slots on this hero for nuanced Deadlock edge cases */
+  counteredSlots?: (1 | 2 | 3 | 4)[];
+  /** Optional explicit action verb override */
+  verbOverride?: CounterActionVerb;
+  /** Optional matchup-specific English timing/interaction caveat for the "Use:" line */
+  useTip?: string;
+  /** Optional matchup-specific German timing/interaction caveat for the "Use:" line */
+  useTipDe?: string;
 }
 
 export interface CounterItemRule {
@@ -226,15 +270,46 @@ export interface MatchupInput {
   itemLanguage?: Language;
 }
 
+export type CounterTargetChip =
+  | {
+      kind: 'ability';
+      ability: DeadlockAbility;
+      heroClass: string;
+    }
+  | {
+      kind: 'mechanic';
+      label: string;
+      tone?: 'modifier' | 'damage' | 'threat';
+    };
+
+export interface CounterActionGroup {
+  verb: CounterActionVerb;
+  verbLabel: string;
+  targets: CounterTargetChip[];
+}
+
+export interface KitAmplifierMeta {
+  /** Player hero's own ability being empowered */
+  ability: DeadlockAbility | null;
+  /** Localized display name of the player's empowered ability */
+  abilityName: string;
+  /** Amplifier axis (cooldown, range, duration, charges, echo, refresher, gap_close) */
+  axis: KitAmplifierAxis;
+  /** Concise localized boost badge (e.g. "+Range", "-CD", "Double Cast") */
+  boostLabel: string;
+}
+
 export interface EnemyCounterReason {
   /** Enemy hero className(s) covered by this line (1 per enemy, or multiple when collapsed into a shared general reason) */
   heroClasses: string[];
   /** Concise matched mechanics/toggles for general picks (e.g. "Kugeln · Hohe Feuerrate") */
   triggerSummary?: string;
-  /** Concise explanation text */
+  /** Concise explanation text (preserved for fallback & backward compatibility) */
   text: string;
   /** Whether this line is a curated hero-specific hard-counter tip */
   isHeroSpecific: boolean;
+  /** Structured [Action Verb] + [Ability / Mechanic Chips] groups for scannable card display */
+  actionGroups?: CounterActionGroup[];
 }
 
 export interface CounterRecommendation {
@@ -252,6 +327,8 @@ export interface CounterRecommendation {
   isHeroSpecific: boolean;
   /** Whether this recommendation empowers your own hero's built-in counter ability */
   isKitAmplifier?: boolean;
+  /** Structured metadata when this card is a Kit-Amplifier empowering your own hero's ability */
+  kitAmplifier?: KitAmplifierMeta;
   /** Enemy hero classNames (from the selected 1-3 enemies) that this item meaningfully counters */
   counteredEnemies?: string[];
   /** Direct component or upgrade path hint (e.g. Rusted Barrel <-> Disarming Hex) */

@@ -2563,3 +2563,231 @@ button {
   background: rgba(34, 25, 11, 0.92);
   color: var(--brass-bright);
 }
+
+/* ==================== STRUCTURED COUNTER TARGET CHIPS ==================== */
+.counter-targets-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 4px 0 2px;
+}
+
+.counter-target-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+}
+
+.counter-action-groups {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+}
+
+.counter-action-group {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.counter-action-verb {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.counter-action-chips {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.counter-ability-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px 2px 3px;
+  border-radius: 7px;
+  background: rgba(20, 22, 28, 0.92);
+  border: 1px solid rgba(235, 224, 200, 0.18);
+  color: var(--text-parchment);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.25;
+  cursor: help;
+  transition: border-color 0.14s ease, background-color 0.14s ease, transform 0.14s ease;
+}
+
+.counter-ability-chip:hover,
+.counter-ability-chip:focus-visible {
+  border-color: var(--brass-bright);
+  background: rgba(214, 165, 86, 0.16);
+  transform: translateY(-1px);
+}
+
+.counter-ability-chip--ult {
+  border-color: rgba(214, 165, 86, 0.48);
+  background: rgba(214, 165, 86, 0.11);
+}
+
+.counter-ability-chip--own {
+  border-color: rgba(116, 178, 255, 0.45);
+  background: rgba(116, 178, 255, 0.12);
+  color: #d6e9ff;
+}
+
+.counter-ability-chip--own:hover,
+.counter-ability-chip--own:focus-visible {
+  border-color: #96c7ff;
+  background: rgba(116, 178, 255, 0.22);
+}
+
+.counter-ability-chip-icon-wrap {
+  position: relative;
+  width: 21px;
+  height: 21px;
+  border-radius: 5px;
+  background: rgba(10, 11, 15, 0.94);
+  border: 1px solid rgba(235, 224, 200, 0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.counter-ability-chip--ult .counter-ability-chip-icon-wrap {
+  border-color: rgba(214, 165, 86, 0.42);
+}
+
+.counter-ability-chip--own .counter-ability-chip-icon-wrap {
+  border-color: rgba(116, 178, 255, 0.4);
+}
+
+.counter-ability-chip-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: brightness(1.08);
+}
+
+.counter-ability-chip-fallback {
+  font-size: 0.56rem;
+  font-weight: 700;
+  color: var(--text-parchment);
+}
+
+.counter-ability-chip-slot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  min-width: 10px;
+  height: 10px;
+  padding: 0 2px;
+  border-top-left-radius: 3px;
+  background: rgba(9, 10, 13, 0.92);
+  color: var(--text-secondary);
+  font-size: 0.52rem;
+  font-weight: 800;
+  line-height: 10px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.counter-ability-chip--ult .counter-ability-chip-slot {
+  background: rgba(34, 25, 11, 0.94);
+  color: var(--brass-bright);
+}
+
+.counter-ability-chip--own .counter-ability-chip-slot {
+  background: rgba(16, 30, 48, 0.94);
+  color: #badbff;
+}
+
+.counter-ability-chip-name {
+  white-space: nowrap;
+}
+
+.counter-mechanic-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 7px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.counter-mechanic-chip--modifier {
+  background: rgba(217, 136, 72, 0.14);
+  border: 1px solid rgba(232, 160, 96, 0.38);
+  color: #ffd3a8;
+}
+
+.counter-mechanic-chip--damage {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(235, 224, 200, 0.18);
+  color: var(--text-parchment);
+}
+
+.counter-mechanic-chip--threat {
+  background: rgba(214, 165, 86, 0.1);
+  border: 1px solid rgba(214, 165, 86, 0.3);
+  color: #efe1c4;
+}
+
+.counter-mechanic-chip--own {
+  background: rgba(116, 178, 255, 0.12);
+  border: 1px solid rgba(116, 178, 255, 0.4);
+  color: #d6e9ff;
+}
+
+.kit-boost-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed rgba(116, 178, 255, 0.22);
+}
+
+.kit-boost-hero-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  object-fit: cover;
+  border: 1px solid rgba(116, 178, 255, 0.55);
+  flex-shrink: 0;
+}
+
+.kit-boost-verb {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #9ec8ff;
+  white-space: nowrap;
+}
+
+.kit-boost-axis-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(116, 178, 255, 0.18);
+  border: 1px solid rgba(116, 178, 255, 0.42);
+  color: #cbe4ff;
+  white-space: nowrap;
+}

@@ -1,4 +1,9 @@
 import { COUNTER_ITEM_RULES, HERO_SPECIFIC_COUNTERS } from '../data/counterItems';
+import {
+  HERO_ABILITY_TAGS,
+  HERO_OVERRIDE_STRUCTURED,
+  ITEM_ACTION_PROFILES,
+} from '../data/heroAbilityTags';
 import { getHeroProfile } from '../data/heroProfiles';
 import { KIT_AMPLIFIER_RULES } from '../data/kitAmplifiers';
 import {
@@ -14,16 +19,21 @@ import {
   resolveHeroAbility,
 } from '../utils/abilities';
 import type {
+  CounterActionGroup,
+  CounterActionVerb,
   CounterItemRule,
   CounterRecommendation,
   CounterRole,
   CounterStance,
+  CounterTargetChip,
+  DeadlockAbility,
   DeadlockHero,
   DeadlockItem,
   EnemyCounterReason,
   EnemyModifier,
   EnemyTargetConfig,
   HeroKitCounter,
+  KitAmplifierMeta,
   Language,
   MatchupInput,
   PlayerAffinity,
@@ -406,6 +416,385 @@ function collectMatchedTriggers(
   return uniqueLabels;
 }
 
+function pushChipToGroup(
+  groups: CounterActionGroup[],
+  verb: CounterActionVerb,
+  verbLabel: string,
+  chip: CounterTargetChip,
+): void {
+  let group = groups.find((g) => g.verb === verb);
+  if (!group) {
+    group = { verb, verbLabel, targets: [] };
+    groups.push(group);
+  }
+  const alreadyPresent = group.targets.some((existing) => {
+    if (existing.kind !== chip.kind) return false;
+    if (existing.kind === 'ability' && chip.kind === 'ability') {
+      return (
+        existing.ability.className === chip.ability.className &&
+        existing.heroClass === chip.heroClass
+      );
+    }
+    if (existing.kind === 'mechanic' && chip.kind === 'mechanic') {
+      return existing.label === chip.label;
+    }
+    return false;
+  });
+  if (!alreadyPresent) {
+    group.targets.push(chip);
+  }
+}
+
+function resolveEnemyActionGroups(
+  rule: CounterItemRule,
+  target: EnemyTargetConfig,
+  enemyHero: DeadlockHero | undefined,
+  primaryThreats: ThreatMechanic[],
+  secondaryThreats: ThreatMechanic[],
+  isOffMetaSpirit: boolean,
+  isOffMetaBullet: boolean,
+  isHeroSpecific: boolean,
+  lang: Language,
+): CounterActionGroup[] {
+  const t = UI_TEXT[lang];
+  const profile = ITEM_ACTION_PROFILES[rule.className];
+  const defaultVerb: CounterActionVerb = profile?.defaultVerb ?? 'counters';
+  const abilityBySlot = new Map<number, DeadlockAbility>(
+    (enemyHero?.abilities ?? []).map((ab) => [ab.slot, ab]),
+  );
+  const heroTags = HERO_ABILITY_TAGS[target.heroClass] ?? [];
+  const tagBySlot = new Map(heroTags.map((tag) => [tag.slot, tag]));
+
+  const groups: CounterActionGroup[] = [];
+  const coveredModifiers = new Set<EnemyModifier>();
+
+  const appendUncoveredModifiers = (maxAdded: number) => {
+    if (!rule.modifierCounters || target.modifiers.length === 0) return;
+    let added = 0;
+    const sortedMods = [...target.modifiers]
+      .map((mod) => ({ mod, w: rule.modifierCounters?.[mod] ?? 0 }))
+      .filter((m) => m.w >= 16 && !coveredModifiers.has(m.mod))
+      .sort((a, b) => b.w - a.w);
+    for (const { mod } of sortedMods) {
+      if (added >= maxAdded) break;
+      const verb = profile?.verbByModifier?.[mod] ?? defaultVerb;
+      pushChipToGroup(groups, verb, t.actionVerbs[verb], {
+        kind: 'mechanic',
+        label: t.modifiers[mod].label,
+        tone: 'modifier',
+      });
+      coveredModifiers.add(mod);
+      added++;
+    }
+  };
+
+  // 1. Curated structured override (highest precision for nuanced Deadlock edge cases)
+  const overrideMeta = isHeroSpecific
+    ? HERO_OVERRIDE_STRUCTURED[target.heroClass]?.[rule.className]
+    : undefined;
+
+  if (overrideMeta && (overrideMeta.slots?.length || overrideMeta.mechanicFallback)) {
+    const primaryVerb = overrideMeta.verb ?? defaultVerb;
+    for (const slot of overrideMeta.slots ?? []) {
+      const ab = abilityBySlot.get(slot);
+      if (!ab) continue;
+      pushChipToGroup(groups, primaryVerb, t.actionVerbs[primaryVerb], {
+        kind: 'ability',
+        ability: ab,
+        heroClass: target.heroClass,
+      });
+      for (const m of tagBySlot.get(slot)?.modifiers ?? []) {
+        coveredModifiers.add(m);
+      }
+    }
+    if (overrideMeta.mechanicFallback) {
+      const fb = overrideMeta.mechanicFallback;
+      const tone = fb === 'bullet_dps' || fb === 'spirit_dps' ? 'damage' : fb === 'low_hp' ? 'threat' : 'modifier';
+      pushChipToGroup(groups, primaryVerb, t.actionVerbs[primaryVerb], {
+        kind: 'mechanic',
+        label: t.mechanicFallbacks[fb],
+        tone,
+      });
+      if (fb === 'melee') coveredModifiers.add('melee');
+      if (fb === 'tanky') coveredModifiers.add('tanky');
+      if (fb === 'healing') coveredModifiers.add('healing');
+    }
+    if (overrideMeta.extraGroup) {
+      const extraVerb = overrideMeta.extraGroup.verb;
+      for (const slot of overrideMeta.extraGroup.slots) {
+        const ab = abilityBySlot.get(slot);
+        if (!ab) continue;
+        pushChipToGroup(groups, extraVerb, t.actionVerbs[extraVerb], {
+          kind: 'ability',
+          ability: ab,
+          heroClass: target.heroClass,
+        });
+        for (const m of tagBySlot.get(slot)?.modifiers ?? []) {
+          coveredModifiers.add(m);
+        }
+      }
+    }
+    appendUncoveredModifiers(1);
+    if (groups.length > 0) return groups;
+  }
+
+  // 2. Automatic resolution from hero ability tags × item abilityMatchThreats
+  if (
+    profile &&
+    !profile.preferMechanicFallback &&
+    profile.abilityMatchThreats &&
+    profile.abilityMatchThreats.length > 0 &&
+    heroTags.length > 0
+  ) {
+    interface AbilityCandidate {
+      ability: DeadlockAbility;
+      slot: 1 | 2 | 3 | 4;
+      score: number;
+      bestThreat: ThreatMechanic;
+      modifiers: EnemyModifier[];
+    }
+    const candidates: AbilityCandidate[] = [];
+
+    for (const tag of heroTags) {
+      const ab = abilityBySlot.get(tag.slot);
+      if (!ab) continue;
+      if (profile.skipUltimatesForCleanse && (ab.isUltimate || tag.cleanseable === false)) {
+        continue;
+      }
+      if (profile.matchParryableMeleeOnly && !tag.parryableMelee) {
+        continue;
+      }
+
+      let bestScore = 0;
+      let bestThreat: ThreatMechanic | null = null;
+
+      for (let i = 0; i < profile.abilityMatchThreats.length; i++) {
+        const threat = profile.abilityMatchThreats[i];
+        if (!tag.threats.includes(threat)) continue;
+
+        let w = (rule.threatCounters?.[threat] ?? 16) + Math.max(0, 6 - i * 2);
+        if (
+          isOffMetaSpirit &&
+          (threat === 'rapid_fire' || threat === 'bullet_ult' || threat === 'on_hit_procs')
+        ) {
+          w *= 0.25;
+        }
+        if (
+          isOffMetaBullet &&
+          (threat === 'sustained_spirit' || threat === 'ability_spam')
+        ) {
+          w *= 0.3;
+        }
+        if (ab.isUltimate) w += 3;
+
+        if (w > bestScore) {
+          bestScore = w;
+          bestThreat = threat;
+        }
+      }
+
+      if (bestThreat && bestScore >= 12) {
+        candidates.push({
+          ability: ab,
+          slot: tag.slot,
+          score: bestScore,
+          bestThreat,
+          modifiers: tag.modifiers ?? [],
+        });
+      }
+    }
+
+    candidates.sort((a, b) => b.score - a.score || a.slot - b.slot);
+    const maxChips = profile.maxAbilityChips ?? 2;
+    const picked = candidates.slice(0, maxChips);
+
+    if (picked.length > 0) {
+      for (const p of picked) {
+        const verb = profile.verbByThreat?.[p.bestThreat] ?? defaultVerb;
+        pushChipToGroup(groups, verb, t.actionVerbs[verb], {
+          kind: 'ability',
+          ability: p.ability,
+          heroClass: target.heroClass,
+        });
+        for (const m of p.modifiers) {
+          coveredModifiers.add(m);
+        }
+      }
+      // For Rebuttal, if a parryable melee ability matched, also keep Heavy Melee covered only if melee isn't already obvious
+      appendUncoveredModifiers(1);
+      return groups;
+    }
+  }
+
+  // 3. Unified non-ability mechanic fallback (compact [Verb] + [Target Pill] chips)
+  const fallbackChips: { verb: CounterActionVerb; chip: CounterTargetChip; weight: number }[] = [];
+
+  if (rule.className === 'upgrade_melee_rebuttal') {
+    fallbackChips.push({
+      verb: 'punishes',
+      chip: { kind: 'mechanic', label: t.mechanicFallbacks.melee, tone: 'modifier' },
+      weight: 100,
+    });
+  }
+
+  if (rule.modifierCounters) {
+    for (const mod of target.modifiers) {
+      const w = rule.modifierCounters[mod] ?? 0;
+      if (w >= 14) {
+        const verb = profile?.verbByModifier?.[mod] ?? defaultVerb;
+        fallbackChips.push({
+          verb,
+          chip: { kind: 'mechanic', label: t.modifiers[mod].label, tone: 'modifier' },
+          weight: w * 2.1,
+        });
+      }
+    }
+  }
+
+  if (rule.damageCounters) {
+    const dmgW = rule.damageCounters[target.damageProfile] ?? 0;
+    if (dmgW >= 16) {
+      const dmgLabel =
+        target.damageProfile === 'bullet'
+          ? t.mechanicFallbacks.bullet_dps
+          : target.damageProfile === 'spirit'
+            ? t.mechanicFallbacks.spirit_dps
+            : t.damageReasonLabel.equal;
+      fallbackChips.push({
+        verb: defaultVerb,
+        chip: { kind: 'mechanic', label: dmgLabel, tone: 'damage' },
+        weight: dmgW * 1.15,
+      });
+    }
+  }
+
+  if (rule.threatCounters) {
+    const seen = new Set<ThreatMechanic>();
+    const addThreats = (list: ThreatMechanic[], scale: number) => {
+      for (const threat of list) {
+        if (seen.has(threat)) continue;
+        seen.add(threat);
+        let w = (rule.threatCounters?.[threat] ?? 0) * scale;
+        if (
+          isOffMetaSpirit &&
+          (threat === 'rapid_fire' || threat === 'bullet_ult' || threat === 'on_hit_procs')
+        ) {
+          w *= 0.35;
+        }
+        if (
+          isOffMetaBullet &&
+          (threat === 'sustained_spirit' || threat === 'ability_spam')
+        ) {
+          w *= 0.45;
+        }
+        if (w >= 14) {
+          const verb = profile?.verbByThreat?.[threat] ?? defaultVerb;
+          fallbackChips.push({
+            verb,
+            chip: { kind: 'mechanic', label: t.threats[threat], tone: 'threat' },
+            weight: w,
+          });
+        }
+      }
+    };
+    addThreats(primaryThreats, 1.0);
+    addThreats(secondaryThreats, SECONDARY_THREAT_SCALE);
+  }
+
+  fallbackChips.sort((a, b) => b.weight - a.weight);
+  const usedLabels = new Set<string>();
+  let totalAdded = 0;
+  for (const fc of fallbackChips) {
+    if (fc.chip.kind === 'mechanic' && usedLabels.has(fc.chip.label)) continue;
+    if (fc.chip.kind === 'mechanic') usedLabels.add(fc.chip.label);
+    pushChipToGroup(groups, fc.verb, t.actionVerbs[fc.verb], fc.chip);
+    totalAdded++;
+    if (totalAdded >= 2) break;
+  }
+
+  if (groups.length === 0) {
+    pushChipToGroup(groups, defaultVerb, t.actionVerbs[defaultVerb], {
+      kind: 'mechanic',
+      label: t.damageReasonLabel[target.damageProfile],
+      tone: 'damage',
+    });
+  }
+
+  return groups;
+}
+
+function resolveKitEnemyActionGroups(
+  kitAbility: HeroKitCounter,
+  enemyHeroClass: string,
+  enemyHero: DeadlockHero | undefined,
+  matchedThreats: ThreatMechanic[],
+  matchedTriggerLabels: string[],
+  lang: Language,
+): CounterActionGroup[] {
+  const t = UI_TEXT[lang];
+  const groups: CounterActionGroup[] = [];
+  const abilityBySlot = new Map<number, DeadlockAbility>(
+    (enemyHero?.abilities ?? []).map((ab) => [ab.slot, ab]),
+  );
+  const heroTags = HERO_ABILITY_TAGS[enemyHeroClass] ?? [];
+
+  const verbForKitThreat = (threat?: ThreatMechanic): CounterActionVerb => {
+    if (threat === 'channeled_ult') return 'cancels';
+    if (threat === 'airborne') return 'grounds';
+    if (threat === 'heavy_healing' || kitAbility.role === 'Anti-Heal') return 'cuts_heal';
+    if (threat === 'cleanseable_debuff' || kitAbility.role === 'Cleanse') return 'cleanses';
+    if (kitAbility.role === 'Control') return 'controls';
+    if (kitAbility.role === 'Survival') return 'blocks';
+    if (kitAbility.role === 'Anti-Spirit') return 'silences';
+    return 'counters';
+  };
+
+  if (heroTags.length > 0 && matchedThreats.length > 0) {
+    const scoredAbilities: { ability: DeadlockAbility; slot: number; threat: ThreatMechanic; score: number }[] = [];
+    for (const tag of heroTags) {
+      const ab = abilityBySlot.get(tag.slot);
+      if (!ab) continue;
+      for (let i = 0; i < matchedThreats.length; i++) {
+        const th = matchedThreats[i];
+        if (!tag.threats.includes(th)) continue;
+        scoredAbilities.push({
+          ability: ab,
+          slot: tag.slot,
+          threat: th,
+          score: (10 - i) + (ab.isUltimate ? 2 : 0),
+        });
+        break;
+      }
+    }
+    scoredAbilities.sort((a, b) => b.score - a.score || a.slot - b.slot);
+    for (const match of scoredAbilities.slice(0, 2)) {
+      const verb = verbForKitThreat(match.threat);
+      pushChipToGroup(groups, verb, t.actionVerbs[verb], {
+        kind: 'ability',
+        ability: match.ability,
+        heroClass: enemyHeroClass,
+      });
+    }
+  }
+
+  if (groups.length === 0) {
+    const fallbackVerb = verbForKitThreat(matchedThreats[0]);
+    for (const label of matchedTriggerLabels.slice(0, 2)) {
+      pushChipToGroup(groups, fallbackVerb, t.actionVerbs[fallbackVerb], {
+        kind: 'mechanic',
+        label,
+        tone: 'threat',
+      });
+    }
+  }
+
+  return groups;
+}
+
+function hasAnyAbilityChip(groups: CounterActionGroup[]): boolean {
+  return groups.some((g) => g.targets.some((t) => t.kind === 'ability'));
+}
+
 export function recommendCounters(
   input: MatchupInput,
   itemsByClass: Map<string, DeadlockItem>,
@@ -435,8 +824,10 @@ export function recommendCounters(
     score: number;
     isHeroSpecific: boolean;
     overrideTip: string | null;
+    overrideUseTip: string | null;
     contextTip: string | null;
     matchedTriggers: string[];
+    actionGroups: CounterActionGroup[];
     roleOverride?: CounterRole;
   }
 
@@ -451,6 +842,7 @@ export function recommendCounters(
     synergyNote: string | null;
     isHeroSpecific: boolean;
     isKitAmplifier?: boolean;
+    kitAmplifier?: KitAmplifierMeta;
     counteredEnemies: string[];
     upgradeHint: UpgradeHint | null;
   }
@@ -513,6 +905,7 @@ export function recommendCounters(
       // 4. Hero-specific hard-counter override
       let isHeroSpecific = false;
       let overrideTip: string | null = null;
+      let overrideUseTip: string | null = null;
       let roleOverride: CounterRole | undefined;
       if (override) {
         let overrideBonus = override.bonus;
@@ -532,6 +925,16 @@ export function recommendCounters(
           overrideTip = eHeroObj
             ? localizeAbilityMentions(rawTip, [eHeroObj], itemLang)
             : rawTip;
+          const structuredMeta = HERO_OVERRIDE_STRUCTURED[target.heroClass]?.[rule.className];
+          const rawUseTip =
+            lang === 'de'
+              ? structuredMeta?.useTipDe ?? override.useTipDe ?? null
+              : structuredMeta?.useTip ?? override.useTip ?? null;
+          if (rawUseTip) {
+            overrideUseTip = eHeroObj
+              ? localizeAbilityMentions(rawUseTip, [eHeroObj], itemLang)
+              : rawUseTip;
+          }
         }
         rawScore += overrideBonus;
       }
@@ -564,14 +967,27 @@ export function recommendCounters(
         isOffMetaBullet,
         lang,
       );
+      const actionGroups = resolveEnemyActionGroups(
+        rule,
+        target,
+        eHeroObj,
+        eProfile.threats,
+        eProfile.secondaryThreats ?? [],
+        isOffMetaSpirit,
+        isOffMetaBullet,
+        isHeroSpecific,
+        lang,
+      );
 
       evals.push({
         heroClass: target.heroClass,
         score: enemyScore,
         isHeroSpecific,
         overrideTip,
+        overrideUseTip,
         contextTip,
         matchedTriggers,
+        actionGroups,
         roleOverride,
       });
     }
@@ -611,7 +1027,7 @@ export function recommendCounters(
     // Build smart per-enemy reasons so multi-enemy picks explain EVERY countered hero without repeating boilerplate
     const explainEvals = counteredEvals.length > 0 ? counteredEvals : [bestEval];
     const hasAnySpecificReason = explainEvals.some(
-      (e) => Boolean(e.overrideTip || e.contextTip),
+      (e) => Boolean(e.overrideTip || e.contextTip || hasAnyAbilityChip(e.actionGroups)),
     );
     const reasons: EnemyCounterReason[] = [];
 
@@ -622,6 +1038,7 @@ export function recommendCounters(
           heroClasses: [e.heroClass],
           text: e.overrideTip,
           isHeroSpecific: true,
+          actionGroups: e.actionGroups,
         });
       } else if (e.contextTip) {
         reasons.push({
@@ -629,6 +1046,7 @@ export function recommendCounters(
           triggerSummary: e.matchedTriggers.join(' · ') || undefined,
           text: e.contextTip,
           isHeroSpecific: false,
+          actionGroups: e.actionGroups,
         });
       } else {
         reasons.push({
@@ -636,6 +1054,7 @@ export function recommendCounters(
           triggerSummary: e.matchedTriggers.join(' · ') || undefined,
           text: baseWhy,
           isHeroSpecific: false,
+          actionGroups: e.actionGroups,
         });
       }
     } else if (!hasAnySpecificReason) {
@@ -643,11 +1062,31 @@ export function recommendCounters(
       const sharedTriggers = Array.from(
         new Set(explainEvals.flatMap((e) => e.matchedTriggers)),
       ).slice(0, 3);
+      const mergedActionGroups: CounterActionGroup[] = [];
+      for (const e of explainEvals) {
+        for (const g of e.actionGroups) {
+          for (const chip of g.targets) {
+            pushChipToGroup(mergedActionGroups, g.verb, g.verbLabel, chip);
+          }
+        }
+      }
+      // Keep shared mechanic chips concise (max 3 total across merged groups)
+      let remaining = 3;
+      const trimmedMergedGroups: CounterActionGroup[] = [];
+      for (const g of mergedActionGroups) {
+        if (remaining <= 0) break;
+        const sliced = g.targets.slice(0, remaining);
+        remaining -= sliced.length;
+        if (sliced.length > 0) {
+          trimmedMergedGroups.push({ ...g, targets: sliced });
+        }
+      }
       reasons.push({
         heroClasses: explainEvals.map((e) => e.heroClass),
         triggerSummary: sharedTriggers.join(' · ') || undefined,
         text: baseWhy,
         isHeroSpecific: false,
+        actionGroups: trimmedMergedGroups,
       });
     } else {
       // One crisp reason per countered enemy: curated override/context tip where available, dynamic mechanics otherwise
@@ -657,12 +1096,14 @@ export function recommendCounters(
             heroClasses: [e.heroClass],
             text: e.overrideTip,
             isHeroSpecific: true,
+            actionGroups: e.actionGroups,
           });
         } else if (e.contextTip) {
           reasons.push({
             heroClasses: [e.heroClass],
             text: e.contextTip,
             isHeroSpecific: false,
+            actionGroups: e.actionGroups,
           });
         } else {
           const triggerList =
@@ -675,10 +1116,16 @@ export function recommendCounters(
             heroClasses: [e.heroClass],
             text: uiDict.dynamicMechanicReason(triggerList),
             isHeroSpecific: false,
+            actionGroups: e.actionGroups,
           });
         }
       }
     }
+
+    const matchupUseTip =
+      explainEvals.length === 1 && explainEvals[0].overrideUseTip
+        ? explainEvals[0].overrideUseTip
+        : deCopy?.whenToUse ?? rule.whenToUse;
 
     scored.push({
       item,
@@ -687,7 +1134,7 @@ export function recommendCounters(
       score: Math.round(combinedScore * 10) / 10,
       why: reasons[0]?.text ?? baseWhy,
       reasons,
-      whenToUse: deCopy?.whenToUse ?? rule.whenToUse,
+      whenToUse: matchupUseTip,
       synergyNote,
       isHeroSpecific: anyHeroSpecific,
       counteredEnemies:
@@ -733,6 +1180,7 @@ export function recommendCounters(
       heroClass: string;
       ability: HeroKitCounter;
       score: number;
+      matchedThreats: ThreatMechanic[];
       matchedTriggers: string[];
     }
 
@@ -767,6 +1215,7 @@ export function recommendCounters(
 
           for (const kc of compatibleAbilities) {
             const matchedTriggers: { label: string; weight: number }[] = [];
+            const matchedThreatList: ThreatMechanic[] = [];
             let bestThreatAxisBonus = 0;
 
             // Match ONLY primary defining threats of the enemy (no noisy secondary tags)
@@ -787,6 +1236,7 @@ export function recommendCounters(
               }
               if (w >= 12) {
                 matchedTriggers.push({ label: uiDict.threats[threat], weight: w });
+                matchedThreatList.push(threat);
                 bestThreatAxisBonus = Math.max(
                   bestThreatAxisBonus,
                   ampRule.threatAxisBonus?.[threat] ?? 0,
@@ -835,6 +1285,7 @@ export function recommendCounters(
                 heroClass: target.heroClass,
                 ability: kc,
                 score: totalEnemyScore,
+                matchedThreats: matchedThreatList,
                 matchedTriggers: uniqueTriggerLabels,
               };
             }
@@ -885,16 +1336,34 @@ export function recommendCounters(
           const triggers = Array.from(
             new Set(group.flatMap((g) => g.matchedTriggers)),
           ).slice(0, 3);
+          const combinedActionGroups: CounterActionGroup[] = [];
+          for (const g of group) {
+            const enemyGroups = resolveKitEnemyActionGroups(
+              ab,
+              g.heroClass,
+              heroesByClass.get(g.heroClass),
+              g.matchedThreats,
+              g.matchedTriggers,
+              lang,
+            );
+            for (const eg of enemyGroups) {
+              for (const chip of eg.targets) {
+                pushChipToGroup(combinedActionGroups, eg.verb, eg.verbLabel, chip);
+              }
+            }
+          }
           reasons.push({
             heroClasses: group.map((g) => g.heroClass),
             triggerSummary: triggers.join(' · ') || undefined,
             text: uiDict.kitAmplifierReason(ampRule.axis, abName, myHeroDisplayName, effect),
             isHeroSpecific: false,
+            actionGroups: combinedActionGroups,
           });
         }
 
         const primaryAbility = enemyMatches[0].ability;
         const primaryAbilityName = resolveKitAbilityName(primaryAbility);
+        const primaryOfficialAbility = resolveHeroAbility(myHero, primaryAbility.abilityName);
 
         rawAmpCandidates.push({
           item,
@@ -911,6 +1380,12 @@ export function recommendCounters(
           synergyNote: uiDict.kitAmplifierSynergyNote(myHeroDisplayName, primaryAbilityName),
           isHeroSpecific: false,
           isKitAmplifier: true,
+          kitAmplifier: {
+            ability: primaryOfficialAbility,
+            abilityName: primaryAbilityName,
+            axis: ampRule.axis,
+            boostLabel: uiDict.kitBoostAxisLabel[ampRule.axis],
+          },
           counteredEnemies: enemyMatches.map((em) => em.heroClass),
           upgradeHint: resolveUpgradeHint(ampRule.className, itemsByClass, itemLang),
         });
@@ -1025,6 +1500,7 @@ export function recommendCounters(
         synergyNote: c.synergyNote,
         isHeroSpecific: c.isHeroSpecific,
         isKitAmplifier: c.isKitAmplifier,
+        kitAmplifier: c.kitAmplifier,
         counteredEnemies: c.counteredEnemies,
         upgradeHint: c.upgradeHint,
       };

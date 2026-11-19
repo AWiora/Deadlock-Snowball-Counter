@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getBundledSnapshot } from '../data/apiClient';
 import { COUNTER_ITEM_RULES, HERO_SPECIFIC_COUNTERS } from '../data/counterItems';
+import { HERO_ABILITY_TAGS, ITEM_ACTION_PROFILES } from '../data/heroAbilityTags';
 import { HERO_PROFILES } from '../data/heroProfiles';
 import { KIT_AMPLIFIER_RULES } from '../data/kitAmplifiers';
 import { HERO_OVERRIDE_TIPS_DE, ITEM_COPY_DE } from '../i18n/contentDe';
@@ -1141,5 +1142,286 @@ describe('Deadlock counter recommendation engine', () => {
     expect(itemsByClass.get('upgrade_juggernaut')?.summary.length).toBeGreaterThan(10);
     expect(itemsByClass.get('upgrade_auto_cleanse')?.summary.length).toBeGreaterThan(10);
     expect(itemsByClass.get('upgrade_cheat_death')?.summary.length).toBeGreaterThan(10);
+  });
+
+  // ===================== STRUCTURED COUNTER ABILITY CHIPS TESTS =====================
+
+  it('covers all 44 heroes in HERO_ABILITY_TAGS and all 74 counter items in ITEM_ACTION_PROFILES', () => {
+    for (const hero of snapshot.heroes) {
+      const tags = HERO_ABILITY_TAGS[hero.className];
+      expect(tags, `Missing HERO_ABILITY_TAGS for ${hero.name}`).toBeDefined();
+      expect(tags.length, `Empty HERO_ABILITY_TAGS for ${hero.name}`).toBeGreaterThanOrEqual(2);
+      for (const tag of tags) {
+        const ab = hero.abilities?.find((a) => a.slot === tag.slot);
+        expect(ab, `Slot ${tag.slot} missing on ${hero.name}`).toBeDefined();
+      }
+    }
+
+    for (const rule of COUNTER_ITEM_RULES) {
+      expect(
+        ITEM_ACTION_PROFILES[rule.className],
+        `Missing ITEM_ACTION_PROFILES for ${rule.className}`,
+      ).toBeDefined();
+    }
+  });
+
+  it('populates non-empty structured actionGroups across all 44 heroes and all 5 price tiers', () => {
+    const tiers: PriceTier[] = ['800', '1600', '3200', '6400', 'all'];
+    for (const hero of snapshot.heroes) {
+      const profile = HERO_PROFILES[hero.className];
+      for (const priceTier of tiers) {
+        const res = recommendCounters(
+          {
+            myHeroClass: 'hero_bebop',
+            enemyHeroClass: hero.className,
+            priceTier,
+            damageProfile: profile.defaultDamage,
+            modifiers: [],
+            activeSlotsFull: false,
+            language: 'en',
+          },
+          itemsByClass,
+          heroesByClass,
+        );
+        for (const rec of [...res.offense, ...res.defense]) {
+          expect(rec.reasons.length).toBeGreaterThanOrEqual(1);
+          for (const r of rec.reasons) {
+            expect(
+              r.actionGroups && r.actionGroups.length > 0,
+              `Missing actionGroups on ${rec.item.name} vs ${hero.name} (${priceTier})`,
+            ).toBe(true);
+            for (const g of r.actionGroups ?? []) {
+              expect(g.verbLabel.length).toBeGreaterThan(0);
+              expect(g.targets.length).toBeGreaterThan(0);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  it('resolves exact abilities, verbs, multi-verb groups, and matchup-aware Use tips for iconic counters', () => {
+    // Seven @ 3200: Knockdown cancels Storm Cloud (without redundant Channeled Ult pill)
+    const vsSeven3200 = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_gigawatt',
+        priceTier: '3200',
+        damageProfile: 'spirit',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const kdSeven = vsSeven3200.offense.find((r) => r.item.className === 'upgrade_target_stun')!;
+    const kdGroups = kdSeven.reasons[0].actionGroups!;
+    expect(kdGroups.length).toBe(1);
+    expect(kdGroups[0].verb).toBe('cancels');
+    expect(kdGroups[0].targets).toHaveLength(1);
+    expect(kdGroups[0].targets[0]).toMatchObject({
+      kind: 'ability',
+      heroClass: 'hero_gigawatt',
+      ability: { slot: 4, name: 'Storm Cloud' },
+    });
+
+    // Seven @ 6400: Cursed Relic has two verb groups (Cancels Storm Cloud + Strips Power Surge)
+    const vsSeven6400 = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_gigawatt',
+        priceTier: '6400',
+        damageProfile: 'spirit',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const curseSeven = vsSeven6400.offense.find((r) => r.item.className === 'upgrade_glitch')!;
+    const curseGroups = curseSeven.reasons[0].actionGroups!;
+    expect(curseGroups.map((g) => g.verb)).toEqual(['cancels', 'strips']);
+    expect(curseGroups[0].targets[0]).toMatchObject({ kind: 'ability', ability: { slot: 4 } });
+    expect(curseGroups[1].targets[0]).toMatchObject({ kind: 'ability', ability: { slot: 3 } });
+
+    // Bebop @ 3200 (DE UI + DE In-Game): Dispel Magic cleanses Sticky Bomb with matchup-aware Use tip
+    const vsBebop3200 = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_bebop',
+        priceTier: '3200',
+        damageProfile: 'spirit',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'de',
+        itemLanguage: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const dispelBebop = vsBebop3200.defense.find(
+      (r) => r.item.className === 'upgrade_reduce_debuff_duration',
+    )!;
+    expect(dispelBebop.reasons[0].actionGroups?.[0].verb).toBe('cleanses');
+    expect(dispelBebop.reasons[0].actionGroups?.[0].targets[0]).toMatchObject({
+      kind: 'ability',
+      ability: { slot: 2, name: 'Sticky Bomb' },
+    });
+    expect(dispelBebop.whenToUse).toContain('Haftbombe');
+
+    // Abrams @ 1600: Debuff Reducer shortens Shoulder Charge and keeps the heavy-melee parry caveat in Use:
+    const vsAbrams1600 = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_atlas',
+        priceTier: '1600',
+        damageProfile: 'bullet',
+        modifiers: ['cc'],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const debuffAbrams = vsAbrams1600.defense.find(
+      (r) => r.item.className === 'upgrade_debuff_reducer',
+    )!;
+    expect(debuffAbrams.reasons[0].actionGroups?.[0].verb).toBe('shortens');
+    expect(debuffAbrams.reasons[0].actionGroups?.[0].targets[0]).toMatchObject({
+      kind: 'ability',
+      ability: { slot: 2, name: 'Shoulder Charge' },
+    });
+    expect(debuffAbrams.whenToUse).toMatch(/parry/i);
+
+    // Abrams @ 800: Rebuttal uses unified non-ability mechanic pill (Punishes Heavy Melee)
+    const vsAbrams800 = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_atlas',
+        priceTier: '800',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const rebuttal = vsAbrams800.defense.find((r) => r.item.className === 'upgrade_melee_rebuttal')!;
+    expect(rebuttal.reasons[0].actionGroups?.[0]).toMatchObject({
+      verb: 'punishes',
+      targets: [{ kind: 'mechanic', label: 'Heavy Melee' }],
+    });
+  });
+
+  it('auto-resolves abilities on generic recommendations, appends uncovered active modifiers, and respects Dispel Magic non-ult guardrail', () => {
+    // Pocket @ 3200: Dispel Magic must NOT claim to cleanse Pocket's ultimate Affliction,
+    // while Divine Barrier @ 6400 explicitly DOES cleanse Affliction.
+    const vsPocket6400 = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_synth',
+        priceTier: '6400',
+        damageProfile: 'spirit',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const divinePocket = vsPocket6400.defense.find(
+      (r) => r.item.className === 'upgrade_divine_barrier',
+    )!;
+    expect(divinePocket.reasons[0].actionGroups?.[0].targets[0]).toMatchObject({
+      kind: 'ability',
+      ability: { slot: 4, name: 'Affliction' },
+    });
+
+    // Abrams @ 3200 with ['tanky'] toggled: Decay shows Siphon Life & Infernal Resilience AND appends Tanky / Armor
+    const vsTankyAbrams = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_atlas',
+        priceTier: '3200',
+        damageProfile: 'bullet',
+        modifiers: ['tanky'],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const decayAbrams = vsTankyAbrams.offense.find((r) => r.item.className === 'upgrade_rupture')!;
+    const decayGroups = decayAbrams.reasons[0].actionGroups!;
+    expect(decayGroups.some((g) => g.verb === 'cuts_heal')).toBe(true);
+    expect(
+      decayGroups.some(
+        (g) =>
+          g.verb === 'shreds' &&
+          g.targets.some((t) => t.kind === 'mechanic' && t.label === 'Tanky / Armor'),
+      ),
+    ).toBe(true);
+
+    // Generic non-override match: Healbane vs Mo & Krill auto-resolves Scorn [1]
+    const vsKrill1600 = recommendCounters(
+      {
+        myHeroClass: 'hero_ghost',
+        enemyHeroClass: 'hero_krill',
+        priceTier: '1600',
+        damageProfile: 'spirit',
+        modifiers: ['healing'],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const healbaneKrill = vsKrill1600.offense.find((r) => r.item.className === 'upgrade_healbane')!;
+    expect(healbaneKrill.reasons[0].actionGroups?.[0].verb).toBe('cuts_heal');
+    expect(healbaneKrill.reasons[0].actionGroups?.[0].targets[0]).toMatchObject({
+      kind: 'ability',
+      ability: { slot: 1, name: 'Scorn' },
+    });
+  });
+
+  it('populates structured Kit-Amplifier metadata on BOTH player ability and countered enemy abilities', () => {
+    const res = recommendCounters(
+      {
+        myHeroClass: 'hero_bebop',
+        enemyHeroClass: 'hero_hornet',
+        priceTier: '3200',
+        damageProfile: 'bullet',
+        modifiers: [],
+        enemyTargets: [
+          { heroClass: 'hero_hornet', damageProfile: 'bullet', modifiers: [] },
+          { heroClass: 'hero_gigawatt', damageProfile: 'spirit', modifiers: [] },
+        ],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+
+    const kitPick = res.offense.find((r) => r.isKitAmplifier)!;
+    expect(kitPick.kitAmplifier).toBeDefined();
+    expect(kitPick.kitAmplifier?.ability?.slot).toBe(3); // Grapple Arm
+    expect(kitPick.kitAmplifier?.boostLabel).toBe('+Range');
+
+    const groups = kitPick.reasons[0].actionGroups!;
+    const allChips = groups.flatMap((g) => g.targets);
+    expect(
+      allChips.some(
+        (c) => c.kind === 'ability' && c.heroClass === 'hero_hornet' && c.ability.slot === 2,
+      ),
+    ).toBe(true);
+    expect(
+      allChips.some(
+        (c) => c.kind === 'ability' && c.heroClass === 'hero_gigawatt' && c.ability.slot === 4,
+      ),
+    ).toBe(true);
   });
 });
