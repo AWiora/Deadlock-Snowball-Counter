@@ -3,6 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: ['main']
+  schedule:
+    # Weekly refresh of 30-day live match data & empirical counter lifts (Mondays 05:00 UTC)
+    - cron: '0 5 * * 1'
   workflow_dispatch:
 
 permissions:
@@ -29,6 +32,10 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Refresh Deadlock snapshot & empirical lifts (scheduled/manual)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: npm run sync-data || echo "Live sync failed, falling back to bundled snapshot.json"
 
       - name: Run tests
         run: npm test

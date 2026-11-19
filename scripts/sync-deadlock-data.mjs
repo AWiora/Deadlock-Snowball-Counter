@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = resolve(__dirname, '../src/data/snapshot.json');
+const COUNTER_ITEMS_PATH = resolve(__dirname, '../src/data/counterItems.ts');
 const API_BASE = 'https://api.deadlock-api.com/v1/assets';
+const ANALYTICS_BASE = 'https://api.deadlock-api.com/v1/analytics';
 
 function cleanHtml(html) {
   if (!html) return '';
@@ -23,6 +25,17 @@ async function fetchJson(url) {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
   return res.json();
+}
+
+function getCuratedCounterClassNames() {
+  const src = readFileSync(COUNTER_ITEMS_PATH, 'utf8');
+  return new Set([...src.matchAll(/className:\s*'([^']+)'/g)].map((m) => m[1]));
+}
+
+async function runInBatches(list, batchSize, fn) {
+  for (let i = 0; i < list.length; i += batchSize) {
+    await Promise.all(list.slice(i, i + batchSize).map(fn));
+  }
 }
 
 async function main() {
@@ -78,35 +91,86 @@ async function main() {
     .sort((a, b) => a.slot.localeCompare(b.slot) || a.cost - b.cost || a.name.localeCompare(b.name));
 
   const itemsById = new Map(items.map((it) => [it.id, it]));
+  const curatedClasses = getCuratedCounterClassNames();
   const minTs = Math.floor(Date.now() / 1000) - 30 * 86400;
 
-  // Calibrate real 30-day Weapon vs Spirit soul spend per hero from live match analytics
+  // 1. Calibrate real 30-day Weapon vs Spirit soul spend per hero
   console.log('Calibrating 30-day Weapon vs Spirit meta defaults from /v1/analytics/item-stats...');
-  await Promise.all(
-    heroes.map(async (hero) => {
-      try {
-        const rows = await fetchJson(
-          `https://api.deadlock-api.com/v1/analytics/item-stats?hero_id=${hero.id}&min_unix_timestamp=${minTs}`,
-        );
-        let weaponSouls = 0;
-        let spiritSouls = 0;
-        for (const row of rows) {
-          const it = itemsById.get(row.item_id);
-          if (!it || it.tier < 2) continue;
-          const kept = Math.max(row.matches - (row.sold || 0) * 0.6, row.matches * 0.2);
-          const souls = kept * it.cost;
-          if (it.slot === 'weapon') weaponSouls += souls;
-          else if (it.slot === 'spirit') spiritSouls += souls;
-        }
-        const total = weaponSouls + spiritSouls;
-        const wPct = total > 0 ? Math.round((weaponSouls / total) * 100) : 50;
-        hero.metaWeaponPct = wPct;
-        hero.metaDamage = wPct >= 58 ? 'bullet' : wPct <= 42 ? 'spirit' : 'equal';
-      } catch {
-        // Keep undefined on transient error
+  await runInBatches(heroes, 8, async (hero) => {
+    try {
+      const rows = await fetchJson(
+        `${ANALYTICS_BASE}/item-stats?hero_id=${hero.id}&min_unix_timestamp=${minTs}`,
+      );
+      let weaponSouls = 0;
+      let spiritSouls = 0;
+      for (const row of rows) {
+        const it = itemsById.get(row.item_id);
+        if (!it || it.tier < 2) continue;
+        const kept = Math.max(row.matches - (row.sold || 0) * 0.6, row.matches * 0.2);
+        const souls = kept * it.cost;
+        if (it.slot === 'weapon') weaponSouls += souls;
+        else if (it.slot === 'spirit') spiritSouls += souls;
       }
-    }),
-  );
+      const total = weaponSouls + spiritSouls;
+      const wPct = total > 0 ? Math.round((weaponSouls / total) * 100) : 50;
+      hero.metaWeaponPct = wPct;
+      hero.metaDamage = wPct >= 58 ? 'bullet' : wPct <= 42 ? 'spirit' : 'equal';
+    } catch {
+      // Keep undefined on transient error
+    }
+  });
+
+  // 2. Calibrate bounded empirical counter lifts [0.88..1.15] per enemy hero for curated counter items
+  console.log('Calibrating 30-day empirical counter-item lifts per enemy hero...');
+  try {
+    const globalRows = await fetchJson(
+      `${ANALYTICS_BASE}/item-stats?min_unix_timestamp=${minTs}`,
+    );
+    const gTotal = globalRows.reduce((s, r) => s + r.matches, 0);
+    const gAvgWr = gTotal > 0 ? globalRows.reduce((s, r) => s + r.wins, 0) / gTotal : 0.5;
+    const gMap = new Map(globalRows.map((r) => [r.item_id, r]));
+
+    await runInBatches(heroes, 6, async (hero) => {
+      try {
+        const vsRows = await fetchJson(
+          `${ANALYTICS_BASE}/item-stats?enemy_hero_ids=${hero.id}&min_unix_timestamp=${minTs}`,
+        );
+        const hTotal = vsRows.reduce((s, r) => s + r.matches, 0);
+        if (hTotal < 2000) return;
+        const hAvgWr = vsRows.reduce((s, r) => s + r.wins, 0) / hTotal;
+
+        const lifts = {};
+        for (const r of vsRows) {
+          const it = itemsById.get(r.item_id);
+          if (!it || !curatedClasses.has(it.className) || r.matches < 200) continue;
+          const g = gMap.get(r.item_id);
+          if (!g || g.matches < 500) continue;
+
+          const gWr = g.wins / g.matches;
+          const expectedWr = gWr + (hAvgWr - gAvgWr);
+          const priorK = 800;
+          const smoothedWr = (r.wins + priorK * expectedWr) / (r.matches + priorK);
+          const wrLift = smoothedWr - expectedWr;
+
+          const pickRatio = (r.matches / hTotal) / (g.matches / gTotal);
+          const pickLift = Math.log2(Math.max(0.25, Math.min(4, pickRatio)));
+
+          const rawAdj = wrLift * 3.2 + pickLift * 0.055;
+          const mult = Math.round(Math.max(0.88, Math.min(1.15, 1 + rawAdj)) * 1000) / 1000;
+          if (Math.abs(mult - 1) >= 0.015) {
+            lifts[it.className] = mult;
+          }
+        }
+        if (Object.keys(lifts).length > 0) {
+          hero.counterLifts = lifts;
+        }
+      } catch {
+        // Ignore transient per-hero analytics error
+      }
+    });
+  } catch (err) {
+    console.warn('Skipping empirical counter lift calibration:', err.message);
+  }
 
   const snapshot = {
     syncedAt: new Date().toISOString().slice(0, 10),
@@ -117,7 +181,10 @@ async function main() {
 
   mkdirSync(dirname(OUT_PATH), { recursive: true });
   writeFileSync(OUT_PATH, `${JSON.stringify(snapshot, null, 2)}\n`, 'utf8');
-  console.log(`Saved ${heroes.length} heroes and ${items.length} items (EN + DE) to ${OUT_PATH}`);
+  const calibratedCount = heroes.filter((h) => h.counterLifts).length;
+  console.log(
+    `Saved ${heroes.length} heroes (${calibratedCount} with counterLifts) and ${items.length} items (EN + DE) to ${OUT_PATH}`,
+  );
 }
 
 main().catch((err) => {

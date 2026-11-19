@@ -298,8 +298,12 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stageFit: { lane: 0.15, mid: 1.0, late: 0.9 },
     modifierCounters: { cc: 20 },
     threatCounters: { cleanseable_debuff: 34, hard_cc: 8 },
+    playerSynergy: { redundantWithTool: 'cleanse' },
     why: 'Instantly purges non-ultimate debuffs (bombs, bleeds, burns, marks, roots), healing you and giving a speed burst.',
     whenToUse: 'Press right after they stick their bomb, mark, burn, or delayed stun onto you.',
+    contextTips: {
+      cc: 'Cuts incoming CC duration passively and purges roots, slows, and delayed stuns on demand.',
+    },
   },
   {
     className: 'upgrade_counterspell', // Counterspell
@@ -311,6 +315,10 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     threatCounters: { telegraphed_burst: 34, hard_cc: 22, ability_spam: 12 },
     why: 'Turns your Parry into a full spell-negation shield (no active slot needed!) — blocks telegraphed ults & burst and heals you.',
     whenToUse: 'Tap Parry right before their telegraphed ult, bomb detonation, hook, or dive slam connects.',
+    contextTips: {
+      cc: 'Spell-parry negates incoming hooks, cages, lassos, and stun combos without spending an active slot.',
+      melee: 'Turns your Parry into a double threat: punishes melee swings AND blocks ability follow-ups.',
+    },
   },
   {
     className: 'upgrade_targeted_silence', // Silence Wave
@@ -331,6 +339,10 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     threatCounters: { heavy_healing: 26 },
     why: 'Point-and-click % current-HP bleed + heavy healing reduction — melts high-HP drain tanks regardless of your hero kit.',
     whenToUse: 'Cast early in the fight while they are high HP to get maximum % health shred and cut their healing.',
+    contextTips: {
+      tanky: 'Shreds stacked Max-HP pools via % current-health bleed while stopping their sustain.',
+      healing: 'Cuts their heavy healing & lifesteal on demand while ticking down their HP bar.',
+    },
   },
   {
     className: 'upgrade_toxic_bullets', // Toxic Bullets
@@ -342,6 +354,10 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     playerSynergy: { preferDamageStyle: 'gun', preferFastFirerate: true, penalizeSlowFirerate: true },
     why: 'Passive % Max-HP bleed + anti-heal applied right from your bullets — top mid/late counter to tanky healers for gun heroes.',
     whenToUse: 'Passive — sustain gunfire on the tank/healer to keep the bleed & healing cut refreshing.',
+    contextTips: {
+      tanky: 'Passively shreds stacked Max HP with % health bleed right from your gunfire.',
+      healing: 'Keeps permanent anti-heal applied via bullets so lifesteal & regen builds collapse.',
+    },
   },
   {
     className: 'upgrade_magic_shock', // Tankbuster
@@ -382,9 +398,13 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     damageCounters: { bullet: 18, equal: 12 },
     modifierCounters: { melee: 18, cc: 10 },
     threatCounters: { close_range_dive: 24, melee_brawler: 20, channeled_ult: 14, hard_cc: 12 },
-    playerSynergy: { preferRange: 'long' },
+    playerSynergy: { preferRange: 'long', redundantWithTool: 'mobility_escape' },
     why: 'Instant blink escape + bonus Bullet Resist — breaks close-range dives, escapes cages/ults, and repositions safely.',
     whenToUse: 'Blink out of their engage radius, ult zone, or melee range as soon as they jump on you.',
+    contextTips: {
+      melee: 'Instantly blinks out of heavy-melee range so close-range brawlers whiff their engage.',
+      cc: 'Escapes telegraphed cages, zones, and follow-up CC chains before they lock you down.',
+    },
   },
   {
     className: 'upgrade_bullet_armor_reduction_aura', // Hunter's Aura
@@ -499,7 +519,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     damageCounters: { spirit: 22, bullet: 18, equal: 22 },
     modifierCounters: { cc: 16 },
     threatCounters: { telegraphed_burst: 32, bullet_ult: 24, channeled_ult: 20, close_range_dive: 18 },
-    playerSynergy: { preferDamageStyle: 'spirit' },
+    playerSynergy: { preferDamageStyle: 'spirit', redundantWithTool: 'invuln' },
     why: 'Instant invulnerability void-state that completely blanks telegraphed ultimates, delayed detonations, and dive combos.',
     whenToUse: 'Pop right before lethal burst/ult hits while your cooldowns come back up.',
   },
@@ -696,6 +716,78 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     playerSynergy: { preferDamageStyle: 'gun' },
     why: 'Huge headshot burst damage + sustain — punishes fragile low-HP carries so hard they cannot stay in fights.',
     whenToUse: 'Passive — open skirmishes with a headshot to immediately force low-HP threats out.',
+  },
+
+  // ===================== ADDITIONAL HIGH-VALUE MECHANICAL COUNTERS =====================
+  {
+    className: 'upgrade_fleetfoot_boots', // Fleetfoot
+    stance: 'defense',
+    role: 'Survival',
+    stageFit: { lane: 0.88, mid: 0.78, late: 0.28 },
+    modifierCounters: { melee: 14, cc: 12 },
+    threatCounters: { close_range_dive: 18, melee_brawler: 18, sustained_spirit: 12 },
+    playerSynergy: { preferDamageStyle: 'gun' },
+    why: 'Active Move Speed + Slow Resistance with zero shooting speed penalty — lets you kite melee brawlers and heavy slowers cleanly.',
+    whenToUse: 'Pop when chased by melee brawlers or hit by heavy slows to maintain distance while firing.',
+    contextTips: {
+      melee: 'Instant speed burst + slow resistance lets you kite heavy-melee engages without losing DPS.',
+    },
+  },
+  {
+    className: 'upgrade_bullet_resist_shredder', // Bullet Resist Shredder
+    stance: 'offense',
+    role: 'Shred',
+    stageFit: { lane: 0.84, mid: 0.78, late: 0.3 },
+    modifierCounters: { tanky: 26 },
+    playerSynergy: { preferDamageStyle: 'gun', preferSpiritProccer: true, penalizeNonSpiritProccer: true },
+    why: 'Abilities strip enemy Bullet Resist for 1600 souls — huge value for hybrid/gun heroes melting tanky frontliners.',
+    whenToUse: 'Passive — tag the tank with any ability before unloading your clip.',
+  },
+  {
+    className: 'upgrade_tech_defense_shredders', // Spirit Shredder
+    stance: 'offense',
+    role: 'Shred',
+    stageFit: { lane: 0.84, mid: 0.78, late: 0.3 },
+    modifierCounters: { tanky: 26 },
+    playerSynergy: { preferDamageStyle: 'spirit', preferFastFirerate: true },
+    why: 'Bullets strip enemy Spirit Resist AND grant Spirit Lifesteal against them — breaks open tanky targets.',
+    whenToUse: 'Passive — weave a few shots onto the frontliner before dropping your spirit combo.',
+  },
+  {
+    className: 'upgrade_rescue_beam', // Rescue Beam
+    stance: 'defense',
+    role: 'Survival',
+    stageFit: { lane: 0.14, mid: 0.98, late: 0.88 },
+    modifierCounters: { cc: 24 },
+    threatCounters: { hard_cc: 28, channeled_ult: 26, close_range_dive: 14 },
+    playerSynergy: { preferSupportive: true },
+    why: 'Heals % Max HP and yanks a trapped ally straight out of Hooks, Combos, Lassos, Swaps, and Singularities.',
+    whenToUse: 'Cast on a caught teammate and press Pull immediately to break enemy pick-CC combos.',
+    contextTips: {
+      cc: 'Pulls teammates straight out of lockdown ults, hooks, and stun chains while healing both of you.',
+    },
+  },
+  {
+    className: 'upgrade_cheat_death', // Cheat Death
+    stance: 'defense',
+    role: 'Survival',
+    stageFit: { lane: 0.02, mid: 0.22, late: 1.0 },
+    damageCounters: { spirit: 20, bullet: 20, equal: 24 },
+    threatCounters: { telegraphed_burst: 34, close_range_dive: 18, bullet_ult: 18 },
+    why: 'Passive death-defiance safety net — denies late-game one-shot executes and burst combos without using an active slot.',
+    whenToUse: 'Passive — gives you a guaranteed survival window when lethal burst or execute ults land.',
+  },
+  {
+    className: 'upgrade_fervor', // Frenzy
+    stance: 'defense',
+    role: 'Survival',
+    stageFit: { lane: 0.02, mid: 0.22, late: 0.94 },
+    damageCounters: { spirit: 18, equal: 20 },
+    modifierCounters: { cc: 22 },
+    threatCounters: { cleanseable_debuff: 22, close_range_dive: 18, hard_cc: 16 },
+    playerSynergy: { preferDamageStyle: 'gun', preferFastFirerate: true, penalizeSlowFirerate: true },
+    why: 'Drops existing debuffs and surges your combat stats below 50% HP — lets gun carries turn around dive & CC bursts passively.',
+    whenToUse: 'Passive — automatically cuts debuffs and spikes your fightback power when bursted low.',
   },
 ];
 
@@ -1091,6 +1183,12 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       stages: ['late'],
       tip: 'Prevents Shiv from clearing Bloodletting or executing with Killing Blow while your team burns him down.',
     },
+    {
+      itemClassName: 'upgrade_cheat_death',
+      bonus: 28,
+      stages: ['late'],
+      tip: 'Denies Shiv\'s Killing Blow execute chain passively so he cannot reset through your team.',
+    },
   ],
   hero_krill: [
     {
@@ -1098,6 +1196,12 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       bonus: 34,
       stages: ['lane', 'mid'],
       tip: '#1 early counter to Mo & Krill: automatically pops a barrier the moment Combo grabs you.',
+    },
+    {
+      itemClassName: 'upgrade_rescue_beam',
+      bonus: 30,
+      stages: ['mid', 'late'],
+      tip: 'Yanks a teammate straight out of Mo & Krill\'s Combo while healing them through the focus fire.',
     },
     {
       itemClassName: 'upgrade_unstoppable',
@@ -1499,6 +1603,12 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       stages: ['late'],
       tip: 'Prevents Holliday from kidnapping you with Spirit Lasso in late teamfights.',
     },
+    {
+      itemClassName: 'upgrade_rescue_beam',
+      bonus: 30,
+      stages: ['mid', 'late'],
+      tip: 'Pulls a lassoed teammate straight back to safety while healing them through Holliday\'s pick.',
+    },
   ],
   hero_chrono: [
     {
@@ -1518,6 +1628,12 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       bonus: 26,
       stages: ['mid', 'late'],
       tip: 'Instantly blinks back to safety if you get hit by Paradoxical Swap.',
+    },
+    {
+      itemClassName: 'upgrade_rescue_beam',
+      bonus: 28,
+      stages: ['mid', 'late'],
+      tip: 'Yanks a swapped teammate back to your team immediately before Paradox\'s squad collapses.',
     },
   ],
   hero_magician: [
@@ -1598,6 +1714,328 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       bonus: 26,
       stages: ['lane', 'mid'],
       tip: 'Triggers a barrier if you step into Hex-Lined Snap Trap or get wall-stunned by Gutshot.',
+    },
+  ],
+  hero_fencer: [
+    {
+      itemClassName: 'upgrade_melee_rebuttal',
+      bonus: 30,
+      stages: ['lane', 'mid'],
+      tip: 'Punishes Apollo\'s close-range lunge & melee trades with instant heal and reflected damage.',
+    },
+    {
+      itemClassName: 'upgrade_containment',
+      bonus: 32,
+      stages: ['lane', 'mid'],
+      tip: 'Locks out Apollo\'s dashes and lunges so he cannot weave in and out of Riposte range.',
+    },
+    {
+      itemClassName: 'upgrade_targeted_silence',
+      bonus: 32,
+      stages: ['mid', 'late'],
+      tip: 'Denies Riposte parry-deflect and Itani Lo Sahn so Apollo cannot outplay your burst.',
+    },
+    {
+      itemClassName: 'upgrade_counterspell',
+      bonus: 28,
+      stages: ['mid', 'late'],
+      tip: 'Spell-parry Apollo\'s telegraphed Itani Lo Sahn strike to negate the burst and anti-heal.',
+    },
+    {
+      itemClassName: 'upgrade_glitch',
+      bonus: 28,
+      stages: ['late'],
+      tip: 'Silences, disarms, and locks Apollo out of Riposte and mobility tools simultaneously.',
+    },
+  ],
+  hero_unicorn: [
+    {
+      itemClassName: 'upgrade_spirit_bubble',
+      bonus: 30,
+      stages: ['lane', 'mid'],
+      tip: 'Absorbs Celeste\'s Radiant Dagger & prism spirit burst cleanly in lane.',
+    },
+    {
+      itemClassName: 'upgrade_reduce_debuff_duration',
+      bonus: 30,
+      stages: ['mid', 'late'],
+      tip: 'Purges Celeste\'s dash-crippling slows and prism silence debuffs with a speed burst.',
+    },
+    {
+      itemClassName: 'upgrade_spellbreaker',
+      bonus: 34,
+      stages: ['late'],
+      tip: '#1 passive counter to Celeste: blunts her heaviest spirit burst combo.',
+    },
+    {
+      itemClassName: 'upgrade_glitch',
+      bonus: 30,
+      stages: ['late'],
+      tip: 'Strips Celeste\'s prism shields and silences her before she can chain abilities.',
+    },
+  ],
+  hero_drifter: [
+    {
+      itemClassName: 'upgrade_reduce_debuff_duration',
+      bonus: 32,
+      stages: ['mid', 'late'],
+      tip: 'Purges Stalker\'s Mark bleed immediately before Drifter can chain his isolation burst.',
+    },
+    {
+      itemClassName: 'upgrade_melee_rebuttal',
+      bonus: 28,
+      stages: ['lane', 'mid'],
+      tip: 'Punishes Drifter\'s close-range melee brawling with instant heal and counter-damage.',
+    },
+    {
+      itemClassName: 'upgrade_warp_stone',
+      bonus: 28,
+      stages: ['mid', 'late'],
+      tip: 'Blinks out of Drifter\'s close-range ambush & Eternal Night engage while adding Bullet Resist.',
+    },
+    {
+      itemClassName: 'upgrade_greater_withering_whip',
+      bonus: 28,
+      stages: ['mid', 'late'],
+      tip: 'Disarms Drifter mid-ambush and shreds his Bullet Resist when he dives isolated targets.',
+    },
+    {
+      itemClassName: 'upgrade_metal_skin',
+      bonus: 28,
+      stages: ['mid', 'late'],
+      tip: 'Negates Drifter\'s close-range weapon burst during Eternal Night.',
+    },
+  ],
+  hero_necro: [
+    {
+      itemClassName: 'upgrade_spirit_bubble',
+      bonus: 28,
+      stages: ['lane', 'mid'],
+      tip: 'Soaks Graves\'s attritional spirit poke and Grasping Hands zone damage in lane.',
+    },
+    {
+      itemClassName: 'upgrade_vex_barrier',
+      bonus: 26,
+      stages: ['lane', 'mid'],
+      tip: 'Auto-triggers a protective barrier if Grasping Hands immobilizes you.',
+    },
+    {
+      itemClassName: 'upgrade_tech_purge',
+      bonus: 30,
+      stages: ['mid', 'late'],
+      tip: 'Counters Graves\'s Spirit Resist shred and sustained spirit zone pressure passively.',
+    },
+    {
+      itemClassName: 'upgrade_absorbing_armor',
+      bonus: 28,
+      stages: ['late'],
+      tip: 'Turns Graves\'s continuous spirit ticks into faster cooldowns for your own abilities.',
+    },
+  ],
+  hero_tengu: [
+    {
+      itemClassName: 'upgrade_healbane',
+      bonus: 30,
+      stages: ['lane', 'mid'],
+      tip: 'Cuts Ivy\'s Watcher\'s Covenant tether healing and Kudzu sustain cheaply in lane.',
+    },
+    {
+      itemClassName: 'upgrade_target_stun',
+      bonus: 34,
+      stages: ['mid', 'late'],
+      tip: 'Drops Ivy out of Air Drop flight before she can deliver a bomb or ally engage.',
+    },
+    {
+      itemClassName: 'upgrade_vex_barrier',
+      bonus: 26,
+      stages: ['lane', 'mid'],
+      tip: 'Stone Form stun instantly triggers Reactive Barrier so you survive her follow-up.',
+    },
+    {
+      itemClassName: 'upgrade_rupture',
+      bonus: 26,
+      stages: ['mid', 'late'],
+      tip: 'Cuts Ivy\'s tether lifesteal & sustain in extended mid/late skirmishes.',
+    },
+    {
+      itemClassName: 'upgrade_glitch',
+      bonus: 28,
+      stages: ['late'],
+      tip: 'Prevents Ivy from using Stone Form invulnerability or flying away with Air Drop.',
+    },
+  ],
+  hero_nurse: [
+    {
+      itemClassName: 'upgrade_healbane',
+      bonus: 34,
+      stages: ['lane', 'mid'],
+      tip: '#1 cheap counter to Nurse Harrow: slashes her Healing Needles & Leech Therapy sustain.',
+    },
+    {
+      itemClassName: 'upgrade_reduce_debuff_duration',
+      bonus: 32,
+      stages: ['mid', 'late'],
+      tip: 'Instantly purges Leech Therapy DoTs so Nurse Harrow loses both damage and drain healing.',
+    },
+    {
+      itemClassName: 'upgrade_rupture',
+      bonus: 30,
+      stages: ['mid', 'late'],
+      tip: 'Shuts down Nurse Harrow\'s healing output while bleeding down her frontline targets.',
+    },
+    {
+      itemClassName: 'upgrade_spirit_burn',
+      bonus: 30,
+      stages: ['late'],
+      tip: 'Heavy late-game anti-heal burn that collapses Nurse Harrow\'s team sustain.',
+    },
+  ],
+  hero_bookworm: [
+    {
+      itemClassName: 'upgrade_healbane',
+      bonus: 26,
+      stages: ['lane', 'mid'],
+      tip: 'Cuts Paige\'s sustain and Rallying Charge healing during lane trades.',
+    },
+    {
+      itemClassName: 'upgrade_restorative_locket',
+      bonus: 28,
+      stages: ['lane', 'mid'],
+      tip: 'Stacks free healing & stamina charges off Paige\'s frequent Bookwyrm & shield casts.',
+    },
+    {
+      itemClassName: 'upgrade_targeted_silence',
+      bonus: 30,
+      stages: ['mid', 'late'],
+      tip: 'Stops Paige from layering Plot Armor barriers and Rallying Charge during teamfights.',
+    },
+    {
+      itemClassName: 'upgrade_glitch',
+      bonus: 36,
+      stages: ['late'],
+      tip: '#1 late-game counter to Paige: strips Plot Armor shields AND silences her entire support kit.',
+    },
+  ],
+  hero_ratking: [
+    {
+      itemClassName: 'upgrade_reduce_debuff_duration',
+      bonus: 32,
+      stages: ['mid', 'late'],
+      tip: 'Purges Rat Swarm DoTs cleanly and gives you a heal + move speed reset.',
+    },
+    {
+      itemClassName: 'upgrade_debuff_reducer',
+      bonus: 26,
+      stages: ['lane', 'mid'],
+      tip: 'Cuts Rat Swarm DoT ticks in lane and upgrades cleanly into Dispel Magic.',
+    },
+    {
+      itemClassName: 'upgrade_rupture',
+      bonus: 28,
+      stages: ['mid', 'late'],
+      tip: 'Shreds Rat King\'s high effective HP through Royal Pestments barrier stacking.',
+    },
+    {
+      itemClassName: 'upgrade_glitch',
+      bonus: 32,
+      stages: ['late'],
+      tip: 'Strips Royal Pestments barriers and locks out Rat King\'s grenade & swarm spam.',
+    },
+  ],
+  hero_familiar: [
+    {
+      itemClassName: 'upgrade_healbane',
+      bonus: 32,
+      stages: ['lane', 'mid'],
+      tip: 'Cuts Rem\'s Tag Along burst healing cheaply before fights reset.',
+    },
+    {
+      itemClassName: 'upgrade_vex_barrier',
+      bonus: 30,
+      stages: ['lane', 'mid'],
+      tip: 'Naptime sleep & Pillow CC instantly pop Reactive Barrier so you survive the follow-up.',
+    },
+    {
+      itemClassName: 'upgrade_containment',
+      bonus: 28,
+      stages: ['lane', 'mid'],
+      tip: 'Locks out Rem\'s slippery movement & Tag Along escapes so you can lock him down.',
+    },
+    {
+      itemClassName: 'upgrade_unstoppable',
+      bonus: 30,
+      stages: ['late'],
+      tip: 'Walks straight through wall-piercing Naptime sleep and Pillow knockbacks.',
+    },
+    {
+      itemClassName: 'upgrade_auto_cleanse',
+      bonus: 30,
+      stages: ['late'],
+      tip: 'Auto-cleanses surprise wall-piercing Naptime sleep without needing reaction time.',
+    },
+  ],
+  hero_werewolf: [
+    {
+      itemClassName: 'upgrade_melee_rebuttal',
+      bonus: 30,
+      stages: ['lane', 'mid'],
+      tip: 'Punishes Silver\'s aggressive close-range melee trades with heal and reflected burst.',
+    },
+    {
+      itemClassName: 'upgrade_withering_whip',
+      bonus: 28,
+      stages: ['lane'],
+      tip: 'Cuts Silver\'s Slam Fire rate early and builds straight into Disarming Hex.',
+    },
+    {
+      itemClassName: 'upgrade_greater_withering_whip',
+      bonus: 34,
+      stages: ['mid', 'late'],
+      tip: 'Disarms Silver during Slam Fire / Lycan Curse and shreds her Bullet Resist.',
+    },
+    {
+      itemClassName: 'upgrade_metal_skin',
+      bonus: 34,
+      stages: ['mid', 'late'],
+      tip: 'Ignores Silver\'s Slam Fire close-range bullet shred completely.',
+    },
+    {
+      itemClassName: 'upgrade_reduce_debuff_duration',
+      bonus: 28,
+      stages: ['mid', 'late'],
+      tip: 'Purges Entangling Bola movement lock so Silver cannot trap and maul you.',
+    },
+    {
+      itemClassName: 'upgrade_deflecting_armor',
+      bonus: 32,
+      stages: ['late'],
+      tip: 'Passively deflects Silver\'s rapid-fire bursts during Lycan Curse dives.',
+    },
+  ],
+  hero_chessmaster: [
+    {
+      itemClassName: 'upgrade_cardio_calibrator',
+      bonus: 28,
+      stages: ['lane', 'mid'],
+      tip: 'Strong Slow Resistance lets you walk out of Solomon\'s Bishop slows and Rook zones.',
+    },
+    {
+      itemClassName: 'upgrade_vex_barrier',
+      bonus: 28,
+      stages: ['lane', 'mid'],
+      tip: 'Rook Battery immobilize triggers Reactive Barrier automatically.',
+    },
+    {
+      itemClassName: 'upgrade_reduce_debuff_duration',
+      bonus: 30,
+      stages: ['mid', 'late'],
+      tip: 'Purges Rook Battery roots & Bishop slows immediately with a move speed burst.',
+    },
+    {
+      itemClassName: 'upgrade_glitch',
+      bonus: 32,
+      stages: ['late'],
+      tip: 'Strips Kingside Knight barriers and silences Solomon\'s tactical zone control.',
     },
   ],
 };

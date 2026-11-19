@@ -3,12 +3,14 @@ import { getHeroProfile } from '../data/heroProfiles';
 import {
   HERO_HEADLINES_DE,
   HERO_OVERRIDE_TIPS_DE,
+  ITEM_CONTEXT_TIPS_DE,
   ITEM_COPY_DE,
 } from '../i18n/contentDe';
 import { getHeroDisplayName, UI_TEXT } from '../i18n/translations';
 import type {
   CounterItemRule,
   CounterRecommendation,
+  CounterRole,
   DeadlockHero,
   DeadlockItem,
   EnemyModifier,
@@ -16,6 +18,7 @@ import type {
   MatchupInput,
   PlayerAffinity,
   RecommendationResult,
+  ThreatMechanic,
 } from '../types/deadlock';
 
 export function getBaseKitTags(heroClassName: string, lang: Language = 'de'): string[] {
@@ -26,7 +29,7 @@ export function getBaseKitTags(heroClassName: string, lang: Language = 'de'): st
 
 /**
  * Upgrade lineages: if both a component and its upgrade score well for the same stage,
- * keep only the higher-scoring one so the top 5 aren't redundant.
+ * keep only the higher-scoring one so the top picks aren't redundant.
  */
 const UPGRADE_FAMILIES: string[][] = [
   ['upgrade_withering_whip', 'upgrade_greater_withering_whip'], // Rusted Barrel -> Disarming Hex
@@ -66,6 +69,11 @@ const SPIRIT_ONLY_ITEMS = new Set([
   'upgrade_spellbreaker',
   'upgrade_absorbing_armor',
 ]);
+
+/** Diminishing weights for matched threat mechanics so surgical counters beat multi-tag generalists */
+const THREAT_DIMINISHING_WEIGHTS = [1.0, 0.72, 0.5, 0.35, 0.25];
+const SECONDARY_THREAT_SCALE = 0.45;
+const THIRD_SLOT_MIN_RATIO = 0.6;
 
 function computePlayerSynergy(
   rule: CounterItemRule,
@@ -145,6 +153,12 @@ function computePlayerSynergy(
     if (!note) note = s.supportive(heroLabel);
   }
 
+  // Built-in kit redundancy awareness (e.g. Pocket Satchel / Viscous Cube vs Ethereal Shift)
+  if (syn.redundantWithTool && affinity.builtInTools?.includes(syn.redundantWithTool)) {
+    delta -= 10;
+    multiplier *= 0.84;
+  }
+
   return { delta, multiplier, note };
 }
 
@@ -157,6 +171,85 @@ function getModifierMatchCount(rule: CounterItemRule, modifiers: EnemyModifier[]
   return total;
 }
 
+function scoreThreatMechanics(
+  rule: CounterItemRule,
+  primaryThreats: ThreatMechanic[],
+  secondaryThreats: ThreatMechanic[],
+  isOffMetaSpirit: boolean,
+  isOffMetaBullet: boolean,
+): number {
+  if (!rule.threatCounters) return 0;
+
+  const contributions: number[] = [];
+  const seen = new Set<ThreatMechanic>();
+
+  const collect = (threats: ThreatMechanic[], tierScale: number) => {
+    for (const threat of threats) {
+      if (seen.has(threat)) continue;
+      seen.add(threat);
+      let weight = (rule.threatCounters?.[threat] ?? 0) * tierScale;
+      if (!weight) continue;
+
+      // Dampen gun-specific intrinsic threats if enemy went off-meta Spirit (and vice versa)
+      if (
+        isOffMetaSpirit &&
+        (threat === 'rapid_fire' || threat === 'bullet_ult' || threat === 'on_hit_procs')
+      ) {
+        weight *= 0.35;
+      }
+      if (
+        isOffMetaBullet &&
+        (threat === 'sustained_spirit' || threat === 'ability_spam')
+      ) {
+        weight *= 0.45;
+      }
+
+      contributions.push(weight);
+    }
+  };
+
+  collect(primaryThreats, 1.0);
+  collect(secondaryThreats, SECONDARY_THREAT_SCALE);
+
+  if (contributions.length === 0) return 0;
+
+  contributions.sort((a, b) => b - a);
+  let total = 0;
+  for (let i = 0; i < contributions.length; i++) {
+    const dim = THREAT_DIMINISHING_WEIGHTS[i] ?? 0.2;
+    total += contributions[i] * dim;
+  }
+  return total;
+}
+
+function resolveContextTip(
+  rule: CounterItemRule,
+  modifiers: EnemyModifier[],
+  lang: Language,
+): string | null {
+  const deTips = lang === 'de' ? ITEM_CONTEXT_TIPS_DE[rule.className] : undefined;
+  const enTips = rule.contextTips;
+  if (!deTips && !enTips) return null;
+
+  // Prefer the strongest active user modifier that has a tailored context tip
+  let bestMod: EnemyModifier | null = null;
+  let bestWeight = -1;
+  for (const mod of modifiers) {
+    const tip = lang === 'de' ? deTips?.[mod] : enTips?.[mod];
+    if (!tip) continue;
+    const w = rule.modifierCounters?.[mod] ?? 0;
+    if (w > bestWeight) {
+      bestWeight = w;
+      bestMod = mod;
+    }
+  }
+
+  if (bestMod) {
+    return (lang === 'de' ? deTips?.[bestMod] : enTips?.[bestMod]) ?? null;
+  }
+  return null;
+}
+
 export function recommendCounters(
   input: MatchupInput,
   itemsByClass: Map<string, DeadlockItem>,
@@ -166,6 +259,7 @@ export function recommendCounters(
   const enemyProfile = getHeroProfile(input.enemyHeroClass);
   const myProfile = input.myHeroClass ? getHeroProfile(input.myHeroClass) : null;
   const myHero = input.myHeroClass ? heroesByClass.get(input.myHeroClass) ?? null : null;
+  const enemyHeroObj = heroesByClass.get(input.enemyHeroClass);
   const myHeroDisplayName = myHero ? getHeroDisplayName(myHero, lang) : null;
 
   const overrides = HERO_SPECIFIC_COUNTERS[input.enemyHeroClass] ?? [];
@@ -179,6 +273,7 @@ export function recommendCounters(
   interface ScoredCandidate {
     item: DeadlockItem;
     rule: CounterItemRule;
+    role: CounterRole;
     score: number;
     why: string;
     whenToUse: string;
@@ -206,34 +301,19 @@ export function recommendCounters(
     // Toggles start OFF by default; turning one ON is a strong user signal that they are stacking it.
     rawScore += getModifierMatchCount(rule, input.modifiers) * 2.0;
 
-    // 3. Intrinsic enemy hero base-kit threat mechanics
-    // Always active so you don't need to toggle toggles for a hero's natural kit.
-    if (rule.threatCounters) {
-      for (const threat of enemyProfile.threats) {
-        let threatWeight = rule.threatCounters[threat] ?? 0;
-        if (!threatWeight) continue;
-
-        // Dampen gun-specific intrinsic threats if enemy went off-meta Spirit (and vice versa)
-        if (
-          isOffMetaSpirit &&
-          (threat === 'rapid_fire' || threat === 'bullet_ult' || threat === 'on_hit_procs')
-        ) {
-          threatWeight *= 0.35;
-        }
-        if (
-          isOffMetaBullet &&
-          (threat === 'sustained_spirit' || threat === 'ability_spam')
-        ) {
-          threatWeight *= 0.45;
-        }
-
-        rawScore += threatWeight;
-      }
-    }
+    // 3. Intrinsic enemy hero base-kit threat mechanics (primary + secondary with diminishing returns)
+    rawScore += scoreThreatMechanics(
+      rule,
+      enemyProfile.threats,
+      enemyProfile.secondaryThreats ?? [],
+      isOffMetaSpirit,
+      isOffMetaBullet,
+    );
 
     // 4. Hero-specific hard-counter override
     let isHeroSpecific = false;
     let overrideTip: string | null = null;
+    let resolvedRole: CounterRole = rule.role;
     const override = overrideMap.get(rule.className);
     if (override && (!override.stages || override.stages.includes(input.stage))) {
       let overrideBonus = override.bonus;
@@ -247,6 +327,9 @@ export function recommendCounters(
 
       if (overrideBonus >= 14) {
         isHeroSpecific = true;
+        if (override.roleOverride) {
+          resolvedRole = override.roleOverride;
+        }
         overrideTip =
           lang === 'de'
             ? HERO_OVERRIDE_TIPS_DE[input.enemyHeroClass]?.[rule.className] ?? override.tip
@@ -263,7 +346,7 @@ export function recommendCounters(
       rawScore *= 0.45;
     }
 
-    // 5. Your hero's kit affinity
+    // 5. Your hero's kit affinity & built-in tool redundancy
     const {
       delta: synergyDelta,
       multiplier: synergyMult,
@@ -275,19 +358,29 @@ export function recommendCounters(
       lang,
     );
 
-    // Apply stage timing multiplier and kit-compatibility multiplier,
-    // so incompatible proc items (e.g. Healbane on a non-spirit hero) drop cleanly.
-    const finalScore = (rawScore * synergyMult + synergyDelta) * stageMult;
+    // 6. Gentle empirical calibration from precomputed 30-day match analytics (bounded ±15%)
+    const rawLift = enemyHeroObj?.counterLifts?.[rule.className] ?? 1.0;
+    const clampedLift = Math.max(0.88, Math.min(1.15, rawLift));
+    const empiricalMult =
+      isOffMetaSpirit || isOffMetaBullet
+        ? 1 + (clampedLift - 1) * 0.25
+        : clampedLift;
+
+    const finalScore = (rawScore * synergyMult + synergyDelta) * stageMult * empiricalMult;
 
     if (finalScore < 14) continue;
 
     const deCopy = lang === 'de' ? ITEM_COPY_DE[rule.className] : undefined;
+    const contextTip = overrideTip
+      ? null
+      : resolveContextTip(rule, input.modifiers, lang);
 
     scored.push({
       item,
       rule,
+      role: resolvedRole,
       score: Math.round(finalScore * 10) / 10,
-      why: overrideTip ?? deCopy?.why ?? rule.why,
+      why: overrideTip ?? contextTip ?? deCopy?.why ?? rule.why,
       whenToUse: deCopy?.whenToUse ?? rule.whenToUse,
       synergyNote,
       isHeroSpecific,
@@ -313,12 +406,28 @@ export function recommendCounters(
     deduped.push(cand);
   }
 
-  // Count how many top-6 slots would have been Active items when activeSlotsFull is enabled
+  // Dynamic quality selector: always keep up to 2 top picks; only include #3 if truly strong (no weak filler)
+  const selectTopForStance = (list: ScoredCandidate[]): ScoredCandidate[] => {
+    if (list.length <= 2) return list;
+    const topScore = list[0].score;
+    const picked = [list[0], list[1]];
+    const third = list[2];
+    if (third && (third.score >= topScore * THIRD_SLOT_MIN_RATIO || third.isHeroSpecific)) {
+      picked.push(third);
+    }
+    return picked;
+  };
+
+  // Count how many top slots would have been Active items when activeSlotsFull is enabled
   let hiddenActiveCount = 0;
   let filtered = deduped;
   if (input.activeSlotsFull) {
-    const topOffenseBefore = deduped.filter((c) => c.rule.stance === 'offense').slice(0, 3);
-    const topDefenseBefore = deduped.filter((c) => c.rule.stance === 'defense').slice(0, 3);
+    const topOffenseBefore = selectTopForStance(
+      deduped.filter((c) => c.rule.stance === 'offense'),
+    );
+    const topDefenseBefore = selectTopForStance(
+      deduped.filter((c) => c.rule.stance === 'defense'),
+    );
     hiddenActiveCount = [...topOffenseBefore, ...topDefenseBefore].filter(
       (c) => c.item.isActive,
     ).length;
@@ -341,7 +450,7 @@ export function recommendCounters(
         rank: idx + 1,
         score: c.score,
         tierLabel,
-        role: c.rule.role,
+        role: c.role,
         why: c.why,
         whenToUse: c.whenToUse,
         synergyNote: c.synergyNote,
@@ -351,10 +460,10 @@ export function recommendCounters(
   };
 
   const offense = toRecommendations(
-    filtered.filter((c) => c.rule.stance === 'offense').slice(0, 3),
+    selectTopForStance(filtered.filter((c) => c.rule.stance === 'offense')),
   );
   const defense = toRecommendations(
-    filtered.filter((c) => c.rule.stance === 'defense').slice(0, 3),
+    selectTopForStance(filtered.filter((c) => c.rule.stance === 'defense')),
   );
   const recommendations = toRecommendations(filtered.slice(0, 5));
 
@@ -362,7 +471,8 @@ export function recommendCounters(
   const topOffScore = offense[0]?.score ?? 0;
   const topDefScore = defense[0]?.score ?? 0;
   const isGlassCannon =
-    enemyProfile.threats.includes('fragile_glass_cannon') &&
+    (enemyProfile.threats.includes('fragile_glass_cannon') ||
+      Boolean(enemyProfile.secondaryThreats?.includes('fragile_glass_cannon'))) &&
     !input.modifiers.includes('tanky');
 
   let recommendedStance: 'offense' | 'defense' | 'balanced' = 'balanced';
@@ -375,7 +485,6 @@ export function recommendCounters(
     recommendedStance = 'defense';
   }
 
-  const enemyHeroObj = heroesByClass.get(input.enemyHeroClass);
   const enemyDisplayName = enemyHeroObj
     ? getHeroDisplayName(enemyHeroObj, lang)
     : input.enemyHeroClass;

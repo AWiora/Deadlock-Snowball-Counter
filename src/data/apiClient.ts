@@ -104,6 +104,7 @@ export async function fetchLiveDeadlockData(): Promise<{
           minimapIcon: h.images?.minimap_image_webp || h.images?.minimap_image || '',
           metaDamage: snapHero?.metaDamage,
           metaWeaponPct: snapHero?.metaWeaponPct,
+          counterLifts: snapHero?.counterLifts,
         };
       })
       .sort((a, b) => a.name.localeCompare(b.name));

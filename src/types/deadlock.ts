@@ -47,6 +47,8 @@ export interface DeadlockHero {
   minimapIcon: string;
   metaDamage?: DamageProfile;
   metaWeaponPct?: number;
+  /** Precomputed empirical counter lift multipliers [0.88..1.15] per item className */
+  counterLifts?: Partial<Record<string, number>>;
 }
 
 export interface DeadlockItem {
@@ -69,19 +71,29 @@ export interface DeadlockSnapshot {
   items: DeadlockItem[];
 }
 
+export type BuiltInHeroTool =
+  | 'invuln'
+  | 'cleanse'
+  | 'mobility_escape';
+
 export interface PlayerAffinity {
   damageStyle: 'gun' | 'spirit' | 'hybrid';
   range: 'close' | 'mid' | 'long';
   fastFirerate: boolean;
   spiritProccer: boolean;
   supportive?: boolean;
+  /** Built-in defensive mechanics in the player's own hero kit (reduces redundant counter picks) */
+  builtInTools?: BuiltInHeroTool[];
 }
 
 export interface HeroProfile {
   className: string;
   defaultDamage: DamageProfile;
   defaultModifiers: EnemyModifier[];
+  /** Primary defining kit threats (full weight 1.0) */
   threats: ThreatMechanic[];
+  /** Secondary/situational kit threats (reduced weight 0.45, prevents tag inflation) */
+  secondaryThreats?: ThreatMechanic[];
   playerAffinity: PlayerAffinity;
   threatHeadline: string;
 }
@@ -116,6 +128,8 @@ export interface CounterItemRule {
     penalizeNonSpiritProccer?: boolean;
     penalizeSlowFirerate?: boolean;
     preferSupportive?: boolean;
+    /** Gently penalizes this item if your own hero already has this mechanic built in */
+    redundantWithTool?: BuiltInHeroTool;
   };
   /** Concise default "Why" explanation */
   why: string;

@@ -305,6 +305,58 @@ export const ITEM_COPY_DE: Record<string, { why: string; whenToUse: string }> = 
     why: 'Starker Kopfschuss-Burst + Selbstheilung — bestraft fragile Low-HP-Carrys im Mid-Game extrem hart.',
     whenToUse: 'Passiv — Gefechte mit einem Kopfschuss eröffnen, um Glaskanonen sofort zum Rückzug zu zwingen.',
   },
+  upgrade_fleetfoot_boots: {
+    why: 'Aktives Lauftempo + Verlangsamungs-Resistenz ohne Schuss-Abbremsung — ideal zum Kiten von Nahkämpfern & Slows.',
+    whenToUse: 'Zünden, sobald dich ein Nahkämpfer jagt oder ein starker Slow trifft, um im Rückwärtsgehen weiterzufeuern.',
+  },
+  upgrade_bullet_resist_shredder: {
+    why: 'Fähigkeiten senken gegnerische Kugelresistenz für 1.600 Seelen — starkes Preis-Leistungs-Shred für Hybrid- & Waffen-Helden.',
+    whenToUse: 'Passiv — Tank kurz mit einer Fähigkeit markieren, bevor du dein Magazin leerst.',
+  },
+  upgrade_tech_defense_shredders: {
+    why: 'Kugeln senken gegnerische Spirit-Resistenz UND geben dir Spirit-Lebensraub gegen das Ziel.',
+    whenToUse: 'Passiv — Frontliner kurz anschießen, bevor deine Haupt-Spirit-Kombo einschlägt.',
+  },
+  upgrade_rescue_beam: {
+    why: 'Heilt %-Max-HP und zieht einen gefangenen Verbündeten direkt aus Haken, Kombo, Lasso, Swap oder Singularität.',
+    whenToUse: 'Auf den gefangenen Teammate wirken und sofort Heranziehen drücken, um Pick-Kombos zu brechen.',
+  },
+  upgrade_cheat_death: {
+    why: 'Passives Sicherheitsnetz gegen tödlichen Burst & Exekutions-Ults — braucht keinen Aktiv-Slot.',
+    whenToUse: 'Passiv — verschafft dir ein garantiertes Überlebensfenster bei tödlichen Exekutionen oder One-Shot-Kombos.',
+  },
+  upgrade_fervor: {
+    why: 'Verkürzt bestehende Debuffs und gibt massive Kampf-Stats unter 50 % HP — dreht Dive- und CC-Kämpfe für Waffen-Carrys.',
+    whenToUse: 'Passiv — löst automatisch aus, sobald du unter 50 % Leben fällst, und lässt dich direkt zurückkämpfen.',
+  },
+};
+
+export const ITEM_CONTEXT_TIPS_DE: Record<string, Partial<Record<string, string>>> = {
+  upgrade_reduce_debuff_duration: {
+    cc: 'Verkürzt eingehenden CC passiv und entfernt Wurzeln, Slows & verzögerte Stuns sofort auf Knopfdruck.',
+  },
+  upgrade_counterspell: {
+    cc: 'Zauber-Parade negiert Haken, Käfige, Lassos und Stun-Kombos komplett ohne Aktiv-Slot.',
+    melee: 'Macht deine Parade doppelt stark: bestraft Nahkampfschläge UND blockt Folge-Fähigkeiten.',
+  },
+  upgrade_rupture: {
+    tanky: 'Schmilzt gestapelte Max-HP-Balken per %-Schaden und bremst gleichzeitig den Sustain.',
+    healing: 'Kappt starke Heilung & Lebensraub auf Knopfdruck und tickt das Ziel sauber herunter.',
+  },
+  upgrade_toxic_bullets: {
+    tanky: 'Frisst sich passiv per %-Max-HP-Blutung direkt durch gestapelte Lebenspunkte.',
+    healing: 'Hält über deine Kugeln dauerhaft Anti-Heilung aktiv, sodass Lebensraub-Builds einbrechen.',
+  },
+  upgrade_warp_stone: {
+    melee: 'Blinkt sofort aus der Nahkampf-Reichweite, sodass Brawler mit ihren Schlägen ins Leere laufen.',
+    cc: 'Entkommt Käfigen, Zonen und Folge-CC-Ketten, bevor du festgenagelt wirst.',
+  },
+  upgrade_fleetfoot_boots: {
+    melee: 'Sofortiger Tempo-Schub + Slow-Resistenz zum sauberen Kiten gegen Nahkampf-Engages.',
+  },
+  upgrade_rescue_beam: {
+    cc: 'Zieht Teammates direkt aus Lockdown-Ults, Haken und Stun-Ketten und heilt euch beide.',
+  },
 };
 
 export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
@@ -390,9 +442,11 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_containment: 'Sperrt Shivs Dashes und seinen Exekutions-Sprung.',
     upgrade_rupture: 'Bestraft Shivs hohe effektive HP durch Aderlass und senkt seine Heilung stark.',
     upgrade_glitch: 'Verhindert Aderlass-Bereinigung und Exekution, während dein Team ihn fokussiert.',
+    upgrade_cheat_death: 'Verhindert Shivs Exekutions-Kette passiv, sodass er sich im Teamkampf nicht zurücksetzen kann.',
   },
   hero_krill: {
     upgrade_vex_barrier: '#1 früher Konter gegen Mo & Krill: seine Kombo-Ult löst automatisch eine Barriere aus.',
+    upgrade_rescue_beam: 'Zieht einen gefangenen Verbündeten direkt aus Mo & Krills Kombo heraus und heilt ihn durch den Fokus.',
     upgrade_unstoppable: 'Kurz bevor Mo & Krill auftaucht aktivieren, damit Kombo und Sandstrahl wirkungslos bleiben.',
     upgrade_auto_cleanse: 'Entfernt Kombo oder Sandstrahl automatisch + Barriere — Retter wenn Aktiv-Slots voll sind.',
     upgrade_rupture: 'Schmilzt Mo & Krills riesigen HP-Pool und senkt seine Verachtung-Heilung.',
@@ -437,5 +491,89 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_targeted_silence: 'Verhindert ihren Rückzug & Fledermaus-Stille, sodass Mina in einer Burst-Rotation fällt.',
     upgrade_focus_lens: '#1 Late-Game-Delete gegen Mina: Stille verhindert ihre Flucht und der Echo-Burst löscht ihre kleine HP-Leiste aus.',
     upgrade_deflecting_armor: 'Blockt ihre On-Hit-Bisse passiv, sodass sie kaum noch Burst-Stapel aufbauen kann.',
+  },
+  hero_astro: {
+    upgrade_vex_barrier: 'Spirit-Lasso löst sofort die Barriere aus, damit du das Wegziehen ins gegnerische Team überlebst.',
+    upgrade_counterspell: 'Pariere Spirit-Lasso oder Fass-Explosionen, um Hollidays Pick-Kombo komplett zu stoppen.',
+    upgrade_unstoppable: 'Verhindert, dass Holliday dich im Teamkampf mit Spirit-Lasso entführt.',
+    upgrade_rescue_beam: 'Zieht einen gefesselten Verbündeten sofort zurück in Sicherheit und heilt ihn durch den Pick.',
+  },
+  hero_chrono: {
+    upgrade_vex_barrier: 'Der Zeitstopp-Karabiner löst automatisch die Barriere aus, bevor Paradox dich tauscht.',
+    upgrade_counterspell: 'Pariere Karabiner oder Positionstausch, um ihre gesamte Pick-Kombo zu vereiteln.',
+    upgrade_warp_stone: 'Blinkt nach einem Positionstausch sofort zurück in Sicherheit.',
+    upgrade_rescue_beam: 'Zieht einen getauschten Verbündeten sofort zurück, bevor Paradox\' Team zuschlägt.',
+  },
+  hero_fencer: {
+    upgrade_melee_rebuttal: 'Bestraft Apollos Nahkampf-Ausfallschritte mit Sofort-Heilung und zurückgeworfenem Schaden.',
+    upgrade_containment: 'Sperrt Apollos Dashes & Ausfallschritte, sodass er nicht aus der Riposte-Reichweite tanzen kann.',
+    upgrade_targeted_silence: 'Verhindert Riposte-Parieren und seine Ult, sodass Apollo deinen Burst nicht kontern kann.',
+    upgrade_counterspell: 'Pariere Apollos angesagte Ult, um Burst und Heilungsblock komplett abzuwehren.',
+    upgrade_glitch: 'Bringt Apollo zum Schweigen, entwaffnet ihn und sperrt Riposte & Mobilität gleichzeitig.',
+  },
+  hero_unicorn: {
+    upgrade_spirit_bubble: 'Fängt Celestes Lichtdolche & Prismen-Spirit-Burst auf der Lane zuverlässig ab.',
+    upgrade_reduce_debuff_duration: 'Entfernt Celestes Dash-Verlangsamungen und Prismen-Stille sofort mit Tempo-Schub.',
+    upgrade_spellbreaker: '#1 passiver Konter gegen Celeste: kappt ihren stärksten Spirit-Burst drastisch.',
+    upgrade_glitch: 'Entfernt Celestes Prismenschilde und bringt sie vor ihrer Fähigkeitskette zum Schweigen.',
+  },
+  hero_drifter: {
+    upgrade_reduce_debuff_duration: 'Entfernt das Jagd-Mal-Bluten sofort, bevor Drifter seinen Isolations-Burst ansetzt.',
+    upgrade_melee_rebuttal: 'Bestraft Drifters Nahkampf-Trades mit sofortiger Heilung und Konterschaden.',
+    upgrade_warp_stone: 'Blinkt aus Drifters Nahkampf-Hinterhalt heraus und liefert zusätzliche Kugelresistenz.',
+    upgrade_greater_withering_whip: 'Entwaffnet Drifter mitten im Hinterhalt und senkt seine Kugelresistenz.',
+    upgrade_metal_skin: 'Blockt Drifters Nahkampf-Waffenburst während seiner Dunkelheits-Ult komplett ab.',
+  },
+  hero_necro: {
+    upgrade_spirit_bubble: 'Fängt Graves\' zermürbenden Spirit-Poke und Greifende-Hände-Schaden auf der Lane ab.',
+    upgrade_vex_barrier: 'Löst automatisch eine Barriere aus, falls Greifende Hände dich festsetzen.',
+    upgrade_tech_purge: 'Kontert Graves\' Spirit-Resistenz-Raub und anhaltenden Zonenschaden passiv.',
+    upgrade_absorbing_armor: 'Wandelt Graves\' permanente Spirit-Ticks in schnellere Abklingzeiten für dich um.',
+  },
+  hero_tengu: {
+    upgrade_healbane: 'Reduziert Ivys Verbindungs-Heilung und Kudzu-Sustain günstig schon auf der Lane.',
+    upgrade_target_stun: 'Holt Ivy direkt aus dem Luftabwurf, bevor sie Bomben oder Verbündete absetzen kann.',
+    upgrade_vex_barrier: 'Steinform-Stun löst sofort die Barriere aus, sodass du den Folge-Burst überlebst.',
+    upgrade_rupture: 'Kappt Ivys Lebensraub & Sustain in längeren Mid-/Late-Game-Gefechten.',
+    upgrade_glitch: 'Verhindert Steinform-Unverwundbarkeit und Luftabwurf-Flucht gleichzeitig.',
+  },
+  hero_nurse: {
+    upgrade_healbane: '#1 günstiger Konter gegen Nurse Harrow: halbiert Heilspritzen & Blutegel-Sustain.',
+    upgrade_reduce_debuff_duration: 'Entfernt Blutegel-DoTs sofort, sodass sie weder Schaden noch Heilung daraus zieht.',
+    upgrade_rupture: 'Bricht Nurse Harrows Heil-Output und schmilzt ihre Frontline-Ziele.',
+    upgrade_spirit_burn: 'Starke Late-Game-Anti-Heilung, die Nurse Harrows Team-Sustain zusammenbrechen lässt.',
+  },
+  hero_bookworm: {
+    upgrade_healbane: 'Senkt Paiges Sustain und Heilung in Lane-Trades zuverlässig.',
+    upgrade_restorative_locket: 'Sammelt gratis Heil- & Ausdauer-Ladungen durch Paiges häufige Schild- und Buch-Zauber.',
+    upgrade_targeted_silence: 'Verhindert, dass Paige im Teamkampf Plot-Armor-Barrieren und Heilungen stapelt.',
+    upgrade_glitch: '#1 Late-Game-Konter gegen Paige: entfernt Plot-Armor-Schilde UND bringt ihr Support-Kit zum Schweigen.',
+  },
+  hero_ratking: {
+    upgrade_reduce_debuff_duration: 'Entfernt Rattenschwarm-DoTs sauber und gibt dir Heilung + Lauftempo.',
+    upgrade_debuff_reducer: 'Verkürzt Rattenschwarm-Ticks auf der Lane und baut zu Magie der Entzauberung aus.',
+    upgrade_rupture: 'Schmilzt Rat Kings hohe effektive HP trotz Max-HP-Barrieren zuverlässig herunter.',
+    upgrade_glitch: 'Entfernt seine Max-HP-Barrieren und stoppt Granaten- sowie Schwarm-Spam.',
+  },
+  hero_familiar: {
+    upgrade_healbane: 'Reduziert Rems plötzliche Burst-Heilung günstig, bevor Kämpfe kippen.',
+    upgrade_vex_barrier: 'Schlaf-Ult & Kissen-CC lösen sofort die Barriere aus, damit du den Follow-up überlebst.',
+    upgrade_containment: 'Sperrt Rems wendige Ausweich- und Fluchtbewegungen zuverlässig.',
+    upgrade_unstoppable: 'Läuft ungestört durch wanddurchdringende Schlaf-Ults und Kissen-Rückstöße.',
+    upgrade_auto_cleanse: 'Entfernt überraschenden Schlaf-CC automatisch ohne Reaktionszeit.',
+  },
+  hero_werewolf: {
+    upgrade_melee_rebuttal: 'Bestraft Silvers aggressive Nahkampf-Trades mit Heilung & Konterschaden.',
+    upgrade_withering_whip: 'Senkt Silvers Schnellfeuer schon früh und baut direkt zu Fluch der Entwaffnung aus.',
+    upgrade_greater_withering_whip: 'Entwaffnet Silver während Schnellfeuer / Werwolf-Form und senkt ihre Kugelresistenz.',
+    upgrade_metal_skin: 'Ignoriert Silvers extremen Nahkampf-Waffenburst komplett.',
+    upgrade_reduce_debuff_duration: 'Entfernt die Fessel-Bola sofort, damit Silver dich nicht festnageln kann.',
+    upgrade_deflecting_armor: 'Lenkt Silvers Schnellfeuer-Salven während ihrer Verwandlung passiv ab.',
+  },
+  hero_chessmaster: {
+    upgrade_cardio_calibrator: 'Starke Verlangsamungs-Resistenz lässt dich sauber aus Solomons Läufer-Slows laufen.',
+    upgrade_vex_barrier: 'Turm-Wurzeln lösen automatisch eine Schutzbarriere aus.',
+    upgrade_reduce_debuff_duration: 'Entfernt Turm-Wurzeln & Läufer-Slows sofort mit Lauftempo-Schub.',
+    upgrade_glitch: 'Entfernt Springer-Barrieren und unterbindet Solomons taktische Zonenkontrolle.',
   },
 };

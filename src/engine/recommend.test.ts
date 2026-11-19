@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { getBundledSnapshot } from '../data/apiClient';
+import { COUNTER_ITEM_RULES, HERO_SPECIFIC_COUNTERS } from '../data/counterItems';
+import { HERO_PROFILES } from '../data/heroProfiles';
+import { ITEM_COPY_DE } from '../i18n/contentDe';
 import { recommendCounters } from './recommend';
-import type { DeadlockHero, DeadlockItem } from '../types/deadlock';
+import type { DeadlockHero, DeadlockItem, GameStage } from '../types/deadlock';
 
 const snapshot = getBundledSnapshot();
 const itemsByClass = new Map<string, DeadlockItem>(
@@ -221,7 +224,8 @@ describe('Deadlock counter recommendation engine', () => {
     );
     expect(res.recommendedStance).toBe('offense');
     expect(res.offense.length).toBe(3);
-    expect(res.defense.length).toBe(3);
+    expect(res.defense.length).toBeGreaterThanOrEqual(2);
+    expect(res.defense.length).toBeLessThanOrEqual(3);
     const offenseNames = res.offense.map((r) => r.item.name);
     expect(offenseNames.some((n) => ['Silence Wave', 'Slowing Hex', 'Cold Front'].includes(n))).toBe(true);
   });
@@ -240,5 +244,128 @@ describe('Deadlock counter recommendation engine', () => {
       heroesByClass,
     );
     expect(res.recommendations.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('covers all 42 live heroes with profiles, hard-counter overrides, and empirical lifts', () => {
+    for (const hero of snapshot.heroes) {
+      expect(HERO_PROFILES[hero.className], `Missing HERO_PROFILES for ${hero.name}`).toBeDefined();
+      expect(
+        HERO_SPECIFIC_COUNTERS[hero.className]?.length,
+        `Missing HERO_SPECIFIC_COUNTERS for ${hero.name}`,
+      ).toBeGreaterThanOrEqual(3);
+      expect(
+        Object.keys(hero.counterLifts ?? {}).length,
+        `Missing empirical counterLifts for ${hero.name}`,
+      ).toBeGreaterThan(0);
+    }
+
+    for (const rule of COUNTER_ITEM_RULES) {
+      expect(itemsByClass.has(rule.className), `Rule ${rule.className} missing from snapshot`).toBe(
+        true,
+      );
+      expect(ITEM_COPY_DE[rule.className], `Missing DE copy for ${rule.className}`).toBeDefined();
+    }
+  });
+
+  it('passes quality invariants across all 42 heroes and all 3 stages (lane, mid, late)', () => {
+    const stages: GameStage[] = ['lane', 'mid', 'late'];
+    for (const hero of snapshot.heroes) {
+      const profile = HERO_PROFILES[hero.className];
+      for (const stage of stages) {
+        const res = recommendCounters(
+          {
+            myHeroClass: null,
+            enemyHeroClass: hero.className,
+            stage,
+            damageProfile: profile.defaultDamage,
+            modifiers: [],
+            activeSlotsFull: false,
+            language: 'de',
+          },
+          itemsByClass,
+          heroesByClass,
+        );
+
+        expect(
+          res.offense.length,
+          `${hero.name} (${stage}) should have 1-3 offense counters`,
+        ).toBeGreaterThanOrEqual(1);
+        expect(res.offense.length).toBeLessThanOrEqual(3);
+        expect(
+          res.defense.length,
+          `${hero.name} (${stage}) should have 1-3 defense counters`,
+        ).toBeGreaterThanOrEqual(1);
+        expect(res.defense.length).toBeLessThanOrEqual(3);
+
+        // Enforce dynamic quality bar on 3rd slot (no weak filler)
+        for (const list of [res.offense, res.defense]) {
+          if (list.length === 3) {
+            const topScore = list[0].score;
+            const third = list[2];
+            expect(
+              third.score >= topScore * 0.6 || third.isHeroSpecific,
+              `${hero.name} (${stage}) 3rd pick ${third.item.name} (${third.score}) below quality bar of top (${topScore})`,
+            ).toBe(true);
+          }
+        }
+      }
+    }
+  });
+
+  it('penalizes redundant invulnerability items on heroes with built-in invuln (Pocket vs Seven)', () => {
+    const asPocket = recommendCounters(
+      {
+        myHeroClass: 'hero_synth', // Pocket has built-in invuln (Satchel)
+        enemyHeroClass: 'hero_lash',
+        stage: 'late',
+        damageProfile: 'spirit',
+        modifiers: [],
+        activeSlotsFull: false,
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const asSeven = recommendCounters(
+      {
+        myHeroClass: 'hero_gigawatt', // Seven has no built-in invuln
+        enemyHeroClass: 'hero_lash',
+        stage: 'late',
+        damageProfile: 'spirit',
+        modifiers: [],
+        activeSlotsFull: false,
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+
+    const pocketShift = asPocket.defense.find((r) => r.item.className === 'upgrade_self_bubble');
+    const sevenShift = asSeven.defense.find((r) => r.item.className === 'upgrade_self_bubble');
+    if (sevenShift && pocketShift) {
+      expect(pocketShift.score).toBeLessThan(sevenShift.score);
+    } else {
+      expect(sevenShift).toBeDefined();
+    }
+  });
+
+  it('uses dynamic contextTips when Extra Toggles are enabled without a hero-specific override', () => {
+    const res = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_haze',
+        stage: 'mid',
+        damageProfile: 'bullet',
+        modifiers: ['healing'],
+        activeSlotsFull: false,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+
+    const decay = res.offense.find((r) => r.item.className === 'upgrade_rupture');
+    const toxic = res.offense.find((r) => r.item.className === 'upgrade_toxic_bullets');
+    const antiHealPick = decay ?? toxic;
+    expect(antiHealPick).toBeDefined();
+    expect(antiHealPick?.why).toMatch(/Heilung|Anti-Heilung/);
   });
 });
