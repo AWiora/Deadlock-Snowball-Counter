@@ -76,8 +76,8 @@ export const HERO_PROFILES: Record<string, HeroProfile> = {
     playerAffinity: { damageStyle: 'spirit', range: 'mid', fastFirerate: true, spiritProccer: true },
     kitCounters: [
       {
-        abilityName: 'Hook',
-        abilityNameDe: 'Hook',
+        abilityName: 'Grapple Arm',
+        abilityNameDe: 'Greifarm',
         stance: 'offense',
         role: 'Shutdown',
         countersThreats: ['airborne', 'channeled_ult', 'long_range_poke', 'fragile_glass_cannon'],
@@ -143,8 +143,8 @@ export const HERO_PROFILES: Record<string, HeroProfile> = {
     playerAffinity: { damageStyle: 'spirit', range: 'long', fastFirerate: false, spiritProccer: true },
     kitCounters: [
       {
-        abilityName: 'Prism Shield',
-        abilityNameDe: 'Prism Shield',
+        abilityName: 'Dazzling Trick',
+        abilityNameDe: 'Brillanter Trick',
         stance: 'defense',
         role: 'Anti-Spirit',
         countersThreats: ['ability_spam', 'telegraphed_burst', 'close_range_dive'],
@@ -164,12 +164,13 @@ export const HERO_PROFILES: Record<string, HeroProfile> = {
     playerAffinity: { damageStyle: 'gun', range: 'mid', fastFirerate: true, spiritProccer: true, builtInTools: ['mobility_escape'] },
     kitCounters: [
       {
-        abilityName: 'Jetpack Grab',
-        abilityNameDe: 'Jetpack Grab',
+        abilityName: 'Close The Deal',
+        abilityNameDe: 'Unter Dach und Fach',
         stance: 'offense',
         role: 'Shutdown',
         countersThreats: ['airborne', 'long_range_poke', 'channeled_ult'],
         amplifiers: ['cooldown', 'range'],
+        isUltimate: true,
         effectEn: 'contests flying snipers vertically and disrupts channels',
         effectDe: 'contested fliegende Sniper direkt in der Luft und bricht Channel-Ults ab',
       },
@@ -263,8 +264,8 @@ export const HERO_PROFILES: Record<string, HeroProfile> = {
     playerAffinity: { damageStyle: 'spirit', range: 'long', fastFirerate: false, spiritProccer: true },
     kitCounters: [
       {
-        abilityName: 'Immobilizing Trap',
-        abilityNameDe: 'Immobilizing Trap',
+        abilityName: 'Spirit Snare',
+        abilityNameDe: 'Magiefalle',
         stance: 'offense',
         role: 'Control',
         countersThreats: ['close_range_dive', 'high_mobility', 'melee_brawler'],
@@ -569,8 +570,8 @@ export const HERO_PROFILES: Record<string, HeroProfile> = {
     playerAffinity: { damageStyle: 'gun', range: 'mid', fastFirerate: true, spiritProccer: true, builtInTools: ['invuln'] },
     kitCounters: [
       {
-        abilityName: 'Tornado',
-        abilityNameDe: 'Tornado',
+        abilityName: 'Dust Devil',
+        abilityNameDe: 'Staubteufel',
         stance: 'offense',
         role: 'Shutdown',
         countersThreats: ['channeled_ult', 'close_range_dive', 'bullet_ult', 'melee_brawler'],
@@ -579,8 +580,8 @@ export const HERO_PROFILES: Record<string, HeroProfile> = {
         effectDe: 'hebt Gegner per Knockup aus Channel-Ults und stoppt Close-Range-Dives',
       },
       {
-        abilityName: 'Tornado',
-        abilityNameDe: 'Tornado',
+        abilityName: 'Dust Devil',
+        abilityNameDe: 'Staubteufel',
         stance: 'defense',
         role: 'Survival',
         countersThreats: ['telegraphed_burst', 'hard_cc'],
@@ -936,8 +937,8 @@ export const HERO_PROFILES: Record<string, HeroProfile> = {
     playerAffinity: { damageStyle: 'spirit', range: 'mid', fastFirerate: false, spiritProccer: true },
     kitCounters: [
       {
-        abilityName: 'Baroness Hotel',
-        abilityNameDe: 'Baroness Hotel',
+        abilityName: 'Hotel Guest',
+        abilityNameDe: 'Hotelgast',
         stance: 'offense',
         role: 'Shutdown',
         countersThreats: ['channeled_ult', 'bullet_ult', 'close_range_dive', 'high_mobility'],
@@ -970,8 +971,8 @@ export const HERO_PROFILES: Record<string, HeroProfile> = {
     playerAffinity: { damageStyle: 'gun', range: 'mid', fastFirerate: true, spiritProccer: false },
     kitCounters: [
       {
-        abilityName: 'Snap Trap',
-        abilityNameDe: 'Snap Trap',
+        abilityName: 'Hex-Lined Snap Trap',
+        abilityNameDe: 'Bannende Schlagfalle',
         stance: 'offense',
         role: 'Control',
         countersThreats: ['close_range_dive', 'high_mobility', 'melee_brawler'],

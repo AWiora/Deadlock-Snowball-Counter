@@ -5,6 +5,7 @@ import { HERO_PROFILES } from '../data/heroProfiles';
 import { KIT_AMPLIFIER_RULES } from '../data/kitAmplifiers';
 import { HERO_OVERRIDE_TIPS_DE, ITEM_COPY_DE } from '../i18n/contentDe';
 import { recommendCounters } from './recommend';
+import { segmentTextWithAbilities } from '../utils/abilities';
 import type { DeadlockHero, DeadlockItem, PriceTier } from '../types/deadlock';
 
 const snapshot = getBundledSnapshot();
@@ -258,7 +259,7 @@ describe('Deadlock counter recommendation engine', () => {
       heroesByClass,
     );
     expect(res.recommendations[0].item.nameDe).toBe('Metallhaut');
-    expect(res.recommendations[0].why).toContain('Bullet Dance');
+    expect(res.recommendations[0].why).toContain('Kugelhagel');
     expect(res.enemyThreatHeadline).toContain('Fixation');
   });
 
@@ -471,8 +472,8 @@ describe('Deadlock counter recommendation engine', () => {
     expect(dispel?.reasons.length).toBe(2);
     const bebopReason = dispel?.reasons.find((r) => r.heroClasses.includes('hero_bebop'));
     const infernoReason = dispel?.reasons.find((r) => r.heroClasses.includes('hero_inferno'));
-    expect(bebopReason?.text).toContain('Sticky Bomb');
-    expect(infernoReason?.text).toContain('Afterburn');
+    expect(bebopReason?.text).toContain('Haftbombe');
+    expect(infernoReason?.text).toContain('Nachbrennen');
   });
 
   it('collapses shared generic counters across 2 enemies without repeating boilerplate text', () => {
@@ -638,9 +639,9 @@ describe('Deadlock counter recommendation engine', () => {
     expect(kitPicks.length).toBe(1);
     expect(kitPicks[0].rank).toBeGreaterThanOrEqual(2);
     expect(kitPicks[0].item.className).toBe('upgrade_tech_range'); // Greater Expansion
-    expect(kitPicks[0].why).toContain('Hook');
-    expect(kitPicks[0].whenToUse).toContain('Hook');
-    expect(kitPicks[0].synergyNote).toContain('Hook');
+    expect(kitPicks[0].why).toContain('Greifarm');
+    expect(kitPicks[0].whenToUse).toContain('Greifarm');
+    expect(kitPicks[0].synergyNote).toContain('Greifarm');
     expect(kitPicks[0].upgradeHint?.itemClassName).toBe('upgrade_magic_reach');
   });
 
@@ -664,7 +665,7 @@ describe('Deadlock counter recommendation engine', () => {
     expect(kitPick).toBeDefined();
     expect(kitPick?.rank).toBeGreaterThanOrEqual(2);
     expect(kitPick?.item.className).toBe('upgrade_magic_tempo'); // Compress Cooldown
-    expect(kitPick?.why).toContain('The Cube');
+    expect(kitPick?.why).toContain('Kubus');
     expect(kitPick?.whenToUse).toContain('imbuen');
     expect(kitPick?.upgradeHint).toEqual(
       expect.objectContaining({
@@ -738,8 +739,8 @@ describe('Deadlock counter recommendation engine', () => {
     expect(kitPick).toBeDefined();
     expect(kitPick?.counteredEnemies).toContain('hero_hornet');
     expect(kitPick?.counteredEnemies).toContain('hero_gigawatt');
-    expect(kitPick?.reasons.length).toBe(1); // collapsed cleanly onto shared Hook ability
-    expect(kitPick?.reasons[0].text).toContain('Hook');
+    expect(kitPick?.reasons.length).toBe(1); // collapsed cleanly onto shared Grapple Arm ability
+    expect(kitPick?.reasons[0].text).toContain('Greifarm');
   });
 
   it('respects activeSlotsFull for active Kit-Amplifiers (Majestic Leap / Echo Shard / Refresher)', () => {
@@ -818,7 +819,7 @@ describe('Deadlock counter recommendation engine', () => {
     expect(kelvin800.defense[0].isKitAmplifier).toBeFalsy();
     const kelvinCharge = kelvin800.defense.find((r) => r.isKitAmplifier);
     expect(kelvinCharge?.item.className).toBe('upgrade_extra_charge');
-    expect(kelvinCharge?.why).toContain('Frost Grenade');
+    expect(kelvinCharge?.why).toContain('Frostgranate');
 
     // Bebop Hook (non-ult) vs Vindicta at 6400 -> Echo Shard (not Refresher)
     const bebop6400 = recommendCounters(
@@ -912,5 +913,92 @@ describe('Deadlock counter recommendation engine', () => {
         }
       }
     }
+  });
+
+  it('respects itemLanguage (In-Game toggle) for ability names in both Kit-Amplifiers and Hard-Counter tips', () => {
+    // UI in German, In-Game in English -> English ability names (Bullet Dance, Grapple Arm)
+    const deUiEnGame = recommendCounters(
+      {
+        myHeroClass: 'hero_bebop',
+        enemyHeroClass: 'hero_haze',
+        priceTier: '3200',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'de',
+        itemLanguage: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const metalSkinEn = deUiEnGame.defense.find((r) => r.item.className === 'upgrade_metal_skin');
+    expect(metalSkinEn?.why).toContain('Bullet Dance');
+
+    // UI in German, In-Game in German -> Official German ability names (Kugelhagel, Greifarm)
+    const deUiDeGame = recommendCounters(
+      {
+        myHeroClass: 'hero_bebop',
+        enemyHeroClass: 'hero_haze',
+        priceTier: '3200',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'de',
+        itemLanguage: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const metalSkinDe = deUiDeGame.defense.find((r) => r.item.className === 'upgrade_metal_skin');
+    expect(metalSkinDe?.why).toContain('Kugelhagel');
+
+    // Kit-Amplifier follows itemLanguage too: Bebop vs Vindicta
+    const kitEn = recommendCounters(
+      {
+        myHeroClass: 'hero_bebop',
+        enemyHeroClass: 'hero_hornet',
+        priceTier: '3200',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'de',
+        itemLanguage: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const kitPickEn = kitEn.offense.find((r) => r.isKitAmplifier);
+    expect(kitPickEn?.why).toContain('Grapple Arm');
+    expect(kitPickEn?.synergyNote).toContain('Grapple Arm');
+  });
+
+  it('provides all 4 official EN + DE abilities with descriptions on every hero and segments inline mentions cleanly', () => {
+    for (const hero of snapshot.heroes) {
+      expect(hero.abilities?.length, `Expected 4 abilities for ${hero.name}`).toBe(4);
+      for (const ab of hero.abilities ?? []) {
+        expect(ab.name.length).toBeGreaterThan(0);
+        expect(ab.nameDe.length).toBeGreaterThan(0);
+        expect(ab.descEn.length).toBeGreaterThan(10);
+        expect(ab.descDe.length).toBeGreaterThan(10);
+      }
+    }
+
+    const haze = heroesByClass.get('hero_haze')!;
+    const segmentsDe = segmentTextWithAbilities(
+      'Unterbricht Haze Bullet Dance sofort.',
+      [haze],
+      'de',
+    );
+    const abilitySeg = segmentsDe.find((s) => s.type === 'ability');
+    expect(abilitySeg).toBeDefined();
+    expect(abilitySeg?.text).toBe('Kugelhagel');
+
+    const segmentsEn = segmentTextWithAbilities(
+      'Unterbricht Haze Kugelhagel sofort.',
+      [haze],
+      'en',
+    );
+    const abilitySegEn = segmentsEn.find((s) => s.type === 'ability');
+    expect(abilitySegEn?.text).toBe('Bullet Dance');
   });
 });

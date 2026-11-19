@@ -1,7 +1,8 @@
 import { Check, Coins, Copy, Sparkles, Target, Zap } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { getHeroDisplayName, getItemDisplayName, UI_TEXT } from '../i18n/translations';
 import type { CounterRecommendation, DeadlockHero, Language } from '../types/deadlock';
+import { RichAbilityText } from './RichAbilityText';
 
 interface CounterCardProps {
   rec: CounterRecommendation;
@@ -9,6 +10,7 @@ interface CounterCardProps {
   itemLanguage?: Language;
   totalSelectedEnemies?: number;
   heroesByClass?: Map<string, DeadlockHero>;
+  myHero?: DeadlockHero | null;
 }
 
 export function CounterCard({
@@ -17,6 +19,7 @@ export function CounterCard({
   itemLanguage,
   totalSelectedEnemies = 1,
   heroesByClass,
+  myHero,
 }: CounterCardProps) {
   const [copied, setCopied] = useState(false);
   const {
@@ -34,9 +37,28 @@ export function CounterCard({
   } = rec;
   const isTop = rank === 1;
   const t = UI_TEXT[language];
-  const itemName = getItemDisplayName(item, itemLanguage ?? language);
+  const effectiveInGameLang = itemLanguage ?? language;
+  const itemName = getItemDisplayName(item, effectiveInGameLang);
   const locale = language === 'de' ? 'de-DE' : 'en-US';
   const formattedCost = item.cost.toLocaleString(locale);
+
+  const cardContextHeroes = useMemo(() => {
+    const list: DeadlockHero[] = [];
+    const seen = new Set<string>();
+    const addHero = (h?: DeadlockHero | null) => {
+      if (!h || seen.has(h.className)) return;
+      seen.add(h.className);
+      list.push(h);
+    };
+    if (isKitAmplifier) addHero(myHero);
+    for (const cls of counteredEnemies ?? []) {
+      addHero(heroesByClass?.get(cls));
+    }
+    if (!isKitAmplifier) addHero(myHero);
+    return list;
+  }, [isKitAmplifier, myHero, counteredEnemies, heroesByClass]);
+
+  const myHeroList = useMemo(() => (myHero ? [myHero] : []), [myHero]);
 
   const handleCopyName = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -162,6 +184,17 @@ export function CounterCard({
                 )
                 .join(' + ');
 
+              const reasonHeroes: DeadlockHero[] = [];
+              if (isKitAmplifier && myHero) reasonHeroes.push(myHero);
+              for (const { hero } of matchedHeroes) {
+                if (hero && !reasonHeroes.some((h) => h.className === hero.className)) {
+                  reasonHeroes.push(hero);
+                }
+              }
+              if (!isKitAmplifier && myHero && !reasonHeroes.some((h) => h.className === myHero.className)) {
+                reasonHeroes.push(myHero);
+              }
+
               return (
                 <div key={`${reason.heroClasses.join('-')}-${idx}`} className="counter-reason-row">
                   <span className="reason-hero-tag">
@@ -184,24 +217,49 @@ export function CounterCard({
                     )}
                     <span className="reason-colon">:</span>
                   </span>{' '}
-                  <span className="reason-text">{reason.text}</span>
+                  <span className="reason-text">
+                    <RichAbilityText
+                      text={reason.text}
+                      heroes={reasonHeroes}
+                      uiLang={language}
+                      inGameLang={effectiveInGameLang}
+                    />
+                  </span>
                 </div>
               );
             })}
           </div>
         ) : (
-          <p className="counter-why">{why}</p>
+          <p className="counter-why">
+            <RichAbilityText
+              text={why}
+              heroes={cardContextHeroes}
+              uiLang={language}
+              inGameLang={effectiveInGameLang}
+            />
+          </p>
         )}
 
         <div className="counter-footer-row">
           <span className="when-to-use">
             <Zap size={12} className="when-icon" />
-            <strong>{t.useLabel}</strong> {whenToUse}
+            <strong>{t.useLabel}</strong>{' '}
+            <RichAbilityText
+              text={whenToUse}
+              heroes={cardContextHeroes}
+              uiLang={language}
+              inGameLang={effectiveInGameLang}
+            />
           </span>
           {synergyNote && (
             <span className="synergy-pill">
               <Sparkles size={11} />
-              {synergyNote}
+              <RichAbilityText
+                text={synergyNote}
+                heroes={myHeroList}
+                uiLang={language}
+                inGameLang={effectiveInGameLang}
+              />
             </span>
           )}
         </div>

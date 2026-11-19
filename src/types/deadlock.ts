@@ -37,6 +37,17 @@ export type ThreatMechanic =
   | 'close_range_dive'
   | 'long_range_poke';
 
+export interface DeadlockAbility {
+  className: string;
+  slot: 1 | 2 | 3 | 4;
+  name: string;
+  nameDe: string;
+  icon: string;
+  descEn: string;
+  descDe: string;
+  isUltimate: boolean;
+}
+
 export interface DeadlockHero {
   id: number;
   className: string;
@@ -46,6 +57,7 @@ export interface DeadlockHero {
   iconCard: string;
   iconSmall: string;
   minimapIcon: string;
+  abilities?: DeadlockAbility[];
   metaDamage?: DamageProfile;
   metaWeaponPct?: number;
   /** Precomputed empirical counter lift multipliers [0.88..1.15] per item className */

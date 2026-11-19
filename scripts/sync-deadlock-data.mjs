@@ -9,14 +9,47 @@ const COUNTER_ITEMS_PATH = resolve(__dirname, '../src/data/counterItems.ts');
 const API_BASE = 'https://api.deadlock-api.com/v1/assets';
 const ANALYTICS_BASE = 'https://api.deadlock-api.com/v1/analytics';
 
+const ABILITY_DESC_FALLBACK = {
+  ability_vampirebat_steallife: {
+    en: 'Slash in front of you, dealing spirit damage and healing yourself. Deals bonus damage based on missing health and grants extra healing on kills.',
+    de: 'Schlitzt vor dir zu, verursacht Magieschaden und heilt dich. Verursacht Bonusschaden basierend auf fehlenden LP und gewährt zusätzliche Heilung bei Kills.',
+  },
+};
+
 function cleanHtml(html) {
   if (!html) return '';
   return html
     .replace(/<svg[\s\S]*?<\/svg>/gi, '')
     .replace(/<img[^>]*>/gi, '')
+    .replace(/<br\s*\/?>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
+    .replace(/\(\s*\)/g, '')
+    .replace(/\s+([.,:;!?])/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function extractAbilityDesc(rawAbility, lang) {
+  if (!rawAbility) return '';
+  const d = rawAbility.description;
+  const candidates = [];
+  if (d?.desc && !d.desc.startsWith('#')) {
+    candidates.push(d.desc);
+  } else {
+    if (d?.active && !d.active.startsWith('#')) candidates.push(d.active);
+    if (d?.passive && !d.passive.startsWith('#')) candidates.push(d.passive);
+  }
+  if (candidates.length === 0) {
+    const sections = rawAbility.tooltip_details?.info_sections ?? [];
+    for (const sec of sections) {
+      if (sec?.loc_string && !sec.loc_string.startsWith('#')) {
+        candidates.push(sec.loc_string);
+      }
+    }
+  }
+  const cleaned = cleanHtml(candidates.join(' '));
+  if (cleaned) return cleaned;
+  return ABILITY_DESC_FALLBACK[rawAbility.class_name]?.[lang] ?? '';
 }
 
 async function fetchJson(url) {
@@ -39,29 +72,55 @@ async function runInBatches(list, batchSize, fn) {
 }
 
 async function main() {
-  console.log('Syncing EN + DE Deadlock heroes & shop items from api.deadlock-api.com...');
-  const [rawHeroesEn, rawHeroesDe, rawItemsEn, rawItemsDe] = await Promise.all([
-    fetchJson(`${API_BASE}/heroes?only_active=true&language=english`),
-    fetchJson(`${API_BASE}/heroes?only_active=true&language=german`),
-    fetchJson(`${API_BASE}/items/by-type/upgrade?language=english`),
-    fetchJson(`${API_BASE}/items/by-type/upgrade?language=german`),
-  ]);
+  console.log('Syncing EN + DE Deadlock heroes, abilities & shop items from api.deadlock-api.com...');
+  const [rawHeroesEn, rawHeroesDe, rawItemsEn, rawItemsDe, rawAbilitiesEn, rawAbilitiesDe] =
+    await Promise.all([
+      fetchJson(`${API_BASE}/heroes?only_active=true&language=english`),
+      fetchJson(`${API_BASE}/heroes?only_active=true&language=german`),
+      fetchJson(`${API_BASE}/items/by-type/upgrade?language=english`),
+      fetchJson(`${API_BASE}/items/by-type/upgrade?language=german`),
+      fetchJson(`${API_BASE}/items/by-type/ability?language=english`),
+      fetchJson(`${API_BASE}/items/by-type/ability?language=german`),
+    ]);
 
   const deHeroByClass = new Map(rawHeroesDe.map((h) => [h.class_name, h]));
   const deItemByClass = new Map(rawItemsDe.map((i) => [i.class_name, i]));
+  const enAbilityByClass = new Map(rawAbilitiesEn.map((a) => [a.class_name, a]));
+  const deAbilityByClass = new Map(rawAbilitiesDe.map((a) => [a.class_name, a]));
 
   const heroes = rawHeroesEn
     .filter((h) => !h.disabled && h.player_selectable !== false && !h.in_development)
-    .map((h) => ({
-      id: h.id,
-      className: h.class_name,
-      name: h.name,
-      nameDe: deHeroByClass.get(h.class_name)?.name || h.name,
-      role: cleanHtml(h.description?.role ?? ''),
-      iconCard: h.images?.icon_hero_card_webp || h.images?.icon_hero_card || '',
-      iconSmall: h.images?.icon_image_small_webp || h.images?.icon_image_small || '',
-      minimapIcon: h.images?.minimap_image_webp || h.images?.minimap_image || '',
-    }))
+    .map((h) => {
+      const abilities = [];
+      for (let slot = 1; slot <= 4; slot++) {
+        const cls = h.items?.[`signature${slot}`];
+        if (!cls) continue;
+        const abEn = enAbilityByClass.get(cls);
+        const abDe = deAbilityByClass.get(cls);
+        if (!abEn) continue;
+        abilities.push({
+          className: cls,
+          slot,
+          name: abEn.name,
+          nameDe: abDe?.name || abEn.name,
+          icon: abEn.image_webp || abEn.image || '',
+          descEn: extractAbilityDesc(abEn, 'en'),
+          descDe: extractAbilityDesc(abDe, 'de') || extractAbilityDesc(abEn, 'en'),
+          isUltimate: slot === 4 || abEn.ability_type === 'ultimate',
+        });
+      }
+      return {
+        id: h.id,
+        className: h.class_name,
+        name: h.name,
+        nameDe: deHeroByClass.get(h.class_name)?.name || h.name,
+        role: cleanHtml(h.description?.role ?? ''),
+        iconCard: h.images?.icon_hero_card_webp || h.images?.icon_hero_card || '',
+        iconSmall: h.images?.icon_image_small_webp || h.images?.icon_image_small || '',
+        minimapIcon: h.images?.minimap_image_webp || h.images?.minimap_image || '',
+        abilities,
+      };
+    })
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const items = rawItemsEn

@@ -92,15 +92,15 @@ export function Header({
           <div
             className="lang-switcher"
             role="group"
-            aria-label="Item Names Language"
+            aria-label="In-Game Names Language"
             title={
               language === 'de'
-                ? 'Sprache der Item-Namen (offizielle Valve-Namen für deinen In-Game-Shop)'
-                : 'Item names language (official Valve names for your in-game shop)'
+                ? 'Sprache für Item- & Fähigkeitsnamen (passend zu deinem Deadlock-Client)'
+                : 'Language for item & ability names (matching your Deadlock client)'
             }
           >
             <Tag size={13} className="lang-globe" aria-hidden="true" />
-            <span className="lang-prefix">Items</span>
+            <span className="lang-prefix">In-Game</span>
             <button
               type="button"
               className={`lang-btn ${itemLanguage === 'en' ? 'lang-btn--active' : ''}`}

@@ -17,6 +17,7 @@ import { useState } from 'react';
 import { getHeroProfile } from '../data/heroProfiles';
 import { getBaseKitTags } from '../engine/recommend';
 import { getHeroDisplayName, UI_TEXT } from '../i18n/translations';
+import { HeroAbilityStrip } from './HeroAbilityStrip';
 import type {
   DamageProfile,
   DeadlockHero,
@@ -28,6 +29,7 @@ import type {
 
 interface MatchupControlBarProps {
   language: Language;
+  itemLanguage: Language;
   heroes: DeadlockHero[];
   heroesByClass: Map<string, DeadlockHero>;
   myHero: DeadlockHero | null;
@@ -68,6 +70,7 @@ const MODIFIER_META: { id: EnemyModifier; Icon: typeof ShieldAlert }[] = [
 
 export function MatchupControlBar({
   language,
+  itemLanguage,
   heroes,
   heroesByClass,
   myHero,
@@ -168,6 +171,16 @@ export function MatchupControlBar({
               </button>
             )}
           </div>
+          {myHero && !isPickingMyHero && (
+            <div className="my-hero-abilities-bar">
+              <HeroAbilityStrip
+                hero={myHero}
+                uiLang={language}
+                inGameLang={itemLanguage}
+                compact
+              />
+            </div>
+          )}
         </div>
 
         <div className="vs-medallion" aria-hidden="true">
@@ -410,6 +423,15 @@ export function MatchupControlBar({
                   </button>
                 );
               })}
+            </div>
+
+            <div className="enemy-customize-abilities">
+              <HeroAbilityStrip
+                hero={focusedEnemy}
+                uiLang={language}
+                inGameLang={itemLanguage}
+                compact
+              />
             </div>
 
             {isCustomized && (

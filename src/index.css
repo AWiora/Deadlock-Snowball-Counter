@@ -2366,3 +2366,152 @@ button {
     height: 26px;
   }
 }
+
+
+/* ==================== ABILITY INLINE MENTIONS, STRIP & MINIMALIST TOOLTIP ==================== */
+.ability-tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  outline: none;
+}
+
+.ability-inline-mention {
+  display: inline;
+  color: var(--text-parchment);
+  font-weight: 600;
+  border-bottom: 1px dotted rgba(214, 165, 86, 0.72);
+  cursor: help;
+  border-radius: 2px;
+  transition: color 0.14s ease, border-color 0.14s ease, background-color 0.14s ease;
+}
+
+.ability-inline-mention:hover,
+.ability-inline-mention:focus-visible {
+  color: var(--brass-bright);
+  border-bottom-color: var(--brass-bright);
+  background: rgba(214, 165, 86, 0.12);
+}
+
+.ability-tooltip-popover {
+  position: fixed;
+  z-index: 120;
+  width: max-content;
+  max-width: 296px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(16, 18, 23, 0.97);
+  border: 1px solid var(--border-brass-strong);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.72);
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+
+.ability-tooltip-popover--top {
+  transform: translate(-50%, -100%);
+}
+
+.ability-tooltip-popover--bottom {
+  transform: translate(-50%, 0);
+}
+
+.ability-tooltip-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--brass-bright);
+  line-height: 1.25;
+  margin-bottom: 4px;
+}
+
+.ability-tooltip-desc {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-parchment);
+}
+
+.my-hero-abilities-bar {
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.enemy-customize-abilities {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 2px;
+}
+
+.hero-ability-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.hero-ability-chip {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: rgba(20, 22, 28, 0.95);
+  border: 1px solid var(--border-subtle);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  cursor: help;
+  transition: border-color 0.14s ease, transform 0.14s ease, background-color 0.14s ease;
+}
+
+.hero-ability-strip--compact .hero-ability-chip {
+  width: 26px;
+  height: 26px;
+}
+
+.hero-ability-chip--ult {
+  border-color: rgba(214, 165, 86, 0.5);
+  background: rgba(214, 165, 86, 0.1);
+}
+
+.hero-ability-chip:hover,
+.hero-ability-chip:focus-visible {
+  border-color: var(--brass-bright);
+  background: rgba(214, 165, 86, 0.18);
+  transform: translateY(-1px);
+}
+
+.hero-ability-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: brightness(1.06);
+}
+
+.hero-ability-fallback {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-parchment);
+}
+
+.hero-ability-key {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  min-width: 13px;
+  height: 13px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: #0d0e11;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--text-secondary);
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 11px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.hero-ability-chip--ult .hero-ability-key {
+  border-color: rgba(214, 165, 86, 0.65);
+  color: var(--brass-bright);
+}

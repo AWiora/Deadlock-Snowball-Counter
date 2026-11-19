@@ -8,6 +8,11 @@ import {
   ITEM_COPY_DE,
 } from '../i18n/contentDe';
 import { getHeroDisplayName, getItemDisplayName, UI_TEXT } from '../i18n/translations';
+import {
+  getAbilityDisplayName,
+  localizeAbilityMentions,
+  resolveHeroAbility,
+} from '../utils/abilities';
 import type {
   CounterItemRule,
   CounterRecommendation,
@@ -483,10 +488,13 @@ export function recommendCounters(
         if (overrideBonus >= 14) {
           isHeroSpecific = true;
           roleOverride = override.roleOverride;
-          overrideTip =
+          const rawTip =
             lang === 'de'
               ? HERO_OVERRIDE_TIPS_DE[target.heroClass]?.[rule.className] ?? override.tip
               : override.tip;
+          overrideTip = eHeroObj
+            ? localizeAbilityMentions(rawTip, [eHeroObj], itemLang)
+            : rawTip;
         }
         rawScore += overrideBonus;
       }
@@ -826,10 +834,16 @@ export function recommendCounters(
           abilityGroups.set(key, list);
         }
 
+        const resolveKitAbilityName = (ab: HeroKitCounter): string => {
+          const official = resolveHeroAbility(myHero, ab.abilityName);
+          if (official) return getAbilityDisplayName(official, itemLang);
+          return itemLang === 'de' ? ab.abilityNameDe : ab.abilityName;
+        };
+
         const reasons: EnemyCounterReason[] = [];
         for (const group of abilityGroups.values()) {
           const ab = group[0].ability;
-          const abName = lang === 'de' ? ab.abilityNameDe : ab.abilityName;
+          const abName = resolveKitAbilityName(ab);
           const effect = lang === 'de' ? ab.effectDe : ab.effectEn;
           const triggers = Array.from(
             new Set(group.flatMap((g) => g.matchedTriggers)),
@@ -843,8 +857,7 @@ export function recommendCounters(
         }
 
         const primaryAbility = enemyMatches[0].ability;
-        const primaryAbilityName =
-          lang === 'de' ? primaryAbility.abilityNameDe : primaryAbility.abilityName;
+        const primaryAbilityName = resolveKitAbilityName(primaryAbility);
 
         rawAmpCandidates.push({
           item,

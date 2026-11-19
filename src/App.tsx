@@ -63,6 +63,7 @@ export function App() {
       <main className="main-container">
         <MatchupControlBar
           language={matchup.language}
+          itemLanguage={matchup.itemLanguage}
           heroes={heroes}
           heroesByClass={heroesByClass}
           myHero={myHero}
@@ -147,6 +148,7 @@ export function App() {
                           itemLanguage={matchup.itemLanguage}
                           totalSelectedEnemies={matchup.enemyTargets.length}
                           heroesByClass={heroesByClass}
+                          myHero={myHero}
                         />
                       ))
                     ) : (
@@ -208,6 +210,7 @@ export function App() {
                           itemLanguage={matchup.itemLanguage}
                           totalSelectedEnemies={matchup.enemyTargets.length}
                           heroesByClass={heroesByClass}
+                          myHero={myHero}
                         />
                       ))
                     ) : (
