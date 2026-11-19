@@ -1252,7 +1252,7 @@ export function getHeroProfile(className: string): HeroProfile {
         fastFirerate: true,
         spiritProccer: true,
       },
-      threatHeadline: 'Versatile threat — use the Damage Type and Build toggles above to pinpoint their snowballed stats.',
+      threatHeadline: 'Versatile threat — set damage focus and extra stacks above to pinpoint their build.',
     }
   );
 }

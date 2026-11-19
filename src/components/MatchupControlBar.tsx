@@ -574,11 +574,11 @@ export function MatchupControlBar({
                       <span className="meta-split-bar-spirit" />
                     </div>
                     <div className="meta-split-legend">
-                      <span className="meta-split-num meta-split-num--weapon">{metaPct} % Gun</span>
+                      <span className="meta-split-num meta-split-num--weapon">{metaPct} % {t.damageOptions.bullet}</span>
                       <span className="meta-split-caption">
                         {t.metaSplitCaption(focusedEnemyName ?? '')}
                       </span>
-                      <span className="meta-split-num meta-split-num--spirit">{100 - metaPct} % Spirit</span>
+                      <span className="meta-split-num meta-split-num--spirit">{100 - metaPct} % {t.damageOptions.spirit}</span>
                     </div>
                   </div>
                 )}

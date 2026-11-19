@@ -51,7 +51,7 @@ export const UI_TEXT = {
     rosterHintMyHero: 'Wähle deinen eigenen Helden.',
     cancelMyPickBtn: 'Abbrechen',
     youBadge: 'DU',
-    focusedEnemyBadge: 'Toggles aktiv',
+    focusedEnemyBadge: 'Angepasst',
     backToPrev: (name: string) => `Zurück zu ${name}`,
 
     priceTierLabel: 'Souls',
@@ -73,11 +73,11 @@ export const UI_TEXT = {
     damageLabel: 'Damage-Fokus',
     metaSplitCaption: (name: string) => `So bauen ${name}-Spieler in aktuellen Matches`,
     metaSplitAria: (gun: number, spirit: number) =>
-      `Aktuelle Matches: ${gun} Prozent Gun-Souls, ${spirit} Prozent Spirit-Souls`,
+      `Aktuelle Matches: ${gun} Prozent Weapon-Souls, ${spirit} Prozent Spirit-Souls`,
     resetBtn: 'Reset',
-    resetTitle: 'Damage-Fokus zurücksetzen und Extra-Toggles löschen',
+    resetTitle: 'Damage-Fokus und „Stackt zusätzlich“ zurücksetzen',
     damageOptions: {
-      bullet: 'Gun',
+      bullet: 'Weapon',
       equal: 'Hybrid',
       spirit: 'Spirit',
     } as Record<DamageProfile, string>,
@@ -96,8 +96,8 @@ export const UI_TEXT = {
     emptyOffense800Body:
       'Echte Offense-Counter (Slowing Hex, Healbane, Spirit Sap usw.) starten erst ab 1.600 Souls.',
     switchTo1600Btn: 'Zu 1.600 wechseln',
-    emptyColumnGeneric: 'Keine passenden Counter in diesem Preis-Tier.',
-    switchToAllBtn: 'Alle Tiers zeigen',
+    emptyColumnGeneric: 'Keine passenden Counter auf dieser Souls-Stufe.',
+    switchToAllBtn: 'Alle Souls-Stufen zeigen',
     vsWord: 'vs',
     asWord: 'als',
 
@@ -110,7 +110,7 @@ export const UI_TEXT = {
     activeTag: 'ACTIVE',
     passiveTag: 'PASSIVE',
     hardCounterBadge: 'Hard Counter',
-    hardCounterTitle: 'Spezifischer mechanischer Hard-Counter gegen diesen Hero',
+    hardCounterTitle: 'Spezifischer mechanischer Hard-Counter gegen diesen Helden',
     kitSynergyBadge: 'Kit-Synergy',
     kitSynergyTitle: 'Verstärkt eine Ability deines Helden, die diesen Gegner direkt countert',
     kitAmplifierReason: (
@@ -192,7 +192,7 @@ export const UI_TEXT = {
     } as Record<CounterActionVerb, string>,
     mechanicFallbacks: {
       melee: 'Heavy Melee',
-      bullet_dps: 'Bullet-DPS',
+      bullet_dps: 'Weapon-DPS',
       spirit_dps: 'Spirit-DPS',
       tanky: 'Tanky',
       healing: 'Heilung',
@@ -211,7 +211,7 @@ export const UI_TEXT = {
     countersSingleBadge: (name: string) => `vs ${name}`,
     dynamicMechanicReason: (triggers: string) => `Countert gezielt ${triggers}.`,
     damageReasonLabel: {
-      bullet: 'Bullet-Damage',
+      bullet: 'Weapon-Damage',
       equal: 'Hybrid-Damage',
       spirit: 'Spirit-Damage',
     } as Record<DamageProfile, string>,
@@ -228,7 +228,7 @@ export const UI_TEXT = {
       Shutdown: 'Shutdown',
       Burst: 'Burst',
       Survival: 'Survival',
-      'Anti-Gun': 'Anti-Gun',
+      'Anti-Gun': 'Anti-Weapon',
       'Anti-Spirit': 'Anti-Spirit',
       'Anti-Heal': 'Anti-Heal',
       'Anti-Melee': 'Anti-Melee',
@@ -240,7 +240,7 @@ export const UI_TEXT = {
     threats: {
       rapid_fire: 'Schnelles Dauerfeuer',
       on_hit_procs: 'Stackt pro Treffer',
-      bullet_ult: 'Waffen-Ult',
+      bullet_ult: 'Weapon-Ult',
       channeled_ult: 'Unterbrechbare Ult',
       airborne: 'Kämpft aus der Luft',
       high_mobility: 'Sehr mobil',
@@ -270,7 +270,7 @@ export const UI_TEXT = {
       `Gegen ${name} funktionieren beide Richtungen — wähle Offense für den Shutdown oder Defense zum Überleben.`,
 
     synergy: {
-      gun: (hero: string) => `Passt stark zu ${hero}s Gun-Damage`,
+      gun: (hero: string) => `Passt stark zu ${hero}s Weapon-Damage`,
       spirit: (hero: string) => `Skaliert sauber mit ${hero}s Spirit-Kit`,
       firerate: (hero: string) => `Procct schnell durch ${hero}s Fire Rate`,
       spiritProccer: (hero: string) => `Procct zuverlässig über ${hero}s Abilities`,
@@ -282,7 +282,7 @@ export const UI_TEXT = {
     emptyBadge: 'Counter-Lookup unter 5 Sekunden',
     emptyHeading: 'Wer snowballt gerade oder macht Druck auf deiner Lane?',
     emptySub: 'Klick einen Gegner im Roster an oder tippe einfach seinen Namen.',
-    searchPlaceholderEnemy: 'Gegner suchen',
+    searchPlaceholderEnemy: 'Helden suchen',
     searchPlaceholderMy: 'Deinen Helden suchen',
     searchTypeHint: 'Einfach lostippen',
     searchEnterHint: 'Enter',
@@ -303,16 +303,16 @@ export const UI_TEXT = {
     keyHintSouls: 'Souls-Stufe',
     keyHintClear: 'Suche leeren',
     emptyDesc:
-      'Wähle oben deinen Hero und klicke die gegnerische Threat an — du bekommst sofort die besten Counter-Items passend zu Preis-Tier, gegnerischem Build und deinem Kit.',
-    emptyCta: (count: number) => `Alle ${count} Heroes durchsuchen`,
+      'Wähle oben deinen Helden und klicke den Gegner an, der dich unter Druck setzt — du bekommst sofort die besten Counter-Items passend zu Souls-Stufe, gegnerischem Build und deinem Kit.',
+    emptyCta: (count: number) => `Alle ${count} Helden durchsuchen`,
     quickPickLabel: 'HÄUFIGE SNOWBALL-THREATS — 1-KLICK-PICK',
 
-    modalMyTitle: 'Deinen Hero wählen',
+    modalMyTitle: 'Deinen Helden wählen',
     modalMySub: 'Bleibt für das ganze Match gespeichert, damit Counter-Items optimal zu deinem Kit passen.',
     modalEnemyTitle: 'Gegner-Threat wählen',
-    modalEnemySub: 'Base-Kit & Damage-Fokus werden automatisch geladen — Extra-Toggles nur bei Bedarf anklicken.',
-    modalSearchPlaceholder: 'Heroname eintippen (z. B. Haze, Abrams, Seven) + Enter...',
-    modalNoMatch: (q: string) => `Kein Hero gefunden für „${q}“`,
+    modalEnemySub: 'Base-Kit & Damage-Fokus werden automatisch geladen — „Stackt zusätzlich“ nur bei Bedarf anklicken.',
+    modalSearchPlaceholder: 'Heldennamen eintippen (z. B. Haze, Abrams, Seven) + Enter …',
+    modalNoMatch: (q: string) => `Kein Held gefunden für „${q}“`,
 
     footerPrefix: 'Deadlock Counter-Helper · Item-Icons & Soul-Costs via',
   },
@@ -346,7 +346,7 @@ export const UI_TEXT = {
     rosterHintMyHero: 'Pick your own hero.',
     cancelMyPickBtn: 'Cancel',
     youBadge: 'YOU',
-    focusedEnemyBadge: 'Toggles active',
+    focusedEnemyBadge: 'Customized',
     backToPrev: (name: string) => `Back to ${name}`,
 
     priceTierLabel: 'Souls',
@@ -370,9 +370,9 @@ export const UI_TEXT = {
     metaSplitAria: (gun: number, spirit: number) =>
       `Recent matches: ${gun} percent weapon souls, ${spirit} percent spirit souls`,
     resetBtn: 'Reset',
-    resetTitle: 'Reset damage focus and clear extra build toggles',
+    resetTitle: 'Reset damage focus and extra stacks',
     damageOptions: {
-      bullet: 'Gun',
+      bullet: 'Weapon',
       equal: 'Hybrid',
       spirit: 'Spirit',
     } as Record<DamageProfile, string>,
@@ -391,8 +391,8 @@ export const UI_TEXT = {
     emptyOffense800Body:
       'True offensive counters (Slowing Hex, Healbane, Spirit Sap, etc.) start at 1,600 Souls.',
     switchTo1600Btn: 'Switch to 1,600',
-    emptyColumnGeneric: 'No matching counters in this price tier.',
-    switchToAllBtn: 'Show all tiers',
+    emptyColumnGeneric: 'No matching counters at this souls tier.',
+    switchToAllBtn: 'Show all souls tiers',
     vsWord: 'vs',
     asWord: 'as',
 
@@ -487,7 +487,7 @@ export const UI_TEXT = {
     } as Record<CounterActionVerb, string>,
     mechanicFallbacks: {
       melee: 'Heavy Melee',
-      bullet_dps: 'Bullet DPS',
+      bullet_dps: 'Weapon DPS',
       spirit_dps: 'Spirit DPS',
       tanky: 'Tanky',
       healing: 'Healing',
@@ -506,7 +506,7 @@ export const UI_TEXT = {
     countersSingleBadge: (name: string) => `vs ${name}`,
     dynamicMechanicReason: (triggers: string) => `Directly counters ${triggers}.`,
     damageReasonLabel: {
-      bullet: 'Bullet Damage',
+      bullet: 'Weapon Damage',
       equal: 'Mixed Damage',
       spirit: 'Spirit Damage',
     } as Record<DamageProfile, string>,
@@ -523,7 +523,7 @@ export const UI_TEXT = {
       Shutdown: 'Shutdown',
       Burst: 'Burst Down',
       Survival: 'Survival',
-      'Anti-Gun': 'Anti-Gun',
+      'Anti-Gun': 'Anti-Weapon',
       'Anti-Spirit': 'Anti-Spirit',
       'Anti-Heal': 'Anti-Heal',
       'Anti-Melee': 'Anti-Melee',
@@ -535,7 +535,7 @@ export const UI_TEXT = {
     threats: {
       rapid_fire: 'Fast fire rate',
       on_hit_procs: 'Stacks on hit',
-      bullet_ult: 'Bullet Ult',
+      bullet_ult: 'Weapon Ult',
       channeled_ult: 'Channeled Ult',
       airborne: 'Fights from the air',
       high_mobility: 'Very mobile',
@@ -565,7 +565,7 @@ export const UI_TEXT = {
       `Both angles work well vs ${name} — pick Offense to shut them down or Defense to outlast their damage.`,
 
     synergy: {
-      gun: (hero: string) => `Great fit for ${hero}'s gun damage`,
+      gun: (hero: string) => `Great fit for ${hero}'s weapon damage`,
       spirit: (hero: string) => `Scales cleanly with ${hero}'s spirit kit`,
       firerate: (hero: string) => `Procs fast with ${hero}'s fire rate`,
       spiritProccer: (hero: string) => `Applies reliably off ${hero}'s abilities`,
@@ -577,7 +577,7 @@ export const UI_TEXT = {
     emptyBadge: 'Sub-5-Second Counter Lookup',
     emptyHeading: 'Who is snowballing or pressuring your lane?',
     emptySub: 'Click an enemy in the roster or just type their name.',
-    searchPlaceholderEnemy: 'Find an enemy',
+    searchPlaceholderEnemy: 'Find a hero',
     searchPlaceholderMy: 'Find your hero',
     searchTypeHint: 'Just start typing',
     searchEnterHint: 'Enter',
@@ -598,14 +598,14 @@ export const UI_TEXT = {
     keyHintSouls: 'Souls tier',
     keyHintClear: 'Clear search',
     emptyDesc:
-      'Pick your hero above and click the enemy threat below to get exact counter items tuned to their mechanics, game stage, build toggles, and your kit.',
+      'Pick your hero above and click the enemy who is pressuring you to get counter items tuned to their kit, your souls, their build and your kit.',
     emptyCta: (count: number) => `Search All ${count} Heroes`,
     quickPickLabel: 'COMMON SNOWBALL THREATS — 1-CLICK PICK',
 
     modalMyTitle: 'Select Your Hero',
     modalMySub: 'Stays sticky across the match so counter picks fit your kit (gun vs spirit, range, procs).',
     modalEnemyTitle: 'Select Enemy Threat',
-    modalEnemySub: 'Auto-loads base kit & damage focus — only click extra build toggles if they stack them.',
+    modalEnemySub: 'Auto-loads base kit & damage focus — only add extra stacks if they build them.',
     modalSearchPlaceholder: 'Type hero name (e.g. Haze, Abrams, Seven) and press Enter...',
     modalNoMatch: (q: string) => `No hero matching "${q}"`,
 
