@@ -134,7 +134,7 @@ export const ITEM_COPY_DE: Record<string, { why: string; whenToUse: string }> = 
   },
   upgrade_containment: {
     why: 'Silenced alle Movement-Abilities & Dashes für 1.600 Souls — hält mobile Assassinen und Diver zuverlässig fest.',
-    whenToUse: 'Casten, kurz bevor der Gegner wegdash-en, grapplen oder mit Movement-Items escapen will.',
+    whenToUse: 'Casten, kurz bevor der Gegner wegdashen, grapplen oder mit Movement-Items escapen will.',
   },
   upgrade_suppressor: {
     why: 'Senkt passiv die gegnerische Fire Rate bei jedem Spirit-Hit — stark gegen Gun-Carrys ohne Active Slot.',
@@ -185,7 +185,7 @@ export const ITEM_COPY_DE: Record<string, { why: string; whenToUse: string }> = 
     whenToUse: 'Direkt aktivieren, sobald Sticky Bomb, Afterburn, Mark, Root oder Static Charge auf dir sitzt.',
   },
   upgrade_counterspell: {
-    why: 'Macht deinen Parry zum Spell-Shield (braucht keinen Active Slot!) — blockt angesagte Ults, CC & Burst und heilt dich.',
+    why: 'Macht deinen Parry zum Spell-Shield (braucht keinen Active Slot!) — blockt vorhersehbare Ults, CC & Burst und heilt dich.',
     whenToUse: 'Parry genau im Impact-Moment drücken, bevor die gegnerische Ult, Sticky Bomb oder der Hook trifft.',
   },
   upgrade_targeted_silence: {
@@ -253,7 +253,7 @@ export const ITEM_COPY_DE: Record<string, { why: string; whenToUse: string }> = 
     whenToUse: 'Passiv — negiert überraschenden Pick-CC (Lasso, Hook, Sleep, Combo) ganz ohne Reaktionszeit.',
   },
   upgrade_self_bubble: {
-    why: 'Sofortige Invulnerability + Unbeweglichkeit — dodged angesagte Ults, verzögerte Detonations und Dive-Combos.',
+    why: 'Sofortige Invulnerability — dodged vorhersehbare Ults, verzögerte Detonations und Dive-Combos.',
     whenToUse: 'Kurz vor dem tödlichen Burst drücken und bei Bedarf frühzeitig canceln, sobald deine Cooldowns ready sind.',
   },
   upgrade_inhibitor: {
@@ -530,7 +530,7 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
   hero_astro: {
     upgrade_vex_barrier: 'Spirit Lasso & Bounce Pad Stun triggern sofort deine Barrier, damit du den Drag überlebst.',
     upgrade_counterspell: 'Parry Spirit Lasso oder Powder Keg Explosions, um Hollidays Pick-Combo komplett zu negieren.',
-    upgrade_unstoppable: 'Verhindert durch CC-Immunity, dass Holliday dich mit Spirit Lasso entführen kann.',
+    upgrade_unstoppable: 'Verhindert durch CC-Immunity, dass Holliday dich mit Spirit Lasso rausziehen kann.',
     upgrade_rescue_beam: 'Zieht einen Teammate im Spirit Lasso sofort zurück in Sicherheit und heilt ihn gegen.',
   },
   hero_chrono: {
@@ -543,7 +543,7 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_melee_rebuttal: 'Bestraft Apollos Melee-Lunges per Parry mit Self-Heal und reflektiertem Damage.',
     upgrade_containment: 'Silenced Apollos Dashes & Lunges, sodass er nicht rein- und rauskiten kann.',
     upgrade_targeted_silence: 'Silenced Riposte-Parry und seine Ult, sodass Apollo deinen Burst nicht countern kann.',
-    upgrade_counterspell: 'Parry Apollos angesagte Ult (Itani Lo Sahn), um Burst und Anti-Heal komplett zu blocken.',
+    upgrade_counterspell: 'Parry Apollos Ult (Itani Lo Sahn) im Impact-Moment, um Burst und Anti-Heal komplett zu blocken.',
     upgrade_glitch: 'Silenced, disarmt und sperrt Apollos Riposte & Mobility gleichzeitig.',
   },
   hero_unicorn: {
@@ -602,7 +602,7 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_withering_whip: 'Senkt Silvers Slam Fire Rate schon für 800 Souls und upgradet zu Disarming Hex.',
     upgrade_greater_withering_whip: 'Disarmt Silver während Slam Fire / Lycan Curse und shredded ihre Bullet Resist.',
     upgrade_metal_skin: 'Blockt Silvers kompletten Close-Range-Gun- & Melee-Burst während ihrer Werwolf-Form.',
-    upgrade_reduce_debuff_duration: 'Cleansed ihre Entangling Bola sofort, damit Silver dich nicht festpinnen kann.',
+    upgrade_reduce_debuff_duration: 'Cleansed ihre Entangling Bola sofort, damit Silver dich nicht festhalten kann.',
     upgrade_deflecting_armor: 'Deflected Silvers Slam Fire Salven passiv ohne Active Slot.',
   },
   hero_chessmaster: {

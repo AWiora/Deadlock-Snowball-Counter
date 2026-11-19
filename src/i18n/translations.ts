@@ -138,13 +138,13 @@ export const UI_TEXT = {
       isImbue: boolean,
     ): string => {
       if (axis === 'echo') {
-        return `Auf ${ability} imbuen und nach dem ersten Cast direkt resetteten für einen zweiten Cast.`;
+        return `Auf ${ability} imbuen und nach dem ersten Cast direkt resetten für einen zweiten Cast.`;
       }
       if (axis === 'refresher') {
         return `Direkt nach ${ability} aktivieren, um sofort erneut zu countern oder ein zweites Target zu locken.`;
       }
       if (axis === 'gap_close') {
-        return `Per Active reinlaunch-en und direkt in Range für ${ability} droppen.`;
+        return `Per Active in die Luft springen und direkt in Range für ${ability} landen.`;
       }
       if (isImbue) {
         return `Auf ${ability} imbuen — halte ${ability} gezielt für das gegnerische Key-Window bereit.`;
