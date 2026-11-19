@@ -434,12 +434,12 @@ export function MatchupControlBar({
                     className="meta-split-hint"
                     title={
                       language === 'de'
-                        ? `Live-Match-Daten (30 Tage): ${focusedEnemy.metaWeaponPct}% Waffen-Seelen / ${100 - focusedEnemy.metaWeaponPct}% Spirit-Seelen`
+                        ? `Live-Match-Daten (30 Tage): ${focusedEnemy.metaWeaponPct}% Gun-Souls / ${100 - focusedEnemy.metaWeaponPct}% Spirit-Souls`
                         : `Live 30-day match data: ${focusedEnemy.metaWeaponPct}% Weapon souls / ${100 - focusedEnemy.metaWeaponPct}% Spirit souls`
                     }
                   >
                     {focusedEnemy.metaWeaponPct >= 58
-                      ? `Meta: ${focusedEnemy.metaWeaponPct}% ${language === 'de' ? 'Waffe' : 'Gun'}`
+                      ? `Meta: ${focusedEnemy.metaWeaponPct}% Gun`
                       : focusedEnemy.metaWeaponPct <= 42
                         ? `Meta: ${100 - focusedEnemy.metaWeaponPct}% Spirit`
                         : `Meta: ${focusedEnemy.metaWeaponPct}/${100 - focusedEnemy.metaWeaponPct}%`}

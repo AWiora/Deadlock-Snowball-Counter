@@ -21,8 +21,8 @@ export function getItemDisplayName(item: DeadlockItem, lang: Language): string {
 
 export const UI_TEXT = {
   de: {
-    brandTitle: 'DEADLOCK KONTER',
-    brandSub: 'Schneller Mid-Game Konter-Builder',
+    brandTitle: 'DEADLOCK COUNTER',
+    brandSub: 'Schneller Mid-Game Counter-Builder',
     statusLive: 'Live-Patch',
     statusCached: 'Live (Cache)',
     statusSnapshot: 'Snapshot',
@@ -53,62 +53,62 @@ export const UI_TEXT = {
     focusedEnemyBadge: 'Toggles aktiv',
     backToPrev: (name: string) => `Zurück zu ${name}`,
 
-    priceTierLabel: 'PREISSTUFE (SEELEN)',
+    priceTierLabel: 'PREIS-TIER (SOULS)',
     priceTiers: {
-      '800': { label: '800', sub: 'Früh' },
+      '800': { label: '800', sub: 'Early' },
       '1600': { label: '1.600', sub: 'Lane' },
       '3200': { label: '3.200', sub: 'Mid' },
       '6400': { label: '6.400', sub: 'Late' },
       all: { label: 'Alle', sub: 'Top' },
     } as Record<PriceTier, { label: string; sub: string }>,
 
-    activeSlotsFullLabel: 'AKTIVE SLOTS',
-    activeSlotsFullBtn: 'Aktive Slots voll',
+    activeSlotsFullLabel: 'ACTIVE SLOTS',
+    activeSlotsFullBtn: 'Active Slots voll',
     activeSlotsFullSub: 'Nur passive Items',
-    activeSlotsFullTitle: 'Aktive Items ausblenden, wenn alle 4 Aktiv-Slots belegt sind',
+    activeSlotsFullTitle: 'Active Items ausblenden, wenn alle 4 Active Slots belegt sind',
 
-    baseKitLabel: 'Basis-Kit automatisch berücksichtigt:',
+    baseKitLabel: 'Base-Kit automatisch berücksichtigt:',
 
-    damageLabel: 'GEGNER-SCHADENSFOKUS',
-    resetBtn: 'Zurücksetzen',
-    resetTitle: 'Schadensfokus zurücksetzen und Extra-Toggles löschen',
+    damageLabel: 'GEGNER-DAMAGE-FOKUS',
+    resetBtn: 'Reset',
+    resetTitle: 'Damage-Fokus zurücksetzen und Extra-Toggles löschen',
     damageOptions: {
-      bullet: 'Kugeln',
-      equal: 'Gemischt',
+      bullet: 'Bullet / Gun',
+      equal: 'Hybrid / Mix',
       spirit: 'Spirit',
     } as Record<DamageProfile, string>,
 
     customizeForLabel: 'Anpassen für:',
     extraTraitsLabel: 'GEGNER STACKT (OPTIONAL)',
     modifiers: {
-      tanky: { label: 'Tanky / Rüstung', hint: 'Baut viel HP, Rüstung, Barrieren oder Zähigkeit' },
-      healing: { label: 'Heilung / Lebensraub', hint: 'Baut Lebensraub, Heilung oder Leech' },
-      cc: { label: 'Stuns / CC', hint: 'Baut Niederschlag, Verfluchtes Relikt, Stuns oder Debuffs' },
-      melee: { label: 'Nahkampf', hint: 'Baut Nahkampf-Items wie Crushing Fists / Lifestrike' },
-      mobility: { label: 'Flucht / Mobilität', hint: 'Baut Warp Stone, Majestic Leap, Fleetfoot oder Magic Carpet und entkommt ständig' },
+      tanky: { label: 'Tanky / Resist', hint: 'Stackt viel HP, Bullet/Spirit Resist, Barriers oder Fortitude' },
+      healing: { label: 'Heal / Lifesteal', hint: 'Baut Lifesteal, Leech, Healing Nova oder viel Sustain' },
+      cc: { label: 'Stuns / CC', hint: 'Baut Knockdown, Cursed Relic, Stuns, Roots oder Silences' },
+      melee: { label: 'Melee', hint: 'Baut Melee-Items wie Crushing Fists, Melee Charge oder Lifestrike' },
+      mobility: { label: 'Escape / Mobility', hint: 'Baut Warp Stone, Majestic Leap, Fleetfoot oder Magic Carpet zum Escapen' },
     } as Record<EnemyModifier, { label: string; hint: string }>,
 
-    emptyOffense800Title: 'Kein echter Offensiv-Konter für 800 Seelen',
+    emptyOffense800Title: 'Kein echter Offense-Counter für 800 Souls',
     emptyOffense800Body:
-      'Echte Offensiv-Konter (Slowing Hex, Healbane, Spirit Sap usw.) starten erst ab 1.600 Seelen.',
+      'Echte Offense-Counter (Slowing Hex, Healbane, Spirit Sap usw.) starten erst ab 1.600 Souls.',
     switchTo1600Btn: 'Zu 1.600 wechseln',
-    emptyColumnGeneric: 'Keine passenden Konter in dieser Preisstufe.',
-    switchToAllBtn: 'Alle Preisstufen zeigen',
-    vsWord: 'gegen',
+    emptyColumnGeneric: 'Keine passenden Counter in diesem Preis-Tier.',
+    switchToAllBtn: 'Alle Tiers zeigen',
+    vsWord: 'vs',
     asWord: 'als',
 
-    passiveBannerLead: 'Nur-Passiv-Modus:',
+    passiveBannerLead: 'Passive-Only-Modus:',
     passiveBannerBody: (count: number) =>
-      `${count} Top-Aktiv-${count === 1 ? 'Konter ausgeblendet' : 'Konter ausgeblendet'}, da deine Aktiv-Slots voll sind.`,
-    showActivesBtn: 'Aktive zeigen',
+      `${count} Top-Active-${count === 1 ? 'Counter ausgeblendet' : 'Counter ausgeblendet'}, da deine Active Slots voll sind.`,
+    showActivesBtn: 'Actives zeigen',
 
     topBadge: 'TOP',
-    activeTag: 'AKTIV',
-    passiveTag: 'PASSIV',
-    hardCounterBadge: 'Harter Konter',
-    hardCounterTitle: 'Spezifischer mechanischer Konter gegen diesen Helden',
-    kitSynergyBadge: 'Kit-Synergie',
-    kitSynergyTitle: 'Verstärkt eine Fähigkeit deines Helden, die diesen Gegner direkt kontert',
+    activeTag: 'ACTIVE',
+    passiveTag: 'PASSIVE',
+    hardCounterBadge: 'Hard Counter',
+    hardCounterTitle: 'Spezifischer mechanischer Hard-Counter gegen diesen Hero',
+    kitSynergyBadge: 'Kit-Synergy',
+    kitSynergyTitle: 'Verstärkt eine Ability deines Helden, die diesen Gegner direkt countert',
     kitAmplifierReason: (
       axis: KitAmplifierAxis,
       ability: string,
@@ -119,17 +119,17 @@ export const UI_TEXT = {
         case 'cooldown':
           return `Verstärkt ${ability} (${hero}) — kürzerer Cooldown: ${effect}.`;
         case 'range':
-          return `Verstärkt ${ability} (${hero}) — mehr Reichweite/Radius: ${effect}.`;
+          return `Verstärkt ${ability} (${hero}) — mehr Range/Radius: ${effect}.`;
         case 'duration':
-          return `Verstärkt ${ability} (${hero}) — längere Dauer: ${effect}.`;
+          return `Verstärkt ${ability} (${hero}) — längere Duration: ${effect}.`;
         case 'charges':
-          return `Verstärkt ${ability} (${hero}) — zusätzliche Aufladungen: ${effect}.`;
+          return `Verstärkt ${ability} (${hero}) — extra Charges: ${effect}.`;
         case 'echo':
-          return `Setzt ${ability} (${hero}) sofort zurück — doppelter Einsatz: ${effect}.`;
+          return `Resettet ${ability} (${hero}) sofort — Double-Cast: ${effect}.`;
         case 'refresher':
-          return `Setzt ${ability} (${hero}) & Kit sofort zurück — doppelter Einsatz: ${effect}.`;
+          return `Resettet ${ability} (${hero}) & Kit sofort — Double-Cast: ${effect}.`;
         case 'gap_close':
-          return `Bringt ${hero} direkt in Reichweite für ${ability}: ${effect}.`;
+          return `Bringt ${hero} direkt in Range für ${ability}: ${effect}.`;
       }
     },
     kitAmplifierUse: (
@@ -138,117 +138,117 @@ export const UI_TEXT = {
       isImbue: boolean,
     ): string => {
       if (axis === 'echo') {
-        return `Auf ${ability} anwenden (Imbue) und direkt ein zweites Mal einsetzen, wenn der erste Einsatz raus ist.`;
+        return `Auf ${ability} imbuen und nach dem ersten Cast direkt resetteten für einen zweiten Cast.`;
       }
       if (axis === 'refresher') {
-        return `Direkt nach ${ability} aktivieren, um sofort erneut zu kontern oder ein zweites Ziel zu stoppen.`;
+        return `Direkt nach ${ability} aktivieren, um sofort erneut zu countern oder ein zweites Target zu locken.`;
       }
       if (axis === 'gap_close') {
-        return `In die Luft katapultieren und direkt in Reichweite für ${ability} fallen lassen.`;
+        return `Per Active reinlaunch-en und direkt in Range für ${ability} droppen.`;
       }
       if (isImbue) {
-        return `Auf ${ability} anwenden (Imbue) — halte ${ability} gezielt für das gegnerische Kern-Fenster bereit.`;
+        return `Auf ${ability} imbuen — halte ${ability} gezielt für das gegnerische Key-Window bereit.`;
       }
-      return `Passiv — halte ${ability} gezielt bereit, um gegnerische Kern-Fähigkeiten sofort zu kontern.`;
+      return `Passiv — halte ${ability} gezielt bereit, um gegnerische Key-Abilities sofort zu countern.`;
     },
     kitAmplifierSynergyNote: (hero: string, ability: string) =>
-      `Verstärkt ${hero}s ${ability}`,
+      `Bufft ${hero}s ${ability}`,
     tierLabels: {
-      'Best Counter': 'Bester Konter',
-      'Core Counter': 'Kern-Konter',
-      'Strong Pick': 'Starke Wahl',
+      'Best Counter': 'Best Counter',
+      'Core Counter': 'Core Counter',
+      'Strong Pick': 'Strong Pick',
     },
-    useLabel: 'Einsatz:',
-    soulTitle: (tier: number, cost: number) => `Stufe-${tier}-Item (${cost.toLocaleString('de-DE')} Seelen)`,
+    useLabel: 'Use:',
+    soulTitle: (tier: number, cost: number) => `Tier-${tier}-Item (${cost.toLocaleString('de-DE')} Souls)`,
     copyItemTitle: 'Itemnamen für die In-Game-Shop-Suche kopieren',
     copiedItemLabel: 'Kopiert!',
-    countersMultiBadge: (matched: number, total: number) => `Kontert ${matched}/${total}`,
-    countersSingleBadge: (name: string) => `Gegen ${name}`,
-    dynamicMechanicReason: (triggers: string) => `Kontert gezielt ${triggers}.`,
+    countersMultiBadge: (matched: number, total: number) => `Countert ${matched}/${total}`,
+    countersSingleBadge: (name: string) => `vs ${name}`,
+    dynamicMechanicReason: (triggers: string) => `Countert gezielt ${triggers}.`,
     damageReasonLabel: {
-      bullet: 'Kugelschaden',
-      equal: 'Gemischter Schaden',
-      spirit: 'Spirit-Schaden',
+      bullet: 'Bullet-Damage',
+      equal: 'Hybrid-Damage',
+      spirit: 'Spirit-Damage',
     } as Record<DamageProfile, string>,
     upgradeFromBadge: (name: string, cost: string) => `↖ Aus: ${name} (${cost})`,
-    upgradeToBadge: (name: string, cost: string) => `→ Wird zu: ${name} (${cost})`,
+    upgradeToBadge: (name: string, cost: string) => `→ Upgrade zu: ${name} (${cost})`,
 
     slots: {
-      weapon: 'Waffe',
-      vitality: 'Vitalität',
+      weapon: 'Weapon',
+      vitality: 'Vitality',
       spirit: 'Spirit',
     } as Record<ItemSlot, string>,
 
     roles: {
-      Shutdown: 'Ausschalten',
-      Burst: 'Wegbursten',
-      Survival: 'Überleben',
-      'Anti-Gun': 'Anti-Waffe',
+      Shutdown: 'Shutdown',
+      Burst: 'Burst',
+      Survival: 'Survival',
+      'Anti-Gun': 'Anti-Gun',
       'Anti-Spirit': 'Anti-Spirit',
-      'Anti-Heal': 'Anti-Heilung',
-      'Anti-Melee': 'Anti-Nahkampf',
-      Shred: 'Rüstungsbruch',
-      Cleanse: 'Entzaubern',
-      Control: 'Kontrolle',
+      'Anti-Heal': 'Anti-Heal',
+      'Anti-Melee': 'Anti-Melee',
+      Shred: 'Resist-Shred',
+      Cleanse: 'Cleanse',
+      Control: 'Control / CC',
     } as Record<CounterRole, string>,
 
     threats: {
-      rapid_fire: 'Hohe Feuerrate',
-      on_hit_procs: 'On-Hit-Effekte',
-      bullet_ult: 'Kugel-Ult',
-      channeled_ult: 'Kanalisierte Ult',
-      airborne: 'Fliegend',
-      high_mobility: 'Hohe Mobilität',
-      fragile_glass_cannon: 'Wenig HP (Glaskanone)',
+      rapid_fire: 'Rapid Fire',
+      on_hit_procs: 'On-Hit-Procs',
+      bullet_ult: 'Bullet-Ult',
+      channeled_ult: 'Channel-Ult',
+      airborne: 'Airborne',
+      high_mobility: 'High Mobility',
+      fragile_glass_cannon: 'Low HP (Glass Cannon)',
       cleanseable_debuff: 'Debuffs / DoT',
-      telegraphed_burst: 'Starker Burst',
-      hard_cc: 'Harter CC',
-      ability_spam: 'Fähigkeiten-Spam',
+      telegraphed_burst: 'Heavy Burst',
+      hard_cc: 'Hard CC',
+      ability_spam: 'Ability-Spam',
       sustained_spirit: 'Spirit-DoT',
-      heavy_healing: 'Eigene Heilung',
-      melee_brawler: 'Nahkampf',
-      buff_shield_stacker: 'Schilde / Buffs',
-      close_range_dive: 'Nahkampf-Dive',
-      long_range_poke: 'Hohe Reichweite',
+      heavy_healing: 'Sustain / Heal',
+      melee_brawler: 'Melee',
+      buff_shield_stacker: 'Shields / Buffs',
+      close_range_dive: 'Close Dive',
+      long_range_poke: 'Long-Range Poke',
     } as Record<ThreatMechanic, string>,
 
-    offenseSectionTitle: 'Angriff / Ausschalten',
-    offenseSectionSub: 'Festhalten, stilllegen, Anti-Heilung & Wegbursten',
-    defenseSectionTitle: 'Verteidigung / Überleben',
-    defenseSectionSub: 'Schaden abfangen, Debuffs entfernen & Kombos überleben',
+    offenseSectionTitle: 'Offense / Shutdown',
+    offenseSectionSub: 'Lockdown, Silence, Anti-Heal & Burst',
+    defenseSectionTitle: 'Defense / Survive',
+    defenseSectionSub: 'Damage mitigieren, Debuffs cleansen & Combos überleben',
     recommendedStanceBadge: 'Empfohlener Fokus',
     stanceReasonOffense: (name: string) =>
-      `${name} hat wenig HP oder hohe Flucht-Mobilität — festhalten, stilllegen & wegbursten ist oft stärker als reine Verteidigung.`,
+      `${name} ist squishy oder hat starke Escapes — Lockdown, Silence & Wegbursten ist oft stärker als reine Defense.`,
     stanceReasonDefense: (name: string) =>
-      `${name} droht dich mit hohem Burst, CC oder Dauerfeuer rauszunehmen — erst überleben, dann zurückschlagen.`,
+      `${name} droht dich mit Heavy Burst, CC oder DPS zu deleten — erst die Combo überleben, dann zurückschlagen.`,
     stanceReasonBalanced: (name: string) =>
-      `Gegen ${name} lohnen sich beide Wege — wähle Angriff zum Ausschalten oder Verteidigung zum Überleben.`,
+      `Gegen ${name} funktionieren beide Richtungen — wähle Offense für den Shutdown oder Defense zum Überleben.`,
 
     synergy: {
-      gun: (hero: string) => `Passt stark zu ${hero}s Waffenschaden`,
+      gun: (hero: string) => `Passt stark zu ${hero}s Gun-Damage`,
       spirit: (hero: string) => `Skaliert sauber mit ${hero}s Spirit-Kit`,
-      firerate: (hero: string) => `Löst schnell durch ${hero}s Feuerrate aus`,
-      spiritProccer: (hero: string) => `Wird zuverlässig durch ${hero}s Fähigkeiten ausgelöst`,
-      closeRange: (hero: string) => `Passt zu ${hero}s Nahkampf-Spielstil`,
-      longRange: (hero: string) => `Hält ${hero} sicher auf Distanz`,
+      firerate: (hero: string) => `Procct schnell durch ${hero}s Fire Rate`,
+      spiritProccer: (hero: string) => `Procct zuverlässig über ${hero}s Abilities`,
+      closeRange: (hero: string) => `Passt zu ${hero}s Close-Range-Brawl-Stil`,
+      longRange: (hero: string) => `Hält ${hero} sicher auf Backline-Range`,
       supportive: (hero: string) => `Doppelt stark als Team-Utility auf ${hero}`,
     },
 
-    emptyBadge: 'Konter-Lookup unter 5 Sekunden',
+    emptyBadge: 'Counter-Lookup unter 5 Sekunden',
     emptyHeading: 'Wer snowballt gerade oder macht Druck auf deiner Lane?',
     emptyDesc:
-      'Wähle oben deinen Helden und klicke die gegnerische Bedrohung an — du bekommst sofort die besten Konter-Items passend zu Spielphase, gegnerischem Build und deinem Kit.',
-    emptyCta: (count: number) => `Alle ${count} Helden durchsuchen`,
-    quickPickLabel: 'HÄUFIGE SNOWBALL-BEDROHUNGEN — 1-KLICK-AUSWAHL',
+      'Wähle oben deinen Hero und klicke die gegnerische Threat an — du bekommst sofort die besten Counter-Items passend zu Preis-Tier, gegnerischem Build und deinem Kit.',
+    emptyCta: (count: number) => `Alle ${count} Heroes durchsuchen`,
+    quickPickLabel: 'HÄUFIGE SNOWBALL-THREATS — 1-KLICK-PICK',
 
-    modalMyTitle: 'Deinen Helden wählen',
-    modalMySub: 'Bleibt für das ganze Match gespeichert, damit Konter-Items optimal zu deinem Kit passen.',
-    modalEnemyTitle: 'Gegnerische Bedrohung wählen',
-    modalEnemySub: 'Basis-Kit & Schadensfokus werden automatisch geladen — Extra-Toggles nur bei Bedarf anklicken.',
-    modalSearchPlaceholder: 'Heldenname eintippen (z. B. Haze, Abrams, Seven) + Enter...',
-    modalNoMatch: (q: string) => `Kein Held gefunden für „${q}“`,
+    modalMyTitle: 'Deinen Hero wählen',
+    modalMySub: 'Bleibt für das ganze Match gespeichert, damit Counter-Items optimal zu deinem Kit passen.',
+    modalEnemyTitle: 'Gegner-Threat wählen',
+    modalEnemySub: 'Base-Kit & Damage-Fokus werden automatisch geladen — Extra-Toggles nur bei Bedarf anklicken.',
+    modalSearchPlaceholder: 'Heroname eintippen (z. B. Haze, Abrams, Seven) + Enter...',
+    modalNoMatch: (q: string) => `Kein Hero gefunden für „${q}“`,
 
-    footerPrefix: 'Deadlock Konter-Helper · Item-Icons & Seelenkosten via',
+    footerPrefix: 'Deadlock Counter-Helper · Item-Icons & Soul-Costs via',
   },
   en: {
     brandTitle: 'DEADLOCK COUNTER',

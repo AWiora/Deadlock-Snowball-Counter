@@ -258,7 +258,7 @@ describe('Deadlock counter recommendation engine', () => {
       heroesByClass,
     );
     expect(res.recommendations[0].item.nameDe).toBe('Metallhaut');
-    expect(res.recommendations[0].why).toContain('Kugeltanz');
+    expect(res.recommendations[0].why).toContain('Bullet Dance');
     expect(res.enemyThreatHeadline).toContain('Fixation');
   });
 
@@ -437,7 +437,7 @@ describe('Deadlock counter recommendation engine', () => {
     const toxic = res.offense.find((r) => r.item.className === 'upgrade_toxic_bullets');
     const antiHealPick = decay ?? toxic;
     expect(antiHealPick).toBeDefined();
-    expect(antiHealPick?.why).toMatch(/Heilung|Anti-Heilung/);
+    expect(antiHealPick?.why).toMatch(/Anti-Heal|Lifesteal|Heilung/);
   });
 
   it('prioritizes multi-target counters when 2-3 enemies are selected (e.g. Bebop + Infernus -> Dispel Magic counters 2/2)', () => {
@@ -471,8 +471,8 @@ describe('Deadlock counter recommendation engine', () => {
     expect(dispel?.reasons.length).toBe(2);
     const bebopReason = dispel?.reasons.find((r) => r.heroClasses.includes('hero_bebop'));
     const infernoReason = dispel?.reasons.find((r) => r.heroClasses.includes('hero_inferno'));
-    expect(bebopReason?.text).toContain('Haftbombe');
-    expect(infernoReason?.text).toContain('Nachbrennen');
+    expect(bebopReason?.text).toContain('Sticky Bomb');
+    expect(infernoReason?.text).toContain('Afterburn');
   });
 
   it('collapses shared generic counters across 2 enemies without repeating boilerplate text', () => {
@@ -570,7 +570,7 @@ describe('Deadlock counter recommendation engine', () => {
     const disarmMixed = mixedLangRes.offense.find(
       (r) => r.item.className === 'upgrade_greater_withering_whip',
     );
-    expect(disarmMixed?.why).toContain('Entwaffnet');
+    expect(disarmMixed?.why).toContain('Disarmt');
     expect(disarmMixed?.upgradeHint?.itemName).toBe('Rusted Barrel');
   });
 
@@ -638,9 +638,9 @@ describe('Deadlock counter recommendation engine', () => {
     expect(kitPicks.length).toBe(1);
     expect(kitPicks[0].rank).toBeGreaterThanOrEqual(2);
     expect(kitPicks[0].item.className).toBe('upgrade_tech_range'); // Greater Expansion
-    expect(kitPicks[0].why).toContain('Greifhaken');
-    expect(kitPicks[0].whenToUse).toContain('Greifhaken');
-    expect(kitPicks[0].synergyNote).toContain('Greifhaken');
+    expect(kitPicks[0].why).toContain('Hook');
+    expect(kitPicks[0].whenToUse).toContain('Hook');
+    expect(kitPicks[0].synergyNote).toContain('Hook');
     expect(kitPicks[0].upgradeHint?.itemClassName).toBe('upgrade_magic_reach');
   });
 
@@ -664,8 +664,8 @@ describe('Deadlock counter recommendation engine', () => {
     expect(kitPick).toBeDefined();
     expect(kitPick?.rank).toBeGreaterThanOrEqual(2);
     expect(kitPick?.item.className).toBe('upgrade_magic_tempo'); // Compress Cooldown
-    expect(kitPick?.why).toContain('Heilwürfel');
-    expect(kitPick?.whenToUse).toContain('Imbue');
+    expect(kitPick?.why).toContain('The Cube');
+    expect(kitPick?.whenToUse).toContain('imbuen');
     expect(kitPick?.upgradeHint).toEqual(
       expect.objectContaining({
         direction: 'to',
@@ -738,8 +738,8 @@ describe('Deadlock counter recommendation engine', () => {
     expect(kitPick).toBeDefined();
     expect(kitPick?.counteredEnemies).toContain('hero_hornet');
     expect(kitPick?.counteredEnemies).toContain('hero_gigawatt');
-    expect(kitPick?.reasons.length).toBe(1); // collapsed cleanly onto shared Greifhaken ability
-    expect(kitPick?.reasons[0].text).toContain('Greifhaken');
+    expect(kitPick?.reasons.length).toBe(1); // collapsed cleanly onto shared Hook ability
+    expect(kitPick?.reasons[0].text).toContain('Hook');
   });
 
   it('respects activeSlotsFull for active Kit-Amplifiers (Majestic Leap / Echo Shard / Refresher)', () => {
@@ -818,7 +818,7 @@ describe('Deadlock counter recommendation engine', () => {
     expect(kelvin800.defense[0].isKitAmplifier).toBeFalsy();
     const kelvinCharge = kelvin800.defense.find((r) => r.isKitAmplifier);
     expect(kelvinCharge?.item.className).toBe('upgrade_extra_charge');
-    expect(kelvinCharge?.why).toContain('Frostgranate');
+    expect(kelvinCharge?.why).toContain('Frost Grenade');
 
     // Bebop Hook (non-ult) vs Vindicta at 6400 -> Echo Shard (not Refresher)
     const bebop6400 = recommendCounters(
