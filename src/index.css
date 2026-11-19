@@ -349,14 +349,14 @@ button {
 .modifier-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 5px;
 }
 
 .mod-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 9px;
+  padding: 5px 8px;
   border-radius: 9px;
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);

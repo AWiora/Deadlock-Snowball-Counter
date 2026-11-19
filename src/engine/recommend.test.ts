@@ -1340,7 +1340,7 @@ describe('Deadlock counter recommendation engine', () => {
       ability: { slot: 4, name: 'Affliction' },
     });
 
-    // Abrams @ 3200 with ['tanky'] toggled: Decay shows Siphon Life & Infernal Resilience AND appends Tanky / Armor
+    // Abrams @ 3200 with ['tanky'] toggled: Decay shows Siphon Life & Infernal Resilience AND appends Tanky
     const vsTankyAbrams = recommendCounters(
       {
         myHeroClass: 'hero_wraith',
@@ -1361,7 +1361,7 @@ describe('Deadlock counter recommendation engine', () => {
       decayGroups.some(
         (g) =>
           g.verb === 'shreds' &&
-          g.targets.some((t) => t.kind === 'mechanic' && t.label === 'Tanky / Armor'),
+          g.targets.some((t) => t.kind === 'mechanic' && t.label === 'Tanky'),
       ),
     ).toBe(true);
 
