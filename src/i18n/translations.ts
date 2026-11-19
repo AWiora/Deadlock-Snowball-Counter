@@ -68,7 +68,7 @@ export const UI_TEXT = {
     activeSlotsFullSub: 'Nur passive Items',
     activeSlotsFullTitle: 'Active Items ausblenden, wenn alle 4 Active Slots belegt sind',
 
-    baseKitLabel: 'Schon eingerechnet:',
+    baseKitLabel: 'Schon eingerechnet',
 
     damageLabel: 'Damage-Fokus',
     metaSplitCaption: (name: string) => `So bauen ${name}-Spieler in aktuellen Matches`,
@@ -363,7 +363,7 @@ export const UI_TEXT = {
     activeSlotsFullSub: 'Passive items only',
     activeSlotsFullTitle: 'Hide Active items when all 4 of your active slots are already full',
 
-    baseKitLabel: 'Already factored in:',
+    baseKitLabel: 'Already factored in',
 
     damageLabel: 'Damage focus',
     metaSplitCaption: (name: string) => `How ${name} players build in recent matches`,

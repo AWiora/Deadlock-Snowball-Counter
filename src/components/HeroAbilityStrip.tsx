@@ -33,17 +33,19 @@ export function HeroAbilityStrip({
             inGameLang={inGameLang}
             className={`hero-ability-chip ${ab.isUltimate ? 'hero-ability-chip--ult' : ''}`}
           >
+            <span className="hero-ability-tile">
+              {ab.icon ? (
+                <img
+                  src={ab.icon}
+                  alt={displayName}
+                  className="hero-ability-icon"
+                  loading="lazy"
+                />
+              ) : (
+                <span className="hero-ability-fallback">{displayName.slice(0, 2)}</span>
+              )}
+            </span>
             <span className="hero-ability-key">{ab.slot}</span>
-            {ab.icon ? (
-              <img
-                src={ab.icon}
-                alt={displayName}
-                className="hero-ability-icon"
-                loading="lazy"
-              />
-            ) : (
-              <span className="hero-ability-fallback">{displayName.slice(0, 2)}</span>
-            )}
           </AbilityTooltip>
         );
       })}

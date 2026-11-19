@@ -281,14 +281,15 @@ button {
 
 /* Base Kit Read-Only Strip */
 
+/* Read-only facts, so no border: they must not look like the toggles below */
 .base-kit-tag {
   font-size: var(--text-micro);
   font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 99px;
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(235, 224, 200, 0.08);
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 /* Override Row (Damage + 4 Trait Chips + Active Slots Full) */
@@ -449,6 +450,19 @@ button {
   font-weight: 600;
   color: var(--text-secondary);
   transition: all 0.14s ease;
+}
+
+.mod-chip-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  opacity: 0.55;
+  transition: opacity 0.14s ease;
+}
+
+.mod-chip:hover .mod-chip-icon,
+.mod-chip--active .mod-chip-icon {
+  opacity: 1;
 }
 
 .mod-chip:hover {
@@ -1639,8 +1653,19 @@ button {
   gap: 4px;
 }
 
+/* Icon tile with its key (1-4) printed underneath, never on top of the art */
 .hero-ability-chip {
-  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: help;
+}
+
+.hero-ability-tile {
   width: 34px;
   height: 34px;
   border-radius: 7px;
@@ -1651,23 +1676,22 @@ button {
   justify-content: center;
   padding: 4px;
   overflow: hidden;
-  cursor: help;
   transition: border-color 0.14s ease, transform 0.14s ease, background-color 0.14s ease;
 }
 
-.hero-ability-strip--compact .hero-ability-chip {
-  width: 28px;
-  height: 28px;
+.hero-ability-strip--compact .hero-ability-tile {
+  width: 30px;
+  height: 30px;
   padding: 3px;
 }
 
-.hero-ability-chip--ult {
+.hero-ability-chip--ult .hero-ability-tile {
   border-color: rgba(214, 165, 86, 0.55);
   background: rgba(214, 165, 86, 0.12);
 }
 
-.hero-ability-chip:hover,
-.hero-ability-chip:focus-visible {
+.hero-ability-chip:hover .hero-ability-tile,
+.hero-ability-chip:focus-visible .hero-ability-tile {
   border-color: var(--brass-bright);
   background: rgba(214, 165, 86, 0.2);
   transform: translateY(-1px);
@@ -1688,24 +1712,15 @@ button {
 }
 
 .hero-ability-key {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  min-width: 14px;
-  height: 14px;
-  padding: 0 3px;
-  border-top-left-radius: 4px;
-  background: rgba(8, 9, 12, 0.92);
-  color: var(--text-parchment);
-  font-size: 0.66rem;
-  font-weight: 800;
-  line-height: 14px;
-  text-align: center;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
   pointer-events: none;
 }
 
 .hero-ability-chip--ult .hero-ability-key {
-  background: rgba(34, 25, 11, 0.95);
   color: var(--brass-bright);
 }
 
@@ -2809,27 +2824,33 @@ kbd {
   gap: 10px;
 }
 
+/* Abilities on the left, the kit facts they imply on the right */
 .tuning-kit {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 8px 16px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .tuning-kit-tags {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
   gap: 5px;
+  min-width: 0;
 }
 
-.tuning-kit-label {
-  margin-right: 2px;
-  font-size: var(--text-micro);
-  font-weight: 600;
-  color: var(--text-muted);
+.tuning-kit-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+@media (max-width: 420px) {
+  .tuning-kit {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .tuning-row {

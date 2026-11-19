@@ -1,16 +1,11 @@
 import {
   ChevronDown,
   ChevronUp,
-  HeartPulse,
   Plus,
   RotateCcw,
   Search,
-  ShieldAlert,
-  Swords,
   User,
-  Wind,
   X,
-  Zap,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getHeroProfile } from '../data/heroProfiles';
@@ -61,12 +56,13 @@ const DAMAGE_META: { id: DamageProfile; tone: string }[] = [
   { id: 'spirit', tone: 'spirit' },
 ];
 
-const MODIFIER_META: { id: EnemyModifier; Icon: typeof ShieldAlert }[] = [
-  { id: 'tanky', Icon: ShieldAlert },
-  { id: 'healing', Icon: HeartPulse },
-  { id: 'cc', Icon: Zap },
-  { id: 'melee', Icon: Swords },
-  { id: 'mobility', Icon: Wind },
+// Stat glyphs from the Deadlock Wiki (cdn.deadlock.wiki): one white icon set
+const MODIFIER_META: { id: EnemyModifier; icon: string }[] = [
+  { id: 'tanky', icon: 'https://cdn.deadlock.wiki/Health.png' },
+  { id: 'healing', icon: 'https://cdn.deadlock.wiki/Healing.png' },
+  { id: 'cc', icon: 'https://cdn.deadlock.wiki/Status_Stun.png' },
+  { id: 'melee', icon: 'https://cdn.deadlock.wiki/Melee_damage.png' },
+  { id: 'mobility', icon: 'https://cdn.deadlock.wiki/Move_speed.png' },
 ];
 
 function matchesMedia(query: string): boolean {
@@ -541,12 +537,14 @@ export function MatchupControlBar({
                   />
                   {baseKitTags.length > 0 && (
                     <div className="tuning-kit-tags">
-                      <span className="tuning-kit-label">{t.baseKitLabel}</span>
-                      {baseKitTags.map((tag) => (
-                        <span key={tag} className="base-kit-tag">
-                          {tag}
-                        </span>
-                      ))}
+                      <span className="pane-label">{t.baseKitLabel}</span>
+                      <div className="tuning-kit-list">
+                        {baseKitTags.map((tag) => (
+                          <span key={tag} className="base-kit-tag">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -594,7 +592,7 @@ export function MatchupControlBar({
               <div className="tuning-row">
                 <span className="pane-label">{t.extraTraitsLabel}</span>
                 <div className="modifier-chips" role="group" aria-label={t.extraTraitsLabel}>
-                  {MODIFIER_META.map(({ id, Icon }) => {
+                  {MODIFIER_META.map(({ id, icon }) => {
                     const active = modifiers.includes(id);
                     return (
                       <button
@@ -605,7 +603,14 @@ export function MatchupControlBar({
                         title={t.modifiers[id].hint}
                         aria-pressed={active}
                       >
-                        <Icon size={13} />
+                        <img
+                          className="mod-chip-icon"
+                          src={icon}
+                          alt=""
+                          aria-hidden="true"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
                         <span>{t.modifiers[id].label}</span>
                       </button>
                     );
