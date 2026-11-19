@@ -14,7 +14,7 @@ const STORAGE_ITEM_LANG = 'dl_counter_item_lang_v1';
 
 const VALID_STAGES: GameStage[] = ['lane', 'mid', 'late'];
 const VALID_DAMAGE: DamageProfile[] = ['bullet', 'equal', 'spirit'];
-const VALID_MODS: EnemyModifier[] = ['tanky', 'healing', 'cc', 'melee'];
+const VALID_MODS: EnemyModifier[] = ['tanky', 'healing', 'cc', 'melee', 'mobility'];
 const VALID_LANGS: Language[] = ['de', 'en'];
 const MAX_ENEMY_TARGETS = 3;
 
@@ -205,23 +205,30 @@ export function useMatchupState() {
   }, []);
 
   /**
-   * 1-Click toggle in the inline hero roster:
-   * - If already in enemyClasses: removes it
-   * - If not in enemyClasses: adds it (up to 3; if full, replaces the 3rd slot) and focuses it
+   * Smart 1-click behavior in the inline hero roster:
+   * - If NOT selected: adds it (up to 3; if full, replaces the 3rd slot) and focuses it
+   * - If ALREADY selected but NOT currently focused: focuses it (so you can edit its toggles without removing it!)
+   * - If ALREADY selected AND already focused: removes it
    */
   const toggleEnemyHero = useCallback(
     (heroClass: string) => {
       if (heroClass === myHeroClass) return;
       ensureEnemyTweak(heroClass);
 
-      setEnemyClasses((prev) => {
-        if (prev.includes(heroClass)) {
-          const next = prev.filter((c) => c !== heroClass);
-          setFocusedEnemyClass((currFocus) =>
-            currFocus === heroClass ? next[0] ?? null : currFocus,
-          );
-          return next;
+      if (enemyClasses.includes(heroClass)) {
+        if (activeFocusedClass !== heroClass) {
+          setFocusedEnemyClass(heroClass);
+          return;
         }
+        setEnemyClasses((prev) => {
+          const next = prev.filter((c) => c !== heroClass);
+          setFocusedEnemyClass(next[0] ?? null);
+          return next;
+        });
+        return;
+      }
+
+      setEnemyClasses((prev) => {
         const next =
           prev.length < MAX_ENEMY_TARGETS
             ? [...prev, heroClass]
@@ -230,7 +237,7 @@ export function useMatchupState() {
         return next;
       });
     },
-    [myHeroClass, ensureEnemyTweak],
+    [myHeroClass, enemyClasses, activeFocusedClass, ensureEnemyTweak],
   );
 
   const selectEnemyHero = useCallback(

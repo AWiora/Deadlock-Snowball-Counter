@@ -1916,20 +1916,113 @@ button {
   font-weight: 700;
 }
 
-/* Compact Bottom Controls Row */
-.deck-row--controls-compact {
+/* Compact Stage + Per-Enemy Customization Panel */
+.deck-row--stage-compact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 232px;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.enemy-customize-panel {
+  background: #101217;
+  border: 1px solid rgba(217, 93, 93, 0.28);
+  border-radius: var(--radius-md);
+  padding: 9px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.enemy-customize-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.enemy-customize-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.enemy-customize-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.customize-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.14s ease;
+}
+
+.customize-tab-btn:hover {
+  border-color: rgba(240, 138, 123, 0.55);
+  color: var(--text-parchment);
+}
+
+.customize-tab-btn--active {
+  background: rgba(217, 93, 93, 0.22);
+  border-color: #f08a7b;
+  color: var(--text-parchment);
+  box-shadow: 0 0 0 1px rgba(240, 138, 123, 0.3);
+}
+
+.customize-tab-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #ffa5a5;
+}
+
+.customize-tab-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.customize-tab-count {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 99px;
+  background: var(--brass-soft);
+  border: 1px solid var(--border-brass);
+  color: var(--brass-bright);
+}
+
+.customize-reset-btn {
+  margin-left: auto;
+}
+
+.enemy-customize-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 12px;
+  gap: 14px;
 }
 
-.deck-row--controls-compact .stage-control-wrap {
-  min-width: 250px;
-}
-
-.deck-row--controls-compact .active-slots-wrap {
-  width: 210px;
+@media (max-width: 780px) {
+  .deck-row--stage-compact {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Always-Visible Card Badges & 1-Click Copy Button */

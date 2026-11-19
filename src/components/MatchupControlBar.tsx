@@ -9,6 +9,7 @@ import {
   Swords,
   Trash2,
   User,
+  Wind,
   X,
   Zap,
 } from 'lucide-react';
@@ -62,6 +63,7 @@ const MODIFIER_META: { id: EnemyModifier; Icon: typeof ShieldAlert }[] = [
   { id: 'healing', Icon: HeartPulse },
   { id: 'cc', Icon: Zap },
   { id: 'melee', Icon: Swords },
+  { id: 'mobility', Icon: Wind },
 ];
 
 export function MatchupControlBar({
@@ -326,8 +328,8 @@ export function MatchupControlBar({
         </div>
       </div>
 
-      {/* Row 3: Stage + Active Slots Full + Focused Enemy Damage & Build Toggles */}
-      <div className="deck-row deck-row--controls-compact">
+      {/* Row 3: Match Stage + Active Slots Full */}
+      <div className="deck-row deck-row--stage-compact">
         <div className="stage-control-wrap">
           <span className="deck-micro-label">{t.stageLabel}</span>
           <div className="segmented-bar" role="group" aria-label={t.stageLabel}>
@@ -365,14 +367,68 @@ export function MatchupControlBar({
             />
           </button>
         </div>
+      </div>
 
-        {focusedEnemy && (
-          <>
+      {/* Row 4: Dedicated Per-Enemy Build Customization Panel with 1-Click Enemy Tabs */}
+      {focusedEnemy && (
+        <div className="enemy-customize-panel">
+          <div className="enemy-customize-tabs-bar">
+            <span className="enemy-customize-label">{t.customizeForLabel}</span>
+            <div className="enemy-customize-tabs" role="tablist" aria-label={t.customizeForLabel}>
+              {enemyTargets.map((et, idx) => {
+                const hero = heroesByClass.get(et.heroClass);
+                if (!hero) return null;
+                const hName = getHeroDisplayName(hero, language);
+                const isActiveTab = focusedEnemy.className === et.heroClass;
+                const defDmg = getHeroProfile(et.heroClass).defaultDamage;
+                const customCount =
+                  et.modifiers.length + (et.damageProfile !== defDmg ? 1 : 0);
+
+                return (
+                  <button
+                    key={et.heroClass}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActiveTab}
+                    className={`customize-tab-btn ${
+                      isActiveTab ? 'customize-tab-btn--active' : ''
+                    }`}
+                    onClick={() => onFocusEnemy(et.heroClass)}
+                  >
+                    <span className="customize-tab-num">#{idx + 1}</span>
+                    {(hero.iconSmall || hero.iconCard) && (
+                      <img
+                        src={hero.iconSmall || hero.iconCard}
+                        alt=""
+                        className="customize-tab-avatar"
+                      />
+                    )}
+                    <span>{hName}</span>
+                    {customCount > 0 && (
+                      <span className="customize-tab-count">+{customCount}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {isCustomized && (
+              <button
+                type="button"
+                className="reset-defaults-btn customize-reset-btn"
+                onClick={onResetDefaults}
+                title={t.resetTitle}
+              >
+                <RotateCcw size={11} />
+                {t.resetBtn}
+              </button>
+            )}
+          </div>
+
+          <div className="enemy-customize-controls">
             <div className="override-group">
               <div className="override-header">
-                <span className="deck-micro-label">
-                  {t.damageLabel} ({focusedEnemyName})
-                </span>
+                <span className="deck-micro-label">{t.damageLabel}</span>
                 {typeof focusedEnemy.metaWeaponPct === 'number' && !isCustomized && (
                   <span
                     className="meta-split-hint"
@@ -388,17 +444,6 @@ export function MatchupControlBar({
                         ? `Meta: ${100 - focusedEnemy.metaWeaponPct}% Spirit`
                         : `Meta: ${focusedEnemy.metaWeaponPct}/${100 - focusedEnemy.metaWeaponPct}%`}
                   </span>
-                )}
-                {isCustomized && (
-                  <button
-                    type="button"
-                    className="reset-defaults-btn"
-                    onClick={onResetDefaults}
-                    title={t.resetTitle}
-                  >
-                    <RotateCcw size={11} />
-                    {t.resetBtn}
-                  </button>
                 )}
               </div>
               <div className="damage-pills" role="group" aria-label={t.damageLabel}>
@@ -420,9 +465,7 @@ export function MatchupControlBar({
             </div>
 
             <div className="override-group override-group--mods">
-              <span className="deck-micro-label">
-                {t.extraTraitsLabel} ({focusedEnemyName})
-              </span>
+              <span className="deck-micro-label">{t.extraTraitsLabel}</span>
               <div className="modifier-chips" role="group" aria-label={t.extraTraitsLabel}>
                 {MODIFIER_META.map(({ id, Icon }) => {
                   const active = modifiers.includes(id);
@@ -442,9 +485,9 @@ export function MatchupControlBar({
                 })}
               </div>
             </div>
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

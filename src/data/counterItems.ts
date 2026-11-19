@@ -169,9 +169,13 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stance: 'offense',
     role: 'Control',
     stageFit: { lane: 0.96, mid: 0.9, late: 0.42 },
+    modifierCounters: { mobility: 34 },
     threatCounters: { high_mobility: 28, fragile_glass_cannon: 18, airborne: 16, close_range_dive: 14 },
     why: 'Locks out movement abilities & dashes for 1600 souls — traps fragile assassins and mobile divers so you can burst them down.',
     whenToUse: 'Cast right before they try to dash, grapple, blink, or escape.',
+    contextTips: {
+      mobility: 'Silences movement items (Warp Stone, Leap) & escape abilities for 1600 souls so they cannot slip away.',
+    },
   },
   {
     className: 'upgrade_suppressor', // Suppressor
@@ -201,7 +205,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     role: 'Control',
     stageFit: { lane: 0.85, mid: 0.72, late: 0.26 },
     threatCounters: { high_mobility: 18, close_range_dive: 16, melee_brawler: 14 },
-    modifierCounters: { melee: 12 },
+    modifierCounters: { melee: 12, mobility: 18 },
     playerSynergy: { preferSpiritProccer: true, penalizeNonSpiritProccer: true },
     why: 'Applies persistent movement slow off your spirit damage so close-range brawlers struggle to stick to you.',
     whenToUse: 'Passive — poke them with abilities as they try to close distance.',
@@ -212,7 +216,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     role: 'Control',
     stageFit: { lane: 0.84, mid: 0.65, late: 0.2 },
     threatCounters: { high_mobility: 16, close_range_dive: 14, melee_brawler: 12 },
-    modifierCounters: { melee: 10 },
+    modifierCounters: { melee: 10, mobility: 18 },
     playerSynergy: { preferDamageStyle: 'gun', preferFastFirerate: true, penalizeSlowFirerate: true },
     why: 'Lets rapid-fire gun heroes kite melee divers and slow slippery targets without spending an active slot.',
     whenToUse: 'Passive — keep firing while backpedaling to deny their gap-close.',
@@ -287,6 +291,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     role: 'Shutdown',
     stageFit: { lane: 0.16, mid: 1.0, late: 0.88 },
     damageCounters: { bullet: 10, spirit: 10, equal: 10 },
+    modifierCounters: { mobility: 22 },
     threatCounters: { airborne: 44, channeled_ult: 44, high_mobility: 14, long_range_poke: 10 },
     why: 'Long-range point-and-click stun that slams flying heroes out of the sky and cleanly cancels channeled ultimates.',
     whenToUse: 'Cast immediately when they take flight or begin channeling their ultimate.',
@@ -326,9 +331,13 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     role: 'Shutdown',
     stageFit: { lane: 0.15, mid: 1.0, late: 0.78 },
     damageCounters: { spirit: 24, equal: 14 },
+    modifierCounters: { mobility: 26 },
     threatCounters: { high_mobility: 24, fragile_glass_cannon: 22, ability_spam: 24, telegraphed_burst: 20, close_range_dive: 16, heavy_healing: 12 },
     why: 'Wide AoE silence projectile that stops fragile divers and slippery casters from escaping, healing, or casting combos.',
     whenToUse: 'Fire at them as they dive in — note that Silence prevents casts but does not cancel already-channeled ults.',
+    contextTips: {
+      mobility: 'Silences escape abilities mid-fight so slippery targets cannot blink or dash out.',
+    },
   },
   {
     className: 'upgrade_rupture', // Decay
@@ -479,7 +488,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     role: 'Shutdown',
     stageFit: { lane: 0.02, mid: 0.26, late: 1.0 },
     damageCounters: { bullet: 18, spirit: 18, equal: 22 },
-    modifierCounters: { healing: 16, cc: 12, melee: 14 },
+    modifierCounters: { healing: 16, cc: 12, melee: 14, mobility: 24 },
     threatCounters: {
       channeled_ult: 30,
       high_mobility: 28,
@@ -594,10 +603,14 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stance: 'offense',
     role: 'Shutdown',
     stageFit: { lane: 0.02, mid: 0.25, late: 0.98 },
+    modifierCounters: { mobility: 34 },
     threatCounters: { high_mobility: 30, airborne: 22, close_range_dive: 18, buff_shield_stacker: 16 },
     playerSynergy: { preferDamageStyle: 'gun' },
     why: 'High-impact gun active that applies a massive slow, locks out Stamina usage, and silences movement abilities.',
     whenToUse: 'Fire onto hyper-mobile carries or divers so they cannot dash, slide, or escape.',
+    contextTips: {
+      mobility: 'Locks out stamina, dashes, Warp Stone, and movement abilities so mobile carries cannot escape.',
+    },
   },
   {
     className: 'upgrade_phantom_strike', // Phantom Strike
@@ -605,6 +618,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     role: 'Shutdown',
     stageFit: { lane: 0.02, mid: 0.25, late: 0.98 },
     damageCounters: { bullet: 20, equal: 12 },
+    modifierCounters: { mobility: 24 },
     threatCounters: { airborne: 34, long_range_poke: 26, rapid_fire: 18 },
     playerSynergy: { preferRange: 'close', penalizeLongRange: true },
     why: 'Teleports directly onto airborne or backline carries, rips them to the ground, slows, and disarms them.',
@@ -616,6 +630,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     role: 'Burst',
     stageFit: { lane: 0.02, mid: 0.24, late: 1.0 },
     damageCounters: { spirit: 24, equal: 16, bullet: 10 },
+    modifierCounters: { mobility: 26 },
     threatCounters: { fragile_glass_cannon: 32, high_mobility: 26, ability_spam: 24, heavy_healing: 18, telegraphed_burst: 18 },
     why: 'Point-and-click Silence + delayed burst echo — locks down low-HP assassins and deletes them before they can escape.',
     whenToUse: 'Cast right before unloading your burst onto a fragile target.',
@@ -636,9 +651,13 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stance: 'offense',
     role: 'Control',
     stageFit: { lane: 0.02, mid: 0.24, late: 0.96 },
+    modifierCounters: { mobility: 34 },
     threatCounters: { high_mobility: 28, airborne: 22, close_range_dive: 18 },
     why: 'Pulls enemies together and applies Slowing Hex (alt-cast directly on a target!) — locks down evasive movers.',
     whenToUse: 'Alt-cast directly onto slippery carries or toss into their escape lane.',
+    contextTips: {
+      mobility: 'Pulls slippery targets back and applies Slowing Hex (alt-cast directly on them) to shut down all escapes.',
+    },
   },
   {
     className: 'upgrade_divine_barrier', // Divine Barrier
@@ -682,6 +701,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stance: 'offense',
     role: 'Burst',
     stageFit: { lane: 0.98, mid: 0.88, late: 0.18 },
+    modifierCounters: { mobility: 18 },
     threatCounters: { fragile_glass_cannon: 32, high_mobility: 18, close_range_dive: 16 },
     playerSynergy: { preferDamageStyle: 'spirit', preferRange: 'close' },
     why: 'Instant AoE spirit burst + slow for 1600 souls — chunks low-HP glass cannons hard and upgrades into Arctic Blast.',
@@ -692,6 +712,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stance: 'offense',
     role: 'Burst',
     stageFit: { lane: 0.02, mid: 0.22, late: 0.98 },
+    modifierCounters: { mobility: 28 },
     threatCounters: { fragile_glass_cannon: 36, high_mobility: 28, close_range_dive: 20 },
     playerSynergy: { preferDamageStyle: 'spirit', preferRange: 'close' },
     why: 'Freezes, bursts, and locks stamina regen in an AoE — deletes slippery low-HP assassins before they can react.',

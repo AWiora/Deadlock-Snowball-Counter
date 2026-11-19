@@ -509,4 +509,24 @@ describe('Deadlock counter recommendation engine', () => {
     expect(disarmMixed?.why).toContain('Entwaffnet');
     expect(disarmMixed?.upgradeHint?.itemName).toBe('Rusted Barrel');
   });
+
+  it('boosts catch/anti-mobility counters when the new mobility modifier is toggled', () => {
+    const res = recommendCounters(
+      {
+        myHeroClass: 'hero_atlas',
+        enemyHeroClass: 'hero_ghost', // Lady Geist (normally low mobility)
+        stage: 'mid',
+        damageProfile: 'spirit',
+        modifiers: ['mobility'],
+        activeSlotsFull: false,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+
+    const slowingHex = res.offense.find((r) => r.item.className === 'upgrade_containment');
+    expect(slowingHex).toBeDefined();
+    expect(slowingHex?.why).toContain('Warp Stone');
+  });
 });

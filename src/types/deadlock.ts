@@ -2,7 +2,7 @@ export type Language = 'de' | 'en';
 export type ItemSlot = 'weapon' | 'vitality' | 'spirit';
 export type DamageProfile = 'bullet' | 'equal' | 'spirit';
 export type GameStage = 'lane' | 'mid' | 'late';
-export type EnemyModifier = 'tanky' | 'healing' | 'cc' | 'melee';
+export type EnemyModifier = 'tanky' | 'healing' | 'cc' | 'melee' | 'mobility';
 export type CounterStance = 'offense' | 'defense';
 
 export type CounterRole =

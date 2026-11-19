@@ -75,12 +75,14 @@ export const UI_TEXT = {
       spirit: 'Spirit',
     } as Record<DamageProfile, string>,
 
-    extraTraitsLabel: 'GEGNER BAUT EXTRA (OPTIONAL — ANKLICKEN FALLS ER ES STACKT)',
+    customizeForLabel: 'Anpassen für:',
+    extraTraitsLabel: 'GEGNER STACKT (OPTIONAL)',
     modifiers: {
-      tanky: { label: 'Tanky / Viel HP', hint: 'Baut viel HP, Rüstung oder Zähigkeit' },
-      healing: { label: 'Starke Heilung', hint: 'Baut Lebensraub, Heilung oder Leech' },
-      cc: { label: 'Viel CC / Debuffs', hint: 'Baut Niederschlag, Verfluchtes Relikt, Verlangsamungsfluch usw.' },
-      melee: { label: 'Nahkampf-Build', hint: 'Baut Nahkampf-Items wie Zerschmetternde Fäuste / Nahkampfangriff' },
+      tanky: { label: 'Tanky / Rüstung', hint: 'Baut viel HP, Rüstung, Barrieren oder Zähigkeit' },
+      healing: { label: 'Heilung / Lebensraub', hint: 'Baut Lebensraub, Heilung oder Leech' },
+      cc: { label: 'Stuns / CC', hint: 'Baut Niederschlag, Verfluchtes Relikt, Stuns oder Debuffs' },
+      melee: { label: 'Nahkampf', hint: 'Baut Nahkampf-Items wie Crushing Fists / Lifestrike' },
+      mobility: { label: 'Flucht / Mobilität', hint: 'Baut Warp Stone, Majestic Leap, Fleetfoot oder Magic Carpet und entkommt ständig' },
     } as Record<EnemyModifier, { label: string; hint: string }>,
 
     resultsStageTitle: {
@@ -254,12 +256,14 @@ export const UI_TEXT = {
       spirit: 'Spirit',
     } as Record<DamageProfile, string>,
 
-    extraTraitsLabel: 'ENEMY IS BUILDING EXTRA (OPTIONAL — CLICK IF THEY STACK IT)',
+    customizeForLabel: 'Customize for:',
+    extraTraitsLabel: 'ENEMY STACKING (OPTIONAL)',
     modifiers: {
-      tanky: { label: 'Tanky / High HP', hint: 'Stacking HP, armor, or Fortitude' },
-      healing: { label: 'Heavy Healing', hint: 'Building Leech, Lifesteal, or Healing Nova' },
-      cc: { label: 'Heavy CC / Debuffs', hint: 'Building Knockdown, Cursed Relic, Slowing Hex, etc.' },
-      melee: { label: 'Melee Build', hint: 'Building Crushing Fists, Melee Charge, Lifestrike' },
+      tanky: { label: 'Tanky / Armor', hint: 'Stacking HP, armor, barriers, or Fortitude' },
+      healing: { label: 'Healing / Lifesteal', hint: 'Building Leech, Lifesteal, or Healing Nova' },
+      cc: { label: 'Stuns / CC', hint: 'Building Knockdown, Cursed Relic, stuns, or debuffs' },
+      melee: { label: 'Melee', hint: 'Building Crushing Fists, Melee Charge, Lifestrike' },
+      mobility: { label: 'Escape / Mobility', hint: 'Building Warp Stone, Majestic Leap, Fleetfoot, or Magic Carpet to escape' },
     } as Record<EnemyModifier, { label: string; hint: string }>,
 
     resultsStageTitle: {

@@ -357,6 +357,18 @@ export const ITEM_CONTEXT_TIPS_DE: Record<string, Partial<Record<string, string>
   upgrade_rescue_beam: {
     cc: 'Zieht Teammates direkt aus Lockdown-Ults, Haken und Stun-Ketten und heilt euch beide.',
   },
+  upgrade_containment: {
+    mobility: 'Sperrt Bewegungs-Items (Warp Stone, Leap) & Flucht-Fähigkeiten für 1.600 Seelen, sodass das Ziel nicht entkommt.',
+  },
+  upgrade_targeted_silence: {
+    mobility: 'Bringt wendige Gegner mitten im Kampf zum Schweigen, damit sie nicht mehr wegdash-en oder blinken können.',
+  },
+  upgrade_capacitor: {
+    mobility: 'Sperrt Ausdauer, Dashes, Warp Stone und Bewegungsfähigkeiten gleichzeitig — kein Entkommen mehr.',
+  },
+  upgrade_aoe_root: {
+    mobility: 'Zieht wendige Gegner zurück und belegt sie direkt (per Alt-Cast) mit Bewegungs-Stille.',
+  },
 };
 
 export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
