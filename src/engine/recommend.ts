@@ -1,5 +1,6 @@
 import { COUNTER_ITEM_RULES, HERO_SPECIFIC_COUNTERS } from '../data/counterItems';
 import { getHeroProfile } from '../data/heroProfiles';
+import { KIT_AMPLIFIER_RULES } from '../data/kitAmplifiers';
 import {
   HERO_HEADLINES_DE,
   HERO_OVERRIDE_TIPS_DE,
@@ -11,11 +12,13 @@ import type {
   CounterItemRule,
   CounterRecommendation,
   CounterRole,
+  CounterStance,
   DeadlockHero,
   DeadlockItem,
   EnemyCounterReason,
   EnemyModifier,
   EnemyTargetConfig,
+  HeroKitCounter,
   Language,
   MatchupInput,
   PlayerAffinity,
@@ -45,6 +48,10 @@ const UPGRADE_FAMILIES: string[][] = [
   ['upgrade_headshot_booster2', 'upgrade_banshee_slugs'],
   ['upgrade_magic_burst', 'upgrade_magic_shock'], // Mystic Burst -> Tankbuster
   ['upgrade_cold_front', 'upgrade_arctic_blast'], // Cold Front -> Arctic Blast
+  ['upgrade_magic_tempo', 'upgrade_cooldown_reduction', 'upgrade_transcendent_cooldown'], // Compress -> Superior -> Transcendent Cooldown
+  ['upgrade_magic_reach', 'upgrade_tech_range'], // Mystic Expansion -> Greater Expansion
+  ['upgrade_arcane_extension', 'upgrade_imbued_duration_extender'], // Duration Extender -> Superior Duration
+  ['upgrade_extra_charge', 'upgrade_rapid_recharge'], // Extra Charge -> Rapid Recharge
 ];
 
 const UPGRADE_FAMILY_MAP = new Map<string, number>();
@@ -394,7 +401,7 @@ export function recommendCounters(
 
   interface ScoredCandidate {
     item: DeadlockItem;
-    rule: CounterItemRule;
+    stance: CounterStance;
     role: CounterRole;
     score: number;
     why: string;
@@ -402,6 +409,7 @@ export function recommendCounters(
     whenToUse: string;
     synergyNote: string | null;
     isHeroSpecific: boolean;
+    isKitAmplifier?: boolean;
     counteredEnemies: string[];
     upgradeHint: UpgradeHint | null;
   }
@@ -629,7 +637,7 @@ export function recommendCounters(
 
     scored.push({
       item,
-      rule,
+      stance: rule.stance,
       role: bestEval.roleOverride ?? rule.role,
       score: Math.round(combinedScore * 10) / 10,
       why: reasons[0]?.text ?? baseWhy,
@@ -665,6 +673,220 @@ export function recommendCounters(
     deduped.push(cand);
   }
 
+  // Evaluate smart Kit-Amplifiers for YOUR selected hero (only if hero has matching kit counter abilities)
+  const kitAmplifiersByStance: Record<CounterStance, ScoredCandidate[]> = {
+    offense: [],
+    defense: [],
+  };
+
+  const myKitCounters = myProfile?.kitCounters ?? [];
+  if (myKitCounters.length > 0 && myHeroDisplayName) {
+    const uiDict = UI_TEXT[lang];
+    const axisPrefBonus = [12, 7, 3, 0];
+
+    interface KitEnemyMatch {
+      heroClass: string;
+      ability: HeroKitCounter;
+      score: number;
+      matchedTriggers: string[];
+    }
+
+    for (const stance of ['offense', 'defense'] as const) {
+      const stanceAbilities = myKitCounters.filter((kc) => kc.stance === stance);
+      if (stanceAbilities.length === 0) continue;
+
+      const rawAmpCandidates: ScoredCandidate[] = [];
+
+      for (const ampRule of KIT_AMPLIFIER_RULES) {
+        const item = itemsByClass.get(ampRule.className);
+        if (!item) continue;
+        if (targetCost !== null && item.cost !== targetCost) continue;
+
+        const compatibleAbilities = stanceAbilities.filter(
+          (kc) =>
+            kc.amplifiers.includes(ampRule.axis) &&
+            !(ampRule.axis === 'echo' && kc.isUltimate),
+        );
+        if (compatibleAbilities.length === 0) continue;
+
+        const enemyMatches: KitEnemyMatch[] = [];
+
+        for (const target of targets) {
+          const eProfile = getHeroProfile(target.heroClass);
+          const isOffMetaSpirit =
+            target.damageProfile === 'spirit' && eProfile.defaultDamage === 'bullet';
+          const isOffMetaBullet =
+            target.damageProfile === 'bullet' && eProfile.defaultDamage === 'spirit';
+
+          let bestForEnemy: KitEnemyMatch | null = null;
+
+          for (const kc of compatibleAbilities) {
+            const matchedTriggers: { label: string; weight: number }[] = [];
+            let bestThreatAxisBonus = 0;
+
+            // Match ONLY primary defining threats of the enemy (no noisy secondary tags)
+            for (const threat of eProfile.threats) {
+              if (!kc.countersThreats.includes(threat)) continue;
+              let w = 22;
+              if (
+                isOffMetaSpirit &&
+                (threat === 'rapid_fire' || threat === 'bullet_ult' || threat === 'on_hit_procs')
+              ) {
+                w *= 0.35;
+              }
+              if (
+                isOffMetaBullet &&
+                (threat === 'sustained_spirit' || threat === 'ability_spam')
+              ) {
+                w *= 0.45;
+              }
+              if (w >= 12) {
+                matchedTriggers.push({ label: uiDict.threats[threat], weight: w });
+                bestThreatAxisBonus = Math.max(
+                  bestThreatAxisBonus,
+                  ampRule.threatAxisBonus?.[threat] ?? 0,
+                );
+              }
+            }
+
+            // Match explicit enemy build toggles
+            if (kc.countersModifiers) {
+              for (const mod of target.modifiers) {
+                if (!kc.countersModifiers.includes(mod)) continue;
+                matchedTriggers.push({
+                  label: uiDict.modifiers[mod].label,
+                  weight: 26,
+                });
+              }
+            }
+
+            if (matchedTriggers.length === 0) continue;
+
+            matchedTriggers.sort((a, b) => b.weight - a.weight);
+            const matchScore =
+              matchedTriggers[0].weight +
+              (matchedTriggers[1]?.weight ?? 0) * 0.45 +
+              (matchedTriggers[2]?.weight ?? 0) * 0.25;
+
+            const axisIdx = kc.amplifiers.indexOf(ampRule.axis);
+            const prefBonus = axisPrefBonus[axisIdx] ?? 0;
+            const ultResetBonus = kc.isUltimate && ampRule.axis === 'refresher' ? 4 : 0;
+            const tierMult = targetCost === null ? ampRule.tierWeight : 1.0;
+            const totalEnemyScore =
+              (matchScore + prefBonus + bestThreatAxisBonus + ultResetBonus) * tierMult;
+
+            if (totalEnemyScore < 30) continue;
+
+            const uniqueTriggerLabels: string[] = [];
+            for (const mt of matchedTriggers) {
+              if (!uniqueTriggerLabels.includes(mt.label)) {
+                uniqueTriggerLabels.push(mt.label);
+              }
+              if (uniqueTriggerLabels.length >= 2) break;
+            }
+
+            if (!bestForEnemy || totalEnemyScore > bestForEnemy.score) {
+              bestForEnemy = {
+                heroClass: target.heroClass,
+                ability: kc,
+                score: totalEnemyScore,
+                matchedTriggers: uniqueTriggerLabels,
+              };
+            }
+          }
+
+          if (bestForEnemy) {
+            enemyMatches.push(bestForEnemy);
+          }
+        }
+
+        // Strict Multi-Enemy Guardrail: when 2-3 enemies are selected, kit amplifier must counter at least 2 of them
+        if (targets.length >= 2 && enemyMatches.length < 2) continue;
+        if (targets.length === 1 && enemyMatches.length === 0) continue;
+
+        enemyMatches.sort((a, b) => b.score - a.score);
+        let combinedScore = enemyMatches[0].score;
+        if (targets.length > 1) {
+          const s1 = enemyMatches[1]?.score ?? 0;
+          const s2 = enemyMatches[2]?.score ?? 0;
+          combinedScore = enemyMatches[0].score + s1 * 0.48 + s2 * 0.34;
+          if (enemyMatches.length === 2) {
+            combinedScore *= 1.15;
+          } else if (enemyMatches.length >= 3) {
+            combinedScore *= 1.28;
+          }
+        }
+
+        // Group enemy matches by ability so shared abilities collapse cleanly without boilerplate
+        const abilityGroups = new Map<string, KitEnemyMatch[]>();
+        for (const em of enemyMatches) {
+          const key = `${em.ability.abilityName}:${em.ability.stance}`;
+          const list = abilityGroups.get(key) ?? [];
+          list.push(em);
+          abilityGroups.set(key, list);
+        }
+
+        const reasons: EnemyCounterReason[] = [];
+        for (const group of abilityGroups.values()) {
+          const ab = group[0].ability;
+          const abName = lang === 'de' ? ab.abilityNameDe : ab.abilityName;
+          const effect = lang === 'de' ? ab.effectDe : ab.effectEn;
+          const triggers = Array.from(
+            new Set(group.flatMap((g) => g.matchedTriggers)),
+          ).slice(0, 3);
+          reasons.push({
+            heroClasses: group.map((g) => g.heroClass),
+            triggerSummary: triggers.join(' · ') || undefined,
+            text: uiDict.kitAmplifierReason(ampRule.axis, abName, myHeroDisplayName, effect),
+            isHeroSpecific: false,
+          });
+        }
+
+        const primaryAbility = enemyMatches[0].ability;
+        const primaryAbilityName =
+          lang === 'de' ? primaryAbility.abilityNameDe : primaryAbility.abilityName;
+
+        rawAmpCandidates.push({
+          item,
+          stance,
+          role: primaryAbility.role,
+          score: Math.round(combinedScore * 10) / 10,
+          why: reasons[0]?.text ?? '',
+          reasons,
+          whenToUse: uiDict.kitAmplifierUse(
+            ampRule.axis,
+            primaryAbilityName,
+            ampRule.isImbue,
+          ),
+          synergyNote: uiDict.kitAmplifierSynergyNote(myHeroDisplayName, primaryAbilityName),
+          isHeroSpecific: false,
+          isKitAmplifier: true,
+          counteredEnemies: enemyMatches.map((em) => em.heroClass),
+          upgradeHint: resolveUpgradeHint(ampRule.className, itemsByClass, itemLang),
+        });
+      }
+
+      rawAmpCandidates.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (targets.length > 1 && b.counteredEnemies.length !== a.counteredEnemies.length) {
+          return b.counteredEnemies.length - a.counteredEnemies.length;
+        }
+        return a.item.cost - b.item.cost;
+      });
+
+      // Deduplicate upgrade families among kit amplifiers
+      const seenAmpFamilies = new Set<number>();
+      for (const cand of rawAmpCandidates) {
+        const familyId = UPGRADE_FAMILY_MAP.get(cand.item.className);
+        if (familyId !== undefined) {
+          if (seenAmpFamilies.has(familyId)) continue;
+          seenAmpFamilies.add(familyId);
+        }
+        kitAmplifiersByStance[stance].push(cand);
+      }
+    }
+  }
+
   // Dynamic quality selector: always keep up to 2 top picks; only include #3 if truly strong
   const selectTopForStance = (list: ScoredCandidate[]): ScoredCandidate[] => {
     if (list.length <= 2) return list;
@@ -682,19 +904,52 @@ export function recommendCounters(
     return picked;
   };
 
+  /**
+   * Integrates at most ONE Kit-Amplifier into a stance column, strictly on Rank #2 or #3
+   * (Rank #1 always belongs to a direct counter item).
+   */
+  const mergeKitAmplifierIntoStance = (
+    directPicked: ScoredCandidate[],
+    bestAmp: ScoredCandidate | null,
+  ): ScoredCandidate[] => {
+    if (!bestAmp || directPicked.length === 0) return directPicked;
+    if (directPicked.some((c) => c.item.className === bestAmp.item.className)) {
+      return directPicked;
+    }
+    // Keep score ordering strictly below Rank #1 direct counter
+    const cappedAmp: ScoredCandidate = {
+      ...bestAmp,
+      score: Math.min(bestAmp.score, Math.round((directPicked[0].score - 0.5) * 10) / 10),
+    };
+    if (directPicked.length === 1) {
+      return [directPicked[0], cappedAmp];
+    }
+    if (!directPicked[1].isHeroSpecific && bestAmp.score > directPicked[1].score) {
+      return [directPicked[0], cappedAmp, directPicked[1]];
+    }
+    return [directPicked[0], directPicked[1], cappedAmp];
+  };
+
   let hiddenActiveCount = 0;
   let filtered = deduped;
+  let offenseAmpList = kitAmplifiersByStance.offense;
+  let defenseAmpList = kitAmplifiersByStance.defense;
+
   if (input.activeSlotsFull) {
-    const topOffenseBefore = selectTopForStance(
-      deduped.filter((c) => c.rule.stance === 'offense'),
+    const topOffenseBefore = mergeKitAmplifierIntoStance(
+      selectTopForStance(deduped.filter((c) => c.stance === 'offense')),
+      offenseAmpList[0] ?? null,
     );
-    const topDefenseBefore = selectTopForStance(
-      deduped.filter((c) => c.rule.stance === 'defense'),
+    const topDefenseBefore = mergeKitAmplifierIntoStance(
+      selectTopForStance(deduped.filter((c) => c.stance === 'defense')),
+      defenseAmpList[0] ?? null,
     );
     hiddenActiveCount = [...topOffenseBefore, ...topDefenseBefore].filter(
       (c) => c.item.isActive,
     ).length;
     filtered = deduped.filter((c) => !c.item.isActive);
+    offenseAmpList = offenseAmpList.filter((c) => !c.item.isActive);
+    defenseAmpList = defenseAmpList.filter((c) => !c.item.isActive);
   }
 
   const toRecommendations = (list: ScoredCandidate[]): CounterRecommendation[] => {
@@ -709,7 +964,7 @@ export function recommendCounters(
 
       return {
         item: c.item,
-        stance: c.rule.stance,
+        stance: c.stance,
         rank: idx + 1,
         score: c.score,
         tierLabel,
@@ -719,6 +974,7 @@ export function recommendCounters(
         whenToUse: c.whenToUse,
         synergyNote: c.synergyNote,
         isHeroSpecific: c.isHeroSpecific,
+        isKitAmplifier: c.isKitAmplifier,
         counteredEnemies: c.counteredEnemies,
         upgradeHint: c.upgradeHint,
       };
@@ -726,10 +982,16 @@ export function recommendCounters(
   };
 
   const offense = toRecommendations(
-    selectTopForStance(filtered.filter((c) => c.rule.stance === 'offense')),
+    mergeKitAmplifierIntoStance(
+      selectTopForStance(filtered.filter((c) => c.stance === 'offense')),
+      offenseAmpList[0] ?? null,
+    ),
   );
   const defense = toRecommendations(
-    selectTopForStance(filtered.filter((c) => c.rule.stance === 'defense')),
+    mergeKitAmplifierIntoStance(
+      selectTopForStance(filtered.filter((c) => c.stance === 'defense')),
+      defenseAmpList[0] ?? null,
+    ),
   );
   const recommendations = toRecommendations(filtered.slice(0, 5));
 

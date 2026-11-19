@@ -77,6 +77,49 @@ export type BuiltInHeroTool =
   | 'cleanse'
   | 'mobility_escape';
 
+export type KitAmplifierAxis =
+  | 'cooldown'
+  | 'range'
+  | 'duration'
+  | 'charges'
+  | 'echo'
+  | 'refresher'
+  | 'gap_close';
+
+export interface HeroKitCounter {
+  /** English ability name (e.g. "Hook", "The Cube") */
+  abilityName: string;
+  /** German ability name (e.g. "Greifhaken", "Heilwürfel") */
+  abilityNameDe: string;
+  /** Whether this ability counters the enemy offensively or defensively */
+  stance: CounterStance;
+  /** Tactical role fulfilled by this ability */
+  role: CounterRole;
+  /** Enemy primary base-kit threats this ability directly counters */
+  countersThreats: ThreatMechanic[];
+  /** Optional enemy build modifiers this ability directly counters */
+  countersModifiers?: EnemyModifier[];
+  /** Amplifier axes that empower this counter ability (most impactful first) */
+  amplifiers: KitAmplifierAxis[];
+  /** Whether this ability is an ultimate (Echo Shard only imbues non-ultimates) */
+  isUltimate?: boolean;
+  /** Concise English description of what the ability accomplishes as a counter */
+  effectEn: string;
+  /** Concise German description of what the ability accomplishes as a counter */
+  effectDe: string;
+}
+
+export interface KitAmplifierItemRule {
+  className: string;
+  axis: KitAmplifierAxis;
+  /** Whether this item is imbued onto a single specific ability */
+  isImbue: boolean;
+  /** Cross-tier preference weight (used when priceTier === 'all') */
+  tierWeight: number;
+  /** Extra affinity when the matched enemy threat benefits specifically from this axis */
+  threatAxisBonus?: Partial<Record<ThreatMechanic, number>>;
+}
+
 export interface PlayerAffinity {
   damageStyle: 'gun' | 'spirit' | 'hybrid';
   range: 'close' | 'mid' | 'long';
@@ -96,6 +139,8 @@ export interface HeroProfile {
   /** Secondary/situational kit threats (reduced weight 0.45, prevents tag inflation) */
   secondaryThreats?: ThreatMechanic[];
   playerAffinity: PlayerAffinity;
+  /** Built-in abilities in this hero's kit that directly counter enemy threats/modifiers */
+  kitCounters?: HeroKitCounter[];
   threatHeadline: string;
 }
 
@@ -191,6 +236,8 @@ export interface CounterRecommendation {
   whenToUse: string;
   synergyNote: string | null;
   isHeroSpecific: boolean;
+  /** Whether this recommendation empowers your own hero's built-in counter ability */
+  isKitAmplifier?: boolean;
   /** Enemy hero classNames (from the selected 1-3 enemies) that this item meaningfully counters */
   counteredEnemies?: string[];
   /** Direct component or upgrade path hint (e.g. Rusted Barrel <-> Disarming Hex) */

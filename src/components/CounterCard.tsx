@@ -28,6 +28,7 @@ export function CounterCard({
     whenToUse,
     synergyNote,
     isHeroSpecific,
+    isKitAmplifier,
     counteredEnemies,
     upgradeHint,
   } = rec;
@@ -115,6 +116,12 @@ export function CounterCard({
             <span className="hard-counter-badge" title={t.hardCounterTitle}>
               <Target size={10} />
               {t.hardCounterBadge}
+            </span>
+          )}
+          {isKitAmplifier && (
+            <span className="kit-synergy-badge" title={t.kitSynergyTitle}>
+              <Sparkles size={10} />
+              {t.kitSynergyBadge}
             </span>
           )}
           {totalSelectedEnemies > 1 && counteredEnemies && (

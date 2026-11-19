@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getBundledSnapshot } from '../data/apiClient';
 import { COUNTER_ITEM_RULES, HERO_SPECIFIC_COUNTERS } from '../data/counterItems';
 import { HERO_PROFILES } from '../data/heroProfiles';
+import { KIT_AMPLIFIER_RULES } from '../data/kitAmplifiers';
 import { HERO_OVERRIDE_TIPS_DE, ITEM_COPY_DE } from '../i18n/contentDe';
 import { recommendCounters } from './recommend';
 import type { DeadlockHero, DeadlockItem, PriceTier } from '../types/deadlock';
@@ -591,5 +592,325 @@ describe('Deadlock counter recommendation engine', () => {
     const slowingHex = res.offense.find((r) => r.item.className === 'upgrade_containment');
     expect(slowingHex).toBeDefined();
     expect(slowingHex?.why).toContain('Warp Stone');
+  });
+
+  // ===================== SMART KIT-AMPLIFIER TESTS =====================
+
+  it('verifies every KIT_AMPLIFIER_RULES item exists in snapshot and every hero kitCounter has EN + DE copy', () => {
+    for (const rule of KIT_AMPLIFIER_RULES) {
+      expect(
+        itemsByClass.has(rule.className),
+        `Kit amplifier ${rule.className} missing from snapshot`,
+      ).toBe(true);
+    }
+
+    for (const hero of snapshot.heroes) {
+      const profile = HERO_PROFILES[hero.className];
+      for (const kc of profile.kitCounters ?? []) {
+        expect(kc.abilityName.length).toBeGreaterThan(0);
+        expect(kc.abilityNameDe.length).toBeGreaterThan(0);
+        expect(kc.effectEn.length).toBeGreaterThan(0);
+        expect(kc.effectDe.length).toBeGreaterThan(0);
+        expect(kc.amplifiers.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('recommends Greater Expansion for Bebop Hook vs Vindicta on #2/#3 while keeping Knockdown #1', () => {
+    const res = recommendCounters(
+      {
+        myHeroClass: 'hero_bebop',
+        enemyHeroClass: 'hero_hornet', // Vindicta
+        priceTier: '3200',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+
+    expect(res.offense[0].item.name).toBe('Knockdown');
+    expect(res.offense[0].isKitAmplifier).toBeFalsy();
+
+    const kitPicks = res.offense.filter((r) => r.isKitAmplifier);
+    expect(kitPicks.length).toBe(1);
+    expect(kitPicks[0].rank).toBeGreaterThanOrEqual(2);
+    expect(kitPicks[0].item.className).toBe('upgrade_tech_range'); // Greater Expansion
+    expect(kitPicks[0].why).toContain('Greifhaken');
+    expect(kitPicks[0].whenToUse).toContain('Greifhaken');
+    expect(kitPicks[0].synergyNote).toContain('Greifhaken');
+    expect(kitPicks[0].upgradeHint?.itemClassName).toBe('upgrade_magic_reach');
+  });
+
+  it('recommends Compress Cooldown (Imbue) for Viscous Cube vs Bebop at 1600 Defense (never #1)', () => {
+    const res = recommendCounters(
+      {
+        myHeroClass: 'hero_viscous',
+        enemyHeroClass: 'hero_bebop',
+        priceTier: '1600',
+        damageProfile: 'spirit',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+
+    expect(res.defense[0].isKitAmplifier).toBeFalsy();
+    const kitPick = res.defense.find((r) => r.isKitAmplifier);
+    expect(kitPick).toBeDefined();
+    expect(kitPick?.rank).toBeGreaterThanOrEqual(2);
+    expect(kitPick?.item.className).toBe('upgrade_magic_tempo'); // Compress Cooldown
+    expect(kitPick?.why).toContain('Heilwürfel');
+    expect(kitPick?.whenToUse).toContain('Imbue');
+    expect(kitPick?.upgradeHint).toEqual(
+      expect.objectContaining({
+        direction: 'to',
+        itemClassName: 'upgrade_cooldown_reduction',
+      }),
+    );
+  });
+
+  it('never suggests Kit-Amplifiers when myHeroClass is null', () => {
+    const tiers: PriceTier[] = ['800', '1600', '3200', '6400', 'all'];
+    for (const priceTier of tiers) {
+      const res = recommendCounters(
+        {
+          myHeroClass: null,
+          enemyHeroClass: 'hero_hornet',
+          priceTier,
+          damageProfile: 'bullet',
+          modifiers: [],
+          activeSlotsFull: false,
+          language: 'de',
+        },
+        itemsByClass,
+        heroesByClass,
+      );
+      expect([...res.offense, ...res.defense].some((r) => r.isKitAmplifier)).toBe(false);
+    }
+  });
+
+  it('enforces multi-enemy guardrail: requires >= 2 countered enemies when 2-3 enemies are selected', () => {
+    // Bebop Hook counters Vindicta (airborne), NOT Abrams (melee_brawler/heavy_healing/hard_cc/close_range_dive)
+    const onlyOneMatched = recommendCounters(
+      {
+        myHeroClass: 'hero_bebop',
+        enemyHeroClass: 'hero_hornet',
+        priceTier: '3200',
+        damageProfile: 'bullet',
+        modifiers: [],
+        enemyTargets: [
+          { heroClass: 'hero_hornet', damageProfile: 'bullet', modifiers: [] },
+          { heroClass: 'hero_atlas', damageProfile: 'bullet', modifiers: [] },
+        ],
+        activeSlotsFull: false,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    expect(onlyOneMatched.offense.some((r) => r.isKitAmplifier)).toBe(false);
+
+    // Bebop Hook counters BOTH Vindicta (airborne) AND Seven (channeled_ult) -> qualifies!
+    const twoMatched = recommendCounters(
+      {
+        myHeroClass: 'hero_bebop',
+        enemyHeroClass: 'hero_hornet',
+        priceTier: '3200',
+        damageProfile: 'bullet',
+        modifiers: [],
+        enemyTargets: [
+          { heroClass: 'hero_hornet', damageProfile: 'bullet', modifiers: [] },
+          { heroClass: 'hero_gigawatt', damageProfile: 'spirit', modifiers: [] },
+        ],
+        activeSlotsFull: false,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    expect(twoMatched.offense[0].isKitAmplifier).toBeFalsy();
+    const kitPick = twoMatched.offense.find((r) => r.isKitAmplifier);
+    expect(kitPick).toBeDefined();
+    expect(kitPick?.counteredEnemies).toContain('hero_hornet');
+    expect(kitPick?.counteredEnemies).toContain('hero_gigawatt');
+    expect(kitPick?.reasons.length).toBe(1); // collapsed cleanly onto shared Greifhaken ability
+    expect(kitPick?.reasons[0].text).toContain('Greifhaken');
+  });
+
+  it('respects activeSlotsFull for active Kit-Amplifiers (Majestic Leap / Echo Shard / Refresher)', () => {
+    const withActives = recommendCounters(
+      {
+        myHeroClass: 'hero_krill', // Mo & Krill Combo prefers gap_close (Majestic Leap) vs Vindicta
+        enemyHeroClass: 'hero_hornet',
+        priceTier: '3200',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const leapPick = withActives.offense.find((r) => r.isKitAmplifier);
+    expect(leapPick?.item.className).toBe('upgrade_rocket_booster'); // Majestic Leap
+
+    const passiveOnly = recommendCounters(
+      {
+        myHeroClass: 'hero_krill',
+        enemyHeroClass: 'hero_hornet',
+        priceTier: '3200',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: true,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    expect([...passiveOnly.offense, ...passiveOnly.defense].every((r) => !r.item.isActive)).toBe(
+      true,
+    );
+    const passiveKitPick = passiveOnly.offense.find((r) => r.isKitAmplifier);
+    expect(passiveKitPick).toBeDefined();
+    expect(passiveKitPick?.item.isActive).toBe(false);
+    expect(passiveOnly.hiddenActiveCount).toBeGreaterThan(0);
+  });
+
+  it('supports charge-based Kit-Amplifiers (Extra Charge at 800) and separates Echo Shard vs Refresher at 6400', () => {
+    // Holliday Bounce Pad vs Vindicta at 800 -> Extra Charge
+    const holliday800 = recommendCounters(
+      {
+        myHeroClass: 'hero_astro',
+        enemyHeroClass: 'hero_hornet',
+        priceTier: '800',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    expect(holliday800.offense[0].isKitAmplifier).toBeFalsy();
+    const hollidayCharge = holliday800.offense.find((r) => r.isKitAmplifier);
+    expect(hollidayCharge?.item.className).toBe('upgrade_extra_charge');
+    expect(hollidayCharge?.why).toContain('Bounce Pad');
+
+    // Kelvin Frost Grenade vs Vindicta at 800 Defense -> Extra Charge
+    const kelvin800 = recommendCounters(
+      {
+        myHeroClass: 'hero_kelvin',
+        enemyHeroClass: 'hero_hornet',
+        priceTier: '800',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    expect(kelvin800.defense[0].isKitAmplifier).toBeFalsy();
+    const kelvinCharge = kelvin800.defense.find((r) => r.isKitAmplifier);
+    expect(kelvinCharge?.item.className).toBe('upgrade_extra_charge');
+    expect(kelvinCharge?.why).toContain('Frostgranate');
+
+    // Bebop Hook (non-ult) vs Vindicta at 6400 -> Echo Shard (not Refresher)
+    const bebop6400 = recommendCounters(
+      {
+        myHeroClass: 'hero_bebop',
+        enemyHeroClass: 'hero_hornet',
+        priceTier: '6400',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const bebopReset = bebop6400.offense.find((r) => r.isKitAmplifier);
+    expect(bebopReset?.item.className).toBe('upgrade_ability_power_shard'); // Echo Shard
+
+    // With activeSlotsFull=true at 6400, Bebop falls back to passive Transcendent Cooldown
+    const bebop6400Passive = recommendCounters(
+      {
+        myHeroClass: 'hero_bebop',
+        enemyHeroClass: 'hero_hornet',
+        priceTier: '6400',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: true,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const bebopPassiveAmp = bebop6400Passive.offense.find((r) => r.isKitAmplifier);
+    expect(bebopPassiveAmp?.item.className).toBe('upgrade_transcendent_cooldown');
+
+    // Wraith Telekinesis (ult) vs Vindicta at 6400 -> Refresher (never Echo Shard!)
+    const wraith6400 = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_hornet',
+        priceTier: '6400',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const wraithReset = wraith6400.offense.find((r) => r.isKitAmplifier);
+    expect(wraithReset?.item.className).toBe('upgrade_ability_refresher'); // Refresher
+  });
+
+  it('enforces Kit-Amplifier invariants across all 42 player heroes and all 5 tiers (never #1, max 1 per stance)', () => {
+    const sampleEnemies = ['hero_hornet', 'hero_bebop', 'hero_haze', 'hero_atlas', 'hero_gigawatt'];
+    const tiers: PriceTier[] = ['800', '1600', '3200', '6400', 'all'];
+
+    for (const myHero of snapshot.heroes) {
+      for (const enemyClass of sampleEnemies) {
+        if (myHero.className === enemyClass) continue;
+        const eProfile = HERO_PROFILES[enemyClass];
+        for (const priceTier of tiers) {
+          const res = recommendCounters(
+            {
+              myHeroClass: myHero.className,
+              enemyHeroClass: enemyClass,
+              priceTier,
+              damageProfile: eProfile.defaultDamage,
+              modifiers: [],
+              activeSlotsFull: false,
+              language: 'de',
+            },
+            itemsByClass,
+            heroesByClass,
+          );
+
+          for (const list of [res.offense, res.defense]) {
+            expect(list.length).toBeLessThanOrEqual(3);
+            if (list.length > 0) {
+              expect(
+                list[0].isKitAmplifier,
+                `Rank #1 must never be a Kit-Amplifier (${myHero.name} vs ${enemyClass} @ ${priceTier})`,
+              ).toBeFalsy();
+            }
+            const kitCount = list.filter((r) => r.isKitAmplifier).length;
+            expect(
+              kitCount,
+              `At most 1 Kit-Amplifier per column (${myHero.name} vs ${enemyClass} @ ${priceTier})`,
+            ).toBeLessThanOrEqual(1);
+          }
+        }
+      }
+    }
   });
 });

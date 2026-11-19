@@ -5,6 +5,7 @@ import type {
   DeadlockItem,
   EnemyModifier,
   ItemSlot,
+  KitAmplifierAxis,
   Language,
   PriceTier,
   ThreatMechanic,
@@ -106,6 +107,52 @@ export const UI_TEXT = {
     passiveTag: 'PASSIV',
     hardCounterBadge: 'Harter Konter',
     hardCounterTitle: 'Spezifischer mechanischer Konter gegen diesen Helden',
+    kitSynergyBadge: 'Kit-Synergie',
+    kitSynergyTitle: 'Verstärkt eine Fähigkeit deines Helden, die diesen Gegner direkt kontert',
+    kitAmplifierReason: (
+      axis: KitAmplifierAxis,
+      ability: string,
+      hero: string,
+      effect: string,
+    ): string => {
+      switch (axis) {
+        case 'cooldown':
+          return `Verstärkt ${ability} (${hero}) — kürzerer Cooldown: ${effect}.`;
+        case 'range':
+          return `Verstärkt ${ability} (${hero}) — mehr Reichweite/Radius: ${effect}.`;
+        case 'duration':
+          return `Verstärkt ${ability} (${hero}) — längere Dauer: ${effect}.`;
+        case 'charges':
+          return `Verstärkt ${ability} (${hero}) — zusätzliche Aufladungen: ${effect}.`;
+        case 'echo':
+          return `Setzt ${ability} (${hero}) sofort zurück — doppelter Einsatz: ${effect}.`;
+        case 'refresher':
+          return `Setzt ${ability} (${hero}) & Kit sofort zurück — doppelter Einsatz: ${effect}.`;
+        case 'gap_close':
+          return `Bringt ${hero} direkt in Reichweite für ${ability}: ${effect}.`;
+      }
+    },
+    kitAmplifierUse: (
+      axis: KitAmplifierAxis,
+      ability: string,
+      isImbue: boolean,
+    ): string => {
+      if (axis === 'echo') {
+        return `Auf ${ability} anwenden (Imbue) und direkt ein zweites Mal einsetzen, wenn der erste Einsatz raus ist.`;
+      }
+      if (axis === 'refresher') {
+        return `Direkt nach ${ability} aktivieren, um sofort erneut zu kontern oder ein zweites Ziel zu stoppen.`;
+      }
+      if (axis === 'gap_close') {
+        return `In die Luft katapultieren und direkt in Reichweite für ${ability} fallen lassen.`;
+      }
+      if (isImbue) {
+        return `Auf ${ability} anwenden (Imbue) — halte ${ability} gezielt für das gegnerische Kern-Fenster bereit.`;
+      }
+      return `Passiv — halte ${ability} gezielt bereit, um gegnerische Kern-Fähigkeiten sofort zu kontern.`;
+    },
+    kitAmplifierSynergyNote: (hero: string, ability: string) =>
+      `Verstärkt ${hero}s ${ability}`,
     tierLabels: {
       'Best Counter': 'Bester Konter',
       'Core Counter': 'Kern-Konter',
@@ -290,6 +337,52 @@ export const UI_TEXT = {
     passiveTag: 'PASSIVE',
     hardCounterBadge: 'Hard Counter',
     hardCounterTitle: 'Specific mechanical hard-counter for this hero',
+    kitSynergyBadge: 'Kit Synergy',
+    kitSynergyTitle: 'Empowers an ability in your own hero kit that directly counters this enemy',
+    kitAmplifierReason: (
+      axis: KitAmplifierAxis,
+      ability: string,
+      hero: string,
+      effect: string,
+    ): string => {
+      switch (axis) {
+        case 'cooldown':
+          return `Empowers ${ability} (${hero}) — lower cooldown: ${effect}.`;
+        case 'range':
+          return `Empowers ${ability} (${hero}) — extended range/radius: ${effect}.`;
+        case 'duration':
+          return `Empowers ${ability} (${hero}) — longer duration: ${effect}.`;
+        case 'charges':
+          return `Empowers ${ability} (${hero}) — extra charges: ${effect}.`;
+        case 'echo':
+          return `Resets ${ability} (${hero}) instantly — double cast: ${effect}.`;
+        case 'refresher':
+          return `Resets ${ability} (${hero}) & full kit — double cast: ${effect}.`;
+        case 'gap_close':
+          return `Launches ${hero} straight into range for ${ability}: ${effect}.`;
+      }
+    },
+    kitAmplifierUse: (
+      axis: KitAmplifierAxis,
+      ability: string,
+      isImbue: boolean,
+    ): string => {
+      if (axis === 'echo') {
+        return `Imbue onto ${ability} and immediately reset for a second cast in key fights.`;
+      }
+      if (axis === 'refresher') {
+        return `Activate right after ${ability} to immediately counter again or lock down a second threat.`;
+      }
+      if (axis === 'gap_close') {
+        return `Launch overhead and drop straight into range to land ${ability}.`;
+      }
+      if (isImbue) {
+        return `Imbue onto ${ability} — hold ${ability} ready for their key threat window.`;
+      }
+      return `Passive — keep ${ability} ready to shut down their core threat on sight.`;
+    },
+    kitAmplifierSynergyNote: (hero: string, ability: string) =>
+      `Empowers ${hero}'s ${ability}`,
     tierLabels: {
       'Best Counter': 'Best Counter',
       'Core Counter': 'Core Counter',

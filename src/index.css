@@ -1304,6 +1304,19 @@ button {
   color: var(--brass-bright);
 }
 
+.kit-synergy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(116, 178, 255, 0.15);
+  border: 1px solid rgba(116, 178, 255, 0.44);
+  color: #badbff;
+}
+
 .when-to-use {
   display: inline-flex;
   align-items: flex-start;
