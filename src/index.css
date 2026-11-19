@@ -496,11 +496,11 @@ button {
   flex-direction: column;
 }
 
-/* Stage Segmented Bar */
+/* Price Tier Segmented Bar */
 .segmented-bar {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
   background: #101115;
   padding: 4px;
   border-radius: var(--radius-md);
@@ -513,7 +513,7 @@ button {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 7px 8px;
+  padding: 7px 6px;
   border-radius: 8px;
   border: 1px solid transparent;
   background: transparent;
@@ -979,6 +979,48 @@ button {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.empty-stance-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(16, 17, 21, 0.72);
+  border: 1px dashed var(--border-subtle);
+}
+
+.empty-stance-title {
+  margin: 0;
+  font-size: var(--text-body);
+  font-weight: 700;
+  color: var(--text-parchment);
+}
+
+.empty-stance-body {
+  margin: 0;
+  font-size: var(--text-sub);
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.empty-stance-cta {
+  margin-top: 4px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border-brass-strong);
+  background: rgba(214, 165, 86, 0.14);
+  color: var(--brass-bright);
+  font-size: var(--text-sub);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.empty-stance-cta:hover {
+  background: rgba(214, 165, 86, 0.24);
 }
 
 .counter-card {

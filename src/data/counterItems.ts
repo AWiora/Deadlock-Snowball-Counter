@@ -67,6 +67,58 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     why: 'Passive, uninterruptible lane sustain against constant chip damage when you cannot hide for Healing Rite.',
     whenToUse: 'Passive — lets you stay healthy through nonstop lane harassment.',
   },
+  {
+    className: 'upgrade_improved_stamina', // Extra Stamina
+    stance: 'defense',
+    role: 'Survival',
+    stageFit: { lane: 0.96, mid: 0.35, late: 0.1 },
+    modifierCounters: { cc: 18, melee: 18 },
+    threatCounters: { close_range_dive: 20, hard_cc: 18, telegraphed_burst: 16, melee_brawler: 16 },
+    why: 'Extra dash charge for 800 souls — lets you dodge telegraphed hooks, cages, heavy melees, and early dive combos.',
+    whenToUse: 'Passive — keep a spare dash ready to sidestep their engage or escape out of zone abilities.',
+  },
+  {
+    className: 'upgrade_mystic_regeneration', // Mystic Regeneration
+    stance: 'defense',
+    role: 'Survival',
+    stageFit: { lane: 0.95, mid: 0.25, late: 0.05 },
+    damageCounters: { spirit: 12, bullet: 10, equal: 12 },
+    threatCounters: { long_range_poke: 14, ability_spam: 12, sustained_spirit: 10 },
+    playerSynergy: { preferDamageStyle: 'spirit', preferSpiritProccer: true, penalizeNonSpiritProccer: true },
+    why: 'Reliable in-combat lane sustain for spirit heroes — heals you whenever your abilities tag enemy heroes.',
+    whenToUse: 'Passive — poke enemies with abilities during trades to keep the bonus regen rolling.',
+  },
+  {
+    className: 'upgrade_headshot_booster', // Headshot Booster
+    stance: 'offense',
+    role: 'Burst',
+    stageFit: { lane: 0.94, mid: 0.25, late: 0.04 },
+    threatCounters: { fragile_glass_cannon: 28, long_range_poke: 12, airborne: 10 },
+    playerSynergy: { preferDamageStyle: 'gun' },
+    why: 'Cheap 800-soul headshot burst that chunks fragile low-HP laners and forces them off the wave.',
+    whenToUse: 'Passive — look for quick headshot pokes whenever the cooldown is up to punish low-HP targets.',
+  },
+  {
+    className: 'upgrade_magic_burst', // Mystic Burst
+    stance: 'offense',
+    role: 'Burst',
+    stageFit: { lane: 0.94, mid: 0.25, late: 0.04 },
+    threatCounters: { fragile_glass_cannon: 28, close_range_dive: 10 },
+    playerSynergy: { preferDamageStyle: 'spirit', preferSpiritProccer: true, penalizeNonSpiritProccer: true },
+    why: 'Adds instant bonus spirit burst for 800 souls to punish fragile laners — upgrades later into Tankbuster.',
+    whenToUse: 'Passive — weave your main damage ability onto low-HP enemies whenever Mystic Burst is charged.',
+  },
+  {
+    className: 'upgrade_close_range', // Close Quarters
+    stance: 'offense',
+    role: 'Burst',
+    stageFit: { lane: 0.92, mid: 0.25, late: 0.04 },
+    modifierCounters: { melee: 16 },
+    threatCounters: { close_range_dive: 24, melee_brawler: 20 },
+    playerSynergy: { preferDamageStyle: 'gun', preferRange: 'close', penalizeLongRange: true },
+    why: 'Punishes aggressive melee brawlers and close-range divers with heavy bonus gun damage whenever they step into your face.',
+    whenToUse: 'Passive — hold your ground and punish them with close-range shots as soon as they dive in.',
+  },
 
   // ===================== TIER 2 (1600 SOULS) — LANE TO MID COUNTERS =====================
   {

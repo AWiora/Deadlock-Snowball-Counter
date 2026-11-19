@@ -22,8 +22,8 @@ import type {
   DeadlockHero,
   EnemyModifier,
   EnemyTargetConfig,
-  GameStage,
   Language,
+  PriceTier,
 } from '../types/deadlock';
 
 interface MatchupControlBarProps {
@@ -33,7 +33,7 @@ interface MatchupControlBarProps {
   myHero: DeadlockHero | null;
   enemyTargets: EnemyTargetConfig[];
   focusedEnemy: DeadlockHero | null;
-  stage: GameStage;
+  priceTier: PriceTier;
   damageProfile: DamageProfile;
   modifiers: EnemyModifier[];
   activeSlotsFull: boolean;
@@ -43,14 +43,14 @@ interface MatchupControlBarProps {
   onFocusEnemy: (className: string) => void;
   onRemoveEnemy: (className: string) => void;
   onClearAllEnemies: () => void;
-  onChangeStage: (stage: GameStage) => void;
+  onChangePriceTier: (tier: PriceTier) => void;
   onChangeDamage: (dmg: DamageProfile) => void;
   onToggleModifier: (mod: EnemyModifier) => void;
   onToggleActiveSlotsFull: () => void;
   onResetDefaults: () => void;
 }
 
-const STAGE_IDS: GameStage[] = ['lane', 'mid', 'late'];
+const PRICE_TIER_IDS: PriceTier[] = ['800', '1600', '3200', '6400', 'all'];
 
 const DAMAGE_META: { id: DamageProfile; tone: string }[] = [
   { id: 'bullet', tone: 'weapon' },
@@ -73,7 +73,7 @@ export function MatchupControlBar({
   myHero,
   enemyTargets,
   focusedEnemy,
-  stage,
+  priceTier,
   damageProfile,
   modifiers,
   activeSlotsFull,
@@ -83,7 +83,7 @@ export function MatchupControlBar({
   onFocusEnemy,
   onRemoveEnemy,
   onClearAllEnemies,
-  onChangeStage,
+  onChangePriceTier,
   onChangeDamage,
   onToggleModifier,
   onToggleActiveSlotsFull,
@@ -328,20 +328,20 @@ export function MatchupControlBar({
         </div>
       </div>
 
-      {/* Row 3: Match Stage + Active Slots Full */}
+      {/* Row 3: Price Tier (Souls) + Active Slots Full */}
       <div className="deck-row deck-row--stage-compact">
         <div className="stage-control-wrap">
-          <span className="deck-micro-label">{t.stageLabel}</span>
-          <div className="segmented-bar" role="group" aria-label={t.stageLabel}>
-            {STAGE_IDS.map((id) => (
+          <span className="deck-micro-label">{t.priceTierLabel}</span>
+          <div className="segmented-bar" role="group" aria-label={t.priceTierLabel}>
+            {PRICE_TIER_IDS.map((id) => (
               <button
                 key={id}
                 type="button"
-                className={`seg-btn ${stage === id ? 'seg-btn--active' : ''}`}
-                onClick={() => onChangeStage(id)}
+                className={`seg-btn ${priceTier === id ? 'seg-btn--active' : ''}`}
+                onClick={() => onChangePriceTier(id)}
               >
-                <span className="seg-btn-main">{t.stages[id].label}</span>
-                <span className="seg-btn-sub">{t.stages[id].budget}</span>
+                <span className="seg-btn-main">{t.priceTiers[id].label}</span>
+                <span className="seg-btn-sub">{t.priceTiers[id].sub}</span>
               </button>
             ))}
           </div>

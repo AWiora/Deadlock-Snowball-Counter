@@ -4,9 +4,9 @@ import type {
   DeadlockHero,
   DeadlockItem,
   EnemyModifier,
-  GameStage,
   ItemSlot,
   Language,
+  PriceTier,
   ThreatMechanic,
 } from '../types/deadlock';
 
@@ -52,12 +52,14 @@ export const UI_TEXT = {
     focusedEnemyBadge: 'Toggles aktiv',
     backToPrev: (name: string) => `Zurück zu ${name}`,
 
-    stageLabel: 'SPIELPHASE',
-    stages: {
-      lane: { label: 'Lane / Früh', budget: '800–1,6k' },
-      mid: { label: 'Mid-Game', budget: '1,6k–3,2k' },
-      late: { label: 'Late-Game', budget: '3,2k–6,4k' },
-    } as Record<GameStage, { label: string; budget: string }>,
+    priceTierLabel: 'PREISSTUFE (SEELEN)',
+    priceTiers: {
+      '800': { label: '800', sub: 'Früh' },
+      '1600': { label: '1.600', sub: 'Lane' },
+      '3200': { label: '3.200', sub: 'Mid' },
+      '6400': { label: '6.400', sub: 'Late' },
+      all: { label: 'Alle', sub: 'Top' },
+    } as Record<PriceTier, { label: string; sub: string }>,
 
     activeSlotsFullLabel: 'AKTIVE SLOTS',
     activeSlotsFullBtn: 'Aktive Slots voll',
@@ -85,11 +87,12 @@ export const UI_TEXT = {
       mobility: { label: 'Flucht / Mobilität', hint: 'Baut Warp Stone, Majestic Leap, Fleetfoot oder Magic Carpet und entkommt ständig' },
     } as Record<EnemyModifier, { label: string; hint: string }>,
 
-    resultsStageTitle: {
-      lane: 'Lane / Früh-Konter',
-      mid: 'Mid-Game Konter',
-      late: 'Late-Game Konter',
-    } as Record<GameStage, string>,
+    emptyOffense800Title: 'Kein echter Offensiv-Konter für 800 Seelen',
+    emptyOffense800Body:
+      'Echte Offensiv-Konter (Slowing Hex, Healbane, Spirit Sap usw.) starten erst ab 1.600 Seelen.',
+    switchTo1600Btn: 'Zu 1.600 wechseln',
+    emptyColumnGeneric: 'Keine passenden Konter in dieser Preisstufe.',
+    switchToAllBtn: 'Alle Preisstufen zeigen',
     vsWord: 'gegen',
     asWord: 'als',
 
@@ -233,12 +236,14 @@ export const UI_TEXT = {
     focusedEnemyBadge: 'Toggles active',
     backToPrev: (name: string) => `Back to ${name}`,
 
-    stageLabel: 'GAME STAGE',
-    stages: {
-      lane: { label: 'Lane / Early', budget: '800–1.6k' },
-      mid: { label: 'Mid Game', budget: '1.6k–3.2k' },
-      late: { label: 'Late Game', budget: '3.2k–6.4k' },
-    } as Record<GameStage, { label: string; budget: string }>,
+    priceTierLabel: 'PRICE TIER (SOULS)',
+    priceTiers: {
+      '800': { label: '800', sub: 'Early' },
+      '1600': { label: '1,600', sub: 'Lane' },
+      '3200': { label: '3,200', sub: 'Mid' },
+      '6400': { label: '6,400', sub: 'Late' },
+      all: { label: 'All', sub: 'Top' },
+    } as Record<PriceTier, { label: string; sub: string }>,
 
     activeSlotsFullLabel: 'ACTIVE SLOTS',
     activeSlotsFullBtn: 'Active Slots Full',
@@ -266,11 +271,12 @@ export const UI_TEXT = {
       mobility: { label: 'Escape / Mobility', hint: 'Building Warp Stone, Majestic Leap, Fleetfoot, or Magic Carpet to escape' },
     } as Record<EnemyModifier, { label: string; hint: string }>,
 
-    resultsStageTitle: {
-      lane: 'Lane / Early Counters',
-      mid: 'Mid Game Counters',
-      late: 'Late Game Counters',
-    } as Record<GameStage, string>,
+    emptyOffense800Title: 'No true Offense counters at 800 Souls',
+    emptyOffense800Body:
+      'True offensive counters (Slowing Hex, Healbane, Spirit Sap, etc.) start at 1,600 Souls.',
+    switchTo1600Btn: 'Switch to 1,600',
+    emptyColumnGeneric: 'No matching counters in this price tier.',
+    switchToAllBtn: 'Show all tiers',
     vsWord: 'vs',
     asWord: 'as',
 

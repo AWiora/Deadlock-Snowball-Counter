@@ -4,7 +4,7 @@ import { COUNTER_ITEM_RULES, HERO_SPECIFIC_COUNTERS } from '../data/counterItems
 import { HERO_PROFILES } from '../data/heroProfiles';
 import { HERO_OVERRIDE_TIPS_DE, ITEM_COPY_DE } from '../i18n/contentDe';
 import { recommendCounters } from './recommend';
-import type { DeadlockHero, DeadlockItem, GameStage } from '../types/deadlock';
+import type { DeadlockHero, DeadlockItem, PriceTier } from '../types/deadlock';
 
 const snapshot = getBundledSnapshot();
 const itemsByClass = new Map<string, DeadlockItem>(
@@ -15,12 +15,12 @@ const heroesByClass = new Map<string, DeadlockHero>(
 );
 
 describe('Deadlock counter recommendation engine', () => {
-  it('recommends Metal Skin / Disarming Hex in Mid game vs Haze (not generic random armor)', () => {
+  it('recommends Metal Skin / Disarming Hex at 3,200 Souls vs Haze (not generic random armor)', () => {
     const res = recommendCounters(
       {
         myHeroClass: 'hero_inferno',
         enemyHeroClass: 'hero_haze',
-        stage: 'mid',
+        priceTier: '3200',
         damageProfile: 'bullet',
         modifiers: [],
         activeSlotsFull: false,
@@ -32,14 +32,15 @@ describe('Deadlock counter recommendation engine', () => {
     const names = res.recommendations.map((r) => r.item.name);
     expect(names[0]).toBe('Metal Skin');
     expect(names).toContain('Disarming Hex');
+    expect(res.recommendations.every((r) => r.item.cost === 3200)).toBe(true);
   });
 
-  it('recommends Plated Armor #1 in Late game vs Haze', () => {
+  it('recommends Plated Armor #1 at 6,400 Souls vs Haze', () => {
     const res = recommendCounters(
       {
         myHeroClass: 'hero_gigawatt',
         enemyHeroClass: 'hero_haze',
-        stage: 'late',
+        priceTier: '6400',
         damageProfile: 'bullet',
         modifiers: [],
         activeSlotsFull: false,
@@ -49,6 +50,7 @@ describe('Deadlock counter recommendation engine', () => {
     );
 
     expect(res.recommendations[0].item.name).toBe('Plated Armor');
+    expect(res.recommendations.every((r) => r.item.cost === 6400)).toBe(true);
   });
 
   it('filters out all Active items when Active Slots Full is enabled and reports hidden actives', () => {
@@ -56,7 +58,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_wraith',
         enemyHeroClass: 'hero_haze',
-        stage: 'late',
+        priceTier: '6400',
         damageProfile: 'bullet',
         modifiers: [],
         activeSlotsFull: true,
@@ -77,7 +79,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_wraith',
         enemyHeroClass: 'hero_haze',
-        stage: 'mid',
+        priceTier: '3200',
         damageProfile: 'spirit',
         modifiers: [],
         activeSlotsFull: false,
@@ -88,15 +90,15 @@ describe('Deadlock counter recommendation engine', () => {
 
     const top3 = res.recommendations.slice(0, 3).map((r) => r.item.name);
     expect(top3).not.toContain('Metal Skin');
-    expect(top3.some((n) => ['Spirit Resilience', 'Counterspell', 'Silence Wave', 'Spirit Shielding'].includes(n))).toBe(true);
+    expect(top3.some((n) => ['Spirit Resilience', 'Counterspell', 'Silence Wave'].includes(n))).toBe(true);
   });
 
-  it('recommends Knockdown #1 vs Vindicta and Seven in Mid game', () => {
+  it('recommends Knockdown #1 vs Vindicta and Seven at 3,200 Souls', () => {
     const vsVindicta = recommendCounters(
       {
         myHeroClass: 'hero_atlas',
         enemyHeroClass: 'hero_hornet',
-        stage: 'mid',
+        priceTier: '3200',
         damageProfile: 'bullet',
         modifiers: [],
         activeSlotsFull: false,
@@ -110,7 +112,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_wraith',
         enemyHeroClass: 'hero_gigawatt',
-        stage: 'mid',
+        priceTier: '3200',
         damageProfile: 'spirit',
         modifiers: [],
         activeSlotsFull: false,
@@ -126,7 +128,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_haze', // rapid-fire gun, non-spirit proccer
         enemyHeroClass: 'hero_atlas',
-        stage: 'mid',
+        priceTier: '3200',
         damageProfile: 'bullet',
         modifiers: ['tanky', 'healing'],
         activeSlotsFull: true,
@@ -136,13 +138,13 @@ describe('Deadlock counter recommendation engine', () => {
     );
     const gunNames = gunPlayer.recommendations.map((r) => r.item.name);
     expect(gunNames).toContain('Toxic Bullets');
-    expect(gunNames).not.toContain('Healbane');
+    expect(gunNames).not.toContain('Tankbuster');
 
     const spiritPlayer = recommendCounters(
       {
         myHeroClass: 'hero_ghost', // Lady Geist: spirit proccer, slow gun
         enemyHeroClass: 'hero_atlas',
-        stage: 'mid',
+        priceTier: '1600',
         damageProfile: 'bullet',
         modifiers: ['tanky', 'healing'],
         activeSlotsFull: true,
@@ -152,16 +154,15 @@ describe('Deadlock counter recommendation engine', () => {
     );
     const spiritNames = spiritPlayer.recommendations.map((r) => r.item.name);
     expect(spiritNames).toContain('Healbane');
-    expect(spiritNames).toContain('Tankbuster');
-    expect(spiritNames).not.toContain('Toxic Bullets');
+    expect(spiritNames).not.toContain('Weakening Headshot');
   });
 
-  it('recommends Rebuttal in Lane vs Abrams even with 0 extra build toggles clicked', () => {
+  it('recommends Rebuttal at 800 Souls vs Abrams even with 0 extra build toggles clicked', () => {
     const res = recommendCounters(
       {
         myHeroClass: 'hero_inferno',
         enemyHeroClass: 'hero_atlas',
-        stage: 'lane',
+        priceTier: '800',
         damageProfile: 'bullet',
         modifiers: [],
         activeSlotsFull: false,
@@ -170,6 +171,58 @@ describe('Deadlock counter recommendation engine', () => {
       heroesByClass,
     );
     expect(res.recommendations[0].item.name).toBe('Rebuttal');
+    expect(res.recommendations.every((r) => r.item.cost === 800)).toBe(true);
+  });
+
+  it('strictly shows 1,600-soul counters when 1600 tier is selected without 3,200 crowding', () => {
+    const res = recommendCounters(
+      {
+        myHeroClass: 'hero_inferno',
+        enemyHeroClass: 'hero_vampirebat',
+        priceTier: '1600',
+        damageProfile: 'spirit',
+        modifiers: [],
+        activeSlotsFull: false,
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    expect(res.offense.length).toBeGreaterThanOrEqual(2);
+    expect(res.defense.length).toBeGreaterThanOrEqual(2);
+    expect([...res.offense, ...res.defense].every((r) => r.item.cost === 1600)).toBe(true);
+    expect(res.offense.map((r) => r.item.name)).toContain('Slowing Hex');
+  });
+
+  it('shows strongest cross-tier counters when priceTier is "all"', () => {
+    const vsHaze = recommendCounters(
+      {
+        myHeroClass: 'hero_gigawatt',
+        enemyHeroClass: 'hero_haze',
+        priceTier: 'all',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    expect(vsHaze.defense[0].item.name).toBe('Plated Armor');
+
+    const vsVindicta = recommendCounters(
+      {
+        myHeroClass: 'hero_atlas',
+        enemyHeroClass: 'hero_hornet',
+        priceTier: 'all',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const offenseNames = vsVindicta.offense.map((r) => r.item.name);
+    expect(offenseNames).toContain('Phantom Strike'); // 6400 close-range synergy for Abrams
+    expect(offenseNames).toContain('Knockdown'); // 3200 anti-air hard counter
   });
 
   it('boosts anti-heal when Heavy Healing extra toggle is clicked on a non-healer like Haze', () => {
@@ -177,7 +230,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_inferno',
         enemyHeroClass: 'hero_haze',
-        stage: 'mid',
+        priceTier: '3200',
         damageProfile: 'bullet',
         modifiers: ['healing'],
         activeSlotsFull: false,
@@ -186,7 +239,7 @@ describe('Deadlock counter recommendation engine', () => {
       heroesByClass,
     );
     const names = res.recommendations.map((r) => r.item.name);
-    expect(names.some((n) => ['Healbane', 'Decay', 'Toxic Bullets'].includes(n))).toBe(true);
+    expect(names.some((n) => ['Decay', 'Toxic Bullets'].includes(n))).toBe(true);
   });
 
   it('returns German tactical copy and official German item names when language is de', () => {
@@ -194,7 +247,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_kelvin',
         enemyHeroClass: 'hero_haze',
-        stage: 'mid',
+        priceTier: '3200',
         damageProfile: 'bullet',
         modifiers: [],
         activeSlotsFull: false,
@@ -213,7 +266,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_kelvin',
         enemyHeroClass: 'hero_vampirebat',
-        stage: 'mid',
+        priceTier: '3200',
         damageProfile: 'spirit',
         modifiers: [],
         activeSlotsFull: false,
@@ -223,11 +276,11 @@ describe('Deadlock counter recommendation engine', () => {
       heroesByClass,
     );
     expect(res.recommendedStance).toBe('offense');
-    expect(res.offense.length).toBe(3);
+    expect(res.offense.length).toBeGreaterThanOrEqual(1);
     expect(res.defense.length).toBeGreaterThanOrEqual(2);
     expect(res.defense.length).toBeLessThanOrEqual(3);
     const offenseNames = res.offense.map((r) => r.item.name);
-    expect(offenseNames.some((n) => ['Silence Wave', 'Slowing Hex', 'Cold Front'].includes(n))).toBe(true);
+    expect(offenseNames).toContain('Silence Wave');
   });
 
   it('handles unknown/newly-patched heroes gracefully', () => {
@@ -235,7 +288,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: null,
         enemyHeroClass: 'hero_future_patch_99',
-        stage: 'late',
+        priceTier: '6400',
         damageProfile: 'spirit',
         modifiers: ['tanky', 'healing'],
         activeSlotsFull: false,
@@ -274,16 +327,16 @@ describe('Deadlock counter recommendation engine', () => {
     }
   });
 
-  it('passes quality invariants across all 42 heroes and all 3 stages (lane, mid, late)', () => {
-    const stages: GameStage[] = ['lane', 'mid', 'late'];
+  it('passes quality invariants across all 42 heroes and all 5 price tiers (800, 1600, 3200, 6400, all)', () => {
+    const tiers: PriceTier[] = ['800', '1600', '3200', '6400', 'all'];
     for (const hero of snapshot.heroes) {
       const profile = HERO_PROFILES[hero.className];
-      for (const stage of stages) {
+      for (const priceTier of tiers) {
         const res = recommendCounters(
           {
             myHeroClass: null,
             enemyHeroClass: hero.className,
-            stage,
+            priceTier,
             damageProfile: profile.defaultDamage,
             modifiers: [],
             activeSlotsFull: false,
@@ -293,16 +346,26 @@ describe('Deadlock counter recommendation engine', () => {
           heroesByClass,
         );
 
-        expect(
-          res.offense.length,
-          `${hero.name} (${stage}) should have 1-3 offense counters`,
-        ).toBeGreaterThanOrEqual(1);
+        // At 800 souls, some pure spirit/non-glass-cannon heroes legitimately have 0 true Offense counters
+        if (priceTier !== '800') {
+          expect(
+            res.offense.length,
+            `${hero.name} (${priceTier}) should have 1-3 offense counters`,
+          ).toBeGreaterThanOrEqual(1);
+        }
         expect(res.offense.length).toBeLessThanOrEqual(3);
         expect(
           res.defense.length,
-          `${hero.name} (${stage}) should have 1-3 defense counters`,
+          `${hero.name} (${priceTier}) should have 1-3 defense counters`,
         ).toBeGreaterThanOrEqual(1);
         expect(res.defense.length).toBeLessThanOrEqual(3);
+
+        if (priceTier !== 'all') {
+          const expectedCost = Number(priceTier);
+          for (const rec of [...res.offense, ...res.defense]) {
+            expect(rec.item.cost).toBe(expectedCost);
+          }
+        }
 
         // Enforce dynamic quality bar on 3rd slot (no weak filler)
         for (const list of [res.offense, res.defense]) {
@@ -311,7 +374,7 @@ describe('Deadlock counter recommendation engine', () => {
             const third = list[2];
             expect(
               third.score >= topScore * 0.6 || third.isHeroSpecific,
-              `${hero.name} (${stage}) 3rd pick ${third.item.name} (${third.score}) below quality bar of top (${topScore})`,
+              `${hero.name} (${priceTier}) 3rd pick ${third.item.name} (${third.score}) below quality bar of top (${topScore})`,
             ).toBe(true);
           }
         }
@@ -324,7 +387,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_synth', // Pocket has built-in invuln (Satchel)
         enemyHeroClass: 'hero_lash',
-        stage: 'late',
+        priceTier: '6400',
         damageProfile: 'spirit',
         modifiers: [],
         activeSlotsFull: false,
@@ -336,7 +399,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_gigawatt', // Seven has no built-in invuln
         enemyHeroClass: 'hero_lash',
-        stage: 'late',
+        priceTier: '6400',
         damageProfile: 'spirit',
         modifiers: [],
         activeSlotsFull: false,
@@ -359,7 +422,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_wraith',
         enemyHeroClass: 'hero_haze',
-        stage: 'mid',
+        priceTier: '3200',
         damageProfile: 'bullet',
         modifiers: ['healing'],
         activeSlotsFull: false,
@@ -381,7 +444,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_wraith',
         enemyHeroClass: 'hero_bebop',
-        stage: 'mid',
+        priceTier: '3200',
         damageProfile: 'spirit',
         modifiers: [],
         enemyTargets: [
@@ -416,7 +479,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_gigawatt',
         enemyHeroClass: 'hero_haze',
-        stage: 'mid',
+        priceTier: '3200',
         damageProfile: 'bullet',
         modifiers: [],
         enemyTargets: [
@@ -442,11 +505,11 @@ describe('Deadlock counter recommendation engine', () => {
   });
 
   it('attaches upgradeHint build paths (from/to component) on upgrade-family items', () => {
-    const laneRes = recommendCounters(
+    const tier800Res = recommendCounters(
       {
         myHeroClass: 'hero_inferno',
         enemyHeroClass: 'hero_haze',
-        stage: 'lane',
+        priceTier: '800',
         damageProfile: 'bullet',
         modifiers: [],
         activeSlotsFull: false,
@@ -455,7 +518,7 @@ describe('Deadlock counter recommendation engine', () => {
       itemsByClass,
       heroesByClass,
     );
-    const rustedBarrel = laneRes.offense.find(
+    const rustedBarrel = tier800Res.offense.find(
       (r) => r.item.className === 'upgrade_withering_whip',
     );
     expect(rustedBarrel?.upgradeHint).toEqual(
@@ -465,11 +528,11 @@ describe('Deadlock counter recommendation engine', () => {
       }),
     );
 
-    const midRes = recommendCounters(
+    const tier3200Res = recommendCounters(
       {
         myHeroClass: 'hero_inferno',
         enemyHeroClass: 'hero_haze',
-        stage: 'mid',
+        priceTier: '3200',
         damageProfile: 'bullet',
         modifiers: [],
         activeSlotsFull: false,
@@ -478,7 +541,7 @@ describe('Deadlock counter recommendation engine', () => {
       itemsByClass,
       heroesByClass,
     );
-    const disarmingHex = midRes.offense.find(
+    const disarmingHex = tier3200Res.offense.find(
       (r) => r.item.className === 'upgrade_greater_withering_whip',
     );
     expect(disarmingHex?.upgradeHint).toEqual(
@@ -493,7 +556,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_inferno',
         enemyHeroClass: 'hero_haze',
-        stage: 'mid',
+        priceTier: '3200',
         damageProfile: 'bullet',
         modifiers: [],
         activeSlotsFull: false,
@@ -515,7 +578,7 @@ describe('Deadlock counter recommendation engine', () => {
       {
         myHeroClass: 'hero_atlas',
         enemyHeroClass: 'hero_ghost', // Lady Geist (normally low mobility)
-        stage: 'mid',
+        priceTier: '1600',
         damageProfile: 'spirit',
         modifiers: ['mobility'],
         activeSlotsFull: false,

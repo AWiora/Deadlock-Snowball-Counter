@@ -73,6 +73,26 @@ export const ITEM_COPY_DE: Record<string, { why: string; whenToUse: string }> = 
     why: 'Passive, ununterbrechbare Lebensregeneration gegen permanenten Lane-Poke.',
     whenToUse: 'Passiv — hält dich bei ständigem Chip-Schaden stabil auf der Lane.',
   },
+  upgrade_improved_stamina: {
+    why: 'Zusätzliche Ausdauer-Ladung für 800 Seelen — weicht frühen Haken, Käfigen, Nahkampfschlägen und Dive-Kombos sauber aus.',
+    whenToUse: 'Passiv — immer einen Dash in Reserve halten, um aus gegnerischem CC oder Burst herauszuspringen.',
+  },
+  upgrade_mystic_regeneration: {
+    why: 'Zuverlässige Lane-Heilung im Kampf für Spirit-Helden — regeneriert Leben bei jedem Fähigkeitstreffer auf Gegner.',
+    whenToUse: 'Passiv — Gegner regelmäßig mit Fähigkeiten treffen, um die Bonus-Regeneration aktiv zu halten.',
+  },
+  upgrade_headshot_booster: {
+    why: 'Günstiger 800-Seelen-Kopfschuss-Burst, der zerbrechliche Glaskanonen früh aus der Lane drückt.',
+    whenToUse: 'Passiv — bei bereitem Cooldown gezielt kurze Kopfschuss-Trades gegen Gegner mit wenig HP suchen.',
+  },
+  upgrade_magic_burst: {
+    why: 'Sofortiger Bonus-Spirit-Burst für 800 Seelen gegen zerbrechliche Gegner — baut später direkt zu Tankbuster aus.',
+    whenToUse: 'Passiv — Hauptfähigkeit gezielt auf Gegner mit wenig HP setzen, sobald die Ladung bereit ist.',
+  },
+  upgrade_close_range: {
+    why: 'Bestraft aggressive Nahkampf-Diver mit deutlich höherem Waffenschaden, sobald sie auf kurze Distanz kommen.',
+    whenToUse: 'Passiv — beim gegnerischen Dive im Nahkampf direkt mit voller Feuerkraft dagegenhalten.',
+  },
   upgrade_weapon_shielding: {
     why: 'Löst automatisch eine starke Barriere bei anhaltendem Kugelschaden auf der Lane und im Mid-Game aus.',
     whenToUse: 'Passiv — kurze Trades nehmen, solange die Barriere bereit ist.',

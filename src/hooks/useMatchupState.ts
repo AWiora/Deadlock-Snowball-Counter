@@ -4,15 +4,20 @@ import type {
   DamageProfile,
   EnemyModifier,
   EnemyTargetConfig,
-  GameStage,
   Language,
+  PriceTier,
 } from '../types/deadlock';
 
 const STORAGE_MY_HERO = 'dl_counter_my_hero_v1';
 const STORAGE_LANG = 'dl_counter_lang_v1';
 const STORAGE_ITEM_LANG = 'dl_counter_item_lang_v1';
 
-const VALID_STAGES: GameStage[] = ['lane', 'mid', 'late'];
+const VALID_TIERS: PriceTier[] = ['800', '1600', '3200', '6400', 'all'];
+const LEGACY_STAGE_TO_TIER: Record<string, PriceTier> = {
+  lane: '1600',
+  mid: '3200',
+  late: '6400',
+};
 const VALID_DAMAGE: DamageProfile[] = ['bullet', 'equal', 'spirit'];
 const VALID_MODS: EnemyModifier[] = ['tanky', 'healing', 'cc', 'melee', 'mobility'];
 const VALID_LANGS: Language[] = ['de', 'en'];
@@ -37,7 +42,8 @@ function parseInitialState() {
   const params = new URLSearchParams(window.location.search);
   const urlMe = params.get('me');
   const urlVs = params.get('vs');
-  const urlStage = params.get('stage') as GameStage | null;
+  const urlTier = params.get('tier') as PriceTier | null;
+  const urlStage = params.get('stage');
   const urlDmg = params.get('dmg') as DamageProfile | null;
   const urlMods = params.get('mods');
   const urlPassive = params.get('passive');
@@ -70,8 +76,12 @@ function parseInitialState() {
       )
     : [];
 
-  const stage: GameStage =
-    urlStage && VALID_STAGES.includes(urlStage) ? urlStage : 'mid';
+  const priceTier: PriceTier =
+    urlTier && VALID_TIERS.includes(urlTier)
+      ? urlTier
+      : urlStage && LEGACY_STAGE_TO_TIER[urlStage]
+        ? LEGACY_STAGE_TO_TIER[urlStage]
+        : '3200';
 
   const parsedMods: EnemyModifier[] = urlMods
     ? urlMods
@@ -99,7 +109,7 @@ function parseInitialState() {
     myHeroClass,
     enemyClasses,
     focusedEnemyClass: enemyClasses[0] ?? null,
-    stage,
+    priceTier,
     initialTweaks,
     activeSlotsFull,
   };
@@ -115,7 +125,7 @@ export function useMatchupState() {
   const [focusedEnemyClass, setFocusedEnemyClass] = useState<string | null>(
     initial.focusedEnemyClass,
   );
-  const [stage, setStage] = useState<GameStage>(initial.stage);
+  const [priceTier, setPriceTier] = useState<PriceTier>(initial.priceTier);
   const [activeSlotsFull, setActiveSlotsFull] = useState<boolean>(initial.activeSlotsFull);
   const [sessionEnemyTweaks, setSessionEnemyTweaks] = useState<
     Record<string, SavedEnemyOverride>
@@ -325,7 +335,7 @@ export function useMatchupState() {
     if (myHeroClass) params.set('me', myHeroClass);
     if (enemyClasses.length > 0) {
       params.set('vs', enemyClasses.join(','));
-      params.set('stage', stage);
+      params.set('tier', priceTier);
       params.set('dmg', focusedConfig.damageProfile);
       if (focusedConfig.modifiers.length > 0) {
         params.set('mods', focusedConfig.modifiers.join(','));
@@ -342,7 +352,7 @@ export function useMatchupState() {
     itemLanguage,
     myHeroClass,
     enemyClasses,
-    stage,
+    priceTier,
     focusedConfig.damageProfile,
     focusedConfig.modifiers,
     activeSlotsFull,
@@ -374,8 +384,8 @@ export function useMatchupState() {
     focusEnemyHero,
     removeEnemyHero,
     clearAllEnemies,
-    stage,
-    setStage,
+    priceTier,
+    setPriceTier,
     damageProfile: focusedConfig.damageProfile,
     setDamageProfile,
     modifiers: focusedConfig.modifiers,

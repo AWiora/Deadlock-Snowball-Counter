@@ -41,7 +41,9 @@ const UPGRADE_FAMILIES: string[][] = [
   ['upgrade_weapon_shielding', 'upgrade_improved_bullet_armor'],
   ['upgrade_spirit_bubble', 'upgrade_tech_purge'],
   ['upgrade_magic_vulnerability', 'upgrade_escalating_exposure'],
+  ['upgrade_headshot_booster', 'upgrade_headhunter'], // Headshot Booster -> Headhunter
   ['upgrade_headshot_booster2', 'upgrade_banshee_slugs'],
+  ['upgrade_magic_burst', 'upgrade_magic_shock'], // Mystic Burst -> Tankbuster
   ['upgrade_cold_front', 'upgrade_arctic_blast'], // Cold Front -> Arctic Blast
 ];
 
@@ -406,12 +408,13 @@ export function recommendCounters(
 
   const scored: ScoredCandidate[] = [];
 
+  const targetCost = input.priceTier === 'all' ? null : Number(input.priceTier);
+
   for (const rule of COUNTER_ITEM_RULES) {
     const item = itemsByClass.get(rule.className);
     if (!item) continue;
 
-    const stageMult = rule.stageFit[input.stage];
-    if (stageMult <= 0.1) continue;
+    if (targetCost !== null && item.cost !== targetCost) continue;
 
     // Player hero kit affinity & built-in tool redundancy
     const {
@@ -461,7 +464,7 @@ export function recommendCounters(
       let isHeroSpecific = false;
       let overrideTip: string | null = null;
       let roleOverride: CounterRole | undefined;
-      if (override && (!override.stages || override.stages.includes(input.stage))) {
+      if (override) {
         let overrideBonus = override.bonus;
         if (target.damageProfile === 'spirit' && BULLET_ONLY_ITEMS.has(rule.className)) {
           overrideBonus *= 0.25;
@@ -495,7 +498,7 @@ export function recommendCounters(
           ? 1 + (clampedLift - 1) * 0.25
           : clampedLift;
 
-      const enemyScore = (rawScore * synergyMult + synergyDelta) * stageMult * empiricalMult;
+      const enemyScore = (rawScore * synergyMult + synergyDelta) * empiricalMult;
       const contextTip = overrideTip
         ? null
         : resolveContextTip(rule, target.modifiers, lang);

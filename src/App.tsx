@@ -24,7 +24,7 @@ export function App() {
       {
         myHeroClass: matchup.myHeroClass,
         enemyHeroClass: matchup.focusedEnemyClass,
-        stage: matchup.stage,
+        priceTier: matchup.priceTier,
         damageProfile: matchup.damageProfile,
         modifiers: matchup.modifiers,
         enemyTargets: matchup.orderedEnemyTargets,
@@ -39,7 +39,7 @@ export function App() {
     matchup.myHeroClass,
     matchup.focusedEnemyClass,
     matchup.orderedEnemyTargets,
-    matchup.stage,
+    matchup.priceTier,
     matchup.damageProfile,
     matchup.modifiers,
     matchup.activeSlotsFull,
@@ -68,7 +68,7 @@ export function App() {
           myHero={myHero}
           enemyTargets={matchup.enemyTargets}
           focusedEnemy={focusedEnemy}
-          stage={matchup.stage}
+          priceTier={matchup.priceTier}
           damageProfile={matchup.damageProfile}
           modifiers={matchup.modifiers}
           activeSlotsFull={matchup.activeSlotsFull}
@@ -78,7 +78,7 @@ export function App() {
           onFocusEnemy={matchup.focusEnemyHero}
           onRemoveEnemy={matchup.removeEnemyHero}
           onClearAllEnemies={matchup.clearAllEnemies}
-          onChangeStage={matchup.setStage}
+          onChangePriceTier={matchup.setPriceTier}
           onChangeDamage={matchup.setDamageProfile}
           onToggleModifier={matchup.toggleModifier}
           onToggleActiveSlotsFull={() => matchup.setActiveSlotsFull((v) => !v)}
@@ -138,16 +138,38 @@ export function App() {
                     )}
                   </div>
                   <div className="cards-list">
-                    {result.offense.map((rec) => (
-                      <CounterCard
-                        key={rec.item.className}
-                        rec={rec}
-                        language={matchup.language}
-                        itemLanguage={matchup.itemLanguage}
-                        totalSelectedEnemies={matchup.enemyTargets.length}
-                        heroesByClass={heroesByClass}
-                      />
-                    ))}
+                    {result.offense.length > 0 ? (
+                      result.offense.map((rec) => (
+                        <CounterCard
+                          key={rec.item.className}
+                          rec={rec}
+                          language={matchup.language}
+                          itemLanguage={matchup.itemLanguage}
+                          totalSelectedEnemies={matchup.enemyTargets.length}
+                          heroesByClass={heroesByClass}
+                        />
+                      ))
+                    ) : (
+                      <div className="empty-stance-card">
+                        <p className="empty-stance-title">
+                          {matchup.priceTier === '800'
+                            ? t.emptyOffense800Title
+                            : t.emptyColumnGeneric}
+                        </p>
+                        {matchup.priceTier === '800' && (
+                          <p className="empty-stance-body">{t.emptyOffense800Body}</p>
+                        )}
+                        <button
+                          type="button"
+                          className="empty-stance-cta"
+                          onClick={() =>
+                            matchup.setPriceTier(matchup.priceTier === '800' ? '1600' : 'all')
+                          }
+                        >
+                          {matchup.priceTier === '800' ? t.switchTo1600Btn : t.switchToAllBtn}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -177,16 +199,31 @@ export function App() {
                     )}
                   </div>
                   <div className="cards-list">
-                    {result.defense.map((rec) => (
-                      <CounterCard
-                        key={rec.item.className}
-                        rec={rec}
-                        language={matchup.language}
-                        itemLanguage={matchup.itemLanguage}
-                        totalSelectedEnemies={matchup.enemyTargets.length}
-                        heroesByClass={heroesByClass}
-                      />
-                    ))}
+                    {result.defense.length > 0 ? (
+                      result.defense.map((rec) => (
+                        <CounterCard
+                          key={rec.item.className}
+                          rec={rec}
+                          language={matchup.language}
+                          itemLanguage={matchup.itemLanguage}
+                          totalSelectedEnemies={matchup.enemyTargets.length}
+                          heroesByClass={heroesByClass}
+                        />
+                      ))
+                    ) : (
+                      <div className="empty-stance-card">
+                        <p className="empty-stance-title">{t.emptyColumnGeneric}</p>
+                        <button
+                          type="button"
+                          className="empty-stance-cta"
+                          onClick={() =>
+                            matchup.setPriceTier(matchup.priceTier === '800' ? '1600' : 'all')
+                          }
+                        >
+                          {matchup.priceTier === '800' ? t.switchTo1600Btn : t.switchToAllBtn}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

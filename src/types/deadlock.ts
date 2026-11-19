@@ -2,6 +2,7 @@ export type Language = 'de' | 'en';
 export type ItemSlot = 'weapon' | 'vitality' | 'spirit';
 export type DamageProfile = 'bullet' | 'equal' | 'spirit';
 export type GameStage = 'lane' | 'mid' | 'late';
+export type PriceTier = '800' | '1600' | '3200' | '6400' | 'all';
 export type EnemyModifier = 'tanky' | 'healing' | 'cc' | 'melee' | 'mobility';
 export type CounterStance = 'offense' | 'defense';
 
@@ -110,8 +111,8 @@ export interface CounterItemRule {
   className: string;
   stance: CounterStance;
   role: CounterRole;
-  /** Which game stages this item shines in (1.0 = prime, lower = off-curve) */
-  stageFit: Record<GameStage, number>;
+  /** Legacy game stage curve (optional — filtering is now driven by PriceTier / item cost) */
+  stageFit?: Record<GameStage, number>;
   /** How strongly it counters specific damage profiles */
   damageCounters?: Partial<Record<DamageProfile, number>>;
   /** How strongly it counters the 4 user toggles */
@@ -155,7 +156,7 @@ export interface UpgradeHint {
 export interface MatchupInput {
   myHeroClass: string | null;
   enemyHeroClass: string;
-  stage: GameStage;
+  priceTier: PriceTier;
   damageProfile: DamageProfile;
   modifiers: EnemyModifier[];
   /** Optional 1-3 active enemy targets for multi-threat match scoring */
