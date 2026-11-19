@@ -322,11 +322,35 @@ button {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 9px 12px 9px 9px;
+  gap: 10px;
+  padding: 7px 10px 7px 9px;
   background: transparent;
   border: none;
   text-align: left;
+}
+
+.hero-selector-avatar-btn {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hero-selector-name-btn {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  min-width: 0;
+  width: 100%;
 }
 
 .hero-slot-avatar {
@@ -686,6 +710,10 @@ button {
   min-width: 280px;
 }
 
+.override-group--mods > .deck-micro-label {
+  margin-bottom: 6px;
+}
+
 .override-header {
   display: flex;
   align-items: center;
@@ -723,9 +751,9 @@ button {
 
 .damage-pills {
   display: inline-flex;
-  gap: 6px;
+  gap: 5px;
   background: #101115;
-  padding: 4px;
+  padding: 3px;
   border-radius: 10px;
   border: 1px solid var(--border-subtle);
 }
@@ -734,7 +762,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 11px;
+  padding: 4px 11px;
   border-radius: 7px;
   border: 1px solid transparent;
   background: transparent;
@@ -1834,7 +1862,7 @@ button {
   color: #ffd1d1;
 }
 
-/* Inline 3-Row Hero Roster (42 heroes = 14 cols x 3 rows) */
+/* Inline 3-Row Hero Roster (44 heroes = 15 cols x 3 rows) */
 .inline-roster-block {
   background: #101217;
   border: 1px solid var(--border-subtle);
@@ -1870,7 +1898,7 @@ button {
 
 .inline-roster-grid {
   display: grid;
-  grid-template-columns: repeat(14, minmax(0, 1fr));
+  grid-template-columns: repeat(15, minmax(0, 1fr));
   gap: 4px;
 }
 
@@ -2069,14 +2097,22 @@ button {
   color: var(--brass-bright);
 }
 
-.customize-reset-btn {
+.enemy-customize-meta {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.customize-reset-btn {
+  margin-left: 0;
 }
 
 .enemy-customize-controls {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 14px;
 }
 
@@ -2266,7 +2302,7 @@ button {
 
 @media (max-width: 1020px) {
   .inline-roster-grid {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: repeat(9, minmax(0, 1fr));
   }
   .matchup-vs-row--multi {
     grid-template-columns: 1fr;
@@ -2430,7 +2466,7 @@ button {
 }
 
 .my-hero-abilities-bar {
-  margin-top: 5px;
+  margin-top: 4px;
   display: flex;
   align-items: center;
 }
@@ -2438,44 +2474,57 @@ button {
 .enemy-customize-abilities {
   display: inline-flex;
   align-items: center;
-  margin-left: 2px;
+  gap: 7px;
+  padding: 2px 6px 2px 9px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.enemy-customize-abilities-label {
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .hero-ability-strip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .hero-ability-chip {
   position: relative;
   width: 28px;
   height: 28px;
-  border-radius: 7px;
-  background: rgba(20, 22, 28, 0.95);
-  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: rgba(14, 16, 21, 0.94);
+  border: 1px solid rgba(235, 224, 200, 0.14);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 3px;
+  overflow: hidden;
   cursor: help;
   transition: border-color 0.14s ease, transform 0.14s ease, background-color 0.14s ease;
 }
 
 .hero-ability-strip--compact .hero-ability-chip {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
+  padding: 2.5px;
 }
 
 .hero-ability-chip--ult {
-  border-color: rgba(214, 165, 86, 0.5);
-  background: rgba(214, 165, 86, 0.1);
+  border-color: rgba(214, 165, 86, 0.55);
+  background: rgba(214, 165, 86, 0.12);
 }
 
 .hero-ability-chip:hover,
 .hero-ability-chip:focus-visible {
   border-color: var(--brass-bright);
-  background: rgba(214, 165, 86, 0.18);
+  background: rgba(214, 165, 86, 0.2);
   transform: translateY(-1px);
 }
 
@@ -2488,23 +2537,22 @@ button {
 }
 
 .hero-ability-fallback {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
   color: var(--text-parchment);
 }
 
 .hero-ability-key {
   position: absolute;
-  top: -4px;
-  left: -4px;
-  min-width: 13px;
-  height: 13px;
-  padding: 0 3px;
-  border-radius: 4px;
-  background: #0d0e11;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  bottom: 0;
+  right: 0;
+  min-width: 11px;
+  height: 11px;
+  padding: 0 2.5px;
+  border-top-left-radius: 4px;
+  background: rgba(10, 11, 14, 0.88);
   color: var(--text-secondary);
-  font-size: 0.58rem;
+  font-size: 0.54rem;
   font-weight: 700;
   line-height: 11px;
   text-align: center;
@@ -2512,6 +2560,6 @@ button {
 }
 
 .hero-ability-chip--ult .hero-ability-key {
-  border-color: rgba(214, 165, 86, 0.65);
+  background: rgba(34, 25, 11, 0.92);
   color: var(--brass-bright);
 }

@@ -128,37 +128,60 @@ export function MatchupControlBar({
                   : 'hero-selector-card--prompt'
             }`}
           >
-            <button
-              type="button"
-              className="hero-selector-main"
-              onClick={() => setIsPickingMyHero((v) => !v)}
-            >
-              {myHero?.iconCard || myHero?.iconSmall ? (
-                <img
-                  src={myHero.iconCard || myHero.iconSmall}
-                  alt={myHeroName ?? ''}
-                  className="hero-slot-avatar hero-slot-avatar--my"
-                />
-              ) : (
-                <span className="hero-slot-avatar-empty hero-slot-avatar-empty--my">
-                  <User size={19} />
-                </span>
-              )}
+            <div className="hero-selector-main">
+              <button
+                type="button"
+                className="hero-selector-avatar-btn"
+                onClick={() => setIsPickingMyHero((v) => !v)}
+                aria-label={myHero ? t.yourHeroChangeBtn : t.yourHeroSelectBtn}
+              >
+                {myHero?.iconCard || myHero?.iconSmall ? (
+                  <img
+                    src={myHero.iconCard || myHero.iconSmall}
+                    alt={myHeroName ?? ''}
+                    className="hero-slot-avatar hero-slot-avatar--my"
+                  />
+                ) : (
+                  <span className="hero-slot-avatar-empty hero-slot-avatar-empty--my">
+                    <User size={19} />
+                  </span>
+                )}
+              </button>
               <div className="hero-slot-copy">
-                <span className="deck-micro-label">{t.yourHeroLabel}</span>
-                <span className={`hero-slot-name ${!myHero ? 'hero-slot-name--placeholder' : ''}`}>
-                  {myHeroName ?? t.yourHeroEmpty}
-                </span>
-                {!myHero && <span className="hero-slot-subhint">{t.yourHeroHint}</span>}
+                <button
+                  type="button"
+                  className="hero-selector-name-btn"
+                  onClick={() => setIsPickingMyHero((v) => !v)}
+                >
+                  <span className="deck-micro-label">{t.yourHeroLabel}</span>
+                  <span className={`hero-slot-name ${!myHero ? 'hero-slot-name--placeholder' : ''}`}>
+                    {myHeroName ?? t.yourHeroEmpty}
+                  </span>
+                  {!myHero && <span className="hero-slot-subhint">{t.yourHeroHint}</span>}
+                </button>
+                {myHero && !isPickingMyHero && (
+                  <div className="my-hero-abilities-bar">
+                    <HeroAbilityStrip
+                      hero={myHero}
+                      uiLang={language}
+                      inGameLang={itemLanguage}
+                      compact
+                    />
+                  </div>
+                )}
               </div>
-              <span className="slot-action-tag">
+              <button
+                type="button"
+                className="slot-action-tag"
+                onClick={() => setIsPickingMyHero((v) => !v)}
+              >
                 {isPickingMyHero
                   ? t.cancelMyPickBtn
                   : myHero
                     ? t.yourHeroChangeBtn
                     : t.yourHeroSelectBtn}
-              </span>
-            </button>
+              </button>
+            </div>
             {myHero && !isPickingMyHero && (
               <button
                 type="button"
@@ -171,16 +194,6 @@ export function MatchupControlBar({
               </button>
             )}
           </div>
-          {myHero && !isPickingMyHero && (
-            <div className="my-hero-abilities-bar">
-              <HeroAbilityStrip
-                hero={myHero}
-                uiLang={language}
-                inGameLang={itemLanguage}
-                compact
-              />
-            </div>
-          )}
         </div>
 
         <div className="vs-medallion" aria-hidden="true">
@@ -425,26 +438,33 @@ export function MatchupControlBar({
               })}
             </div>
 
-            <div className="enemy-customize-abilities">
-              <HeroAbilityStrip
-                hero={focusedEnemy}
-                uiLang={language}
-                inGameLang={itemLanguage}
-                compact
-              />
-            </div>
+            <div className="enemy-customize-meta">
+              {focusedEnemy.abilities && focusedEnemy.abilities.length > 0 && (
+                <div className="enemy-customize-abilities">
+                  <span className="enemy-customize-abilities-label">
+                    {focusedEnemyName} {language === 'de' ? 'Fähigkeiten' : 'Abilities'}:
+                  </span>
+                  <HeroAbilityStrip
+                    hero={focusedEnemy}
+                    uiLang={language}
+                    inGameLang={itemLanguage}
+                    compact
+                  />
+                </div>
+              )}
 
-            {isCustomized && (
-              <button
-                type="button"
-                className="reset-defaults-btn customize-reset-btn"
-                onClick={onResetDefaults}
-                title={t.resetTitle}
-              >
-                <RotateCcw size={11} />
-                {t.resetBtn}
-              </button>
-            )}
+              {isCustomized && (
+                <button
+                  type="button"
+                  className="reset-defaults-btn customize-reset-btn"
+                  onClick={onResetDefaults}
+                  title={t.resetTitle}
+                >
+                  <RotateCcw size={11} />
+                  {t.resetBtn}
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="enemy-customize-controls">
