@@ -293,11 +293,94 @@ button {
 
 /* Override Row (Damage + 4 Trait Chips + Active Slots Full) */
 
-.meta-split-hint {
+/* Damage-type glyphs: Deadlock Wiki shop category icons */
+.dmg-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dmg-icon-glyph {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  opacity: 0.6;
+  filter: grayscale(0.6);
+  transition: opacity 0.14s ease, filter 0.14s ease;
+}
+
+/* Hybrid: the two glyphs overlap like a fused token */
+.dmg-icon--equal .dmg-icon-glyph + .dmg-icon-glyph {
+  margin-left: -6px;
+}
+
+.dmg-pill:hover .dmg-icon-glyph,
+.dmg-pill--active .dmg-icon-glyph,
+.tuning-summary-dmg .dmg-icon-glyph {
+  opacity: 1;
+  filter: none;
+}
+
+.tuning-summary-dmg .dmg-icon-glyph {
+  width: 12px;
+  height: 12px;
+}
+
+.tuning-summary-dmg .dmg-icon--equal .dmg-icon-glyph + .dmg-icon-glyph {
+  margin-left: -4px;
+}
+
+/* How players of this hero split their souls, read against the pills above */
+.meta-split {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.meta-split-bar {
+  display: flex;
+  height: 3px;
+  border-radius: 2px;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.meta-split-bar-weapon {
+  background: var(--weapon);
+}
+
+.meta-split-bar-spirit {
+  flex: 1;
+  background: var(--spirit);
+}
+
+.meta-split-legend {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   font-size: var(--text-micro);
-  font-weight: 600;
+  line-height: 1.3;
+}
+
+.meta-split-num {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.meta-split-num--weapon {
+  color: #ffc273;
+}
+
+.meta-split-num--spirit {
+  color: #d7b4ff;
+}
+
+.meta-split-caption {
   color: var(--text-muted);
-  cursor: help;
+  text-align: center;
 }
 
 .damage-pills {
@@ -2642,6 +2725,12 @@ kbd {
   gap: 5px;
 }
 
+.tuning-summary-dmg {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .tuning-summary-dmg,
 .tuning-summary-mod {
   padding: 1px 7px;
@@ -2747,13 +2836,6 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.tuning-row-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
 }
 
 /* ---------- Results toolbar: the souls bar ---------- */

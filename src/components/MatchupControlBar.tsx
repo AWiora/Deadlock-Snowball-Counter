@@ -1,13 +1,11 @@
 import {
   ChevronDown,
   ChevronUp,
-  Flame,
   HeartPulse,
   Plus,
   RotateCcw,
   Search,
   ShieldAlert,
-  Sparkles,
   Swords,
   User,
   Wind,
@@ -20,6 +18,7 @@ import { PRICE_TIER_IDS } from '../data/priceTiers';
 import { getBaseKitTags } from '../engine/recommend';
 import { getHeroDisplayName, UI_TEXT } from '../i18n/translations';
 import { searchHeroes } from '../utils/heroSearch';
+import { DamageTypeIcon } from './DamageTypeIcon';
 import { HeroAbilityStrip } from './HeroAbilityStrip';
 import type {
   DamageProfile,
@@ -243,15 +242,8 @@ export function MatchupControlBar({
     ? focusedTarget.modifiers.length +
       (focusedTarget.damageProfile !== getHeroProfile(focusedTarget.heroClass).defaultDamage ? 1 : 0)
     : 0;
-  const metaPct = focusedEnemy?.metaWeaponPct;
-  const metaHint =
-    typeof metaPct === 'number'
-      ? metaPct >= 58
-        ? `Meta ${metaPct}% Gun`
-        : metaPct <= 42
-          ? `Meta ${100 - metaPct}% Spirit`
-          : `Meta ${metaPct}/${100 - metaPct}`
-      : null;
+  const metaPct =
+    typeof focusedEnemy?.metaWeaponPct === 'number' ? Math.round(focusedEnemy.metaWeaponPct) : null;
 
   return (
     <section className="picker" aria-label="Matchup">
@@ -502,6 +494,7 @@ export function MatchupControlBar({
             {!tuningOpen && (
               <span className="tuning-summary">
                 <span className={`tuning-summary-dmg tuning-summary-dmg--${damageProfile}`}>
+                  <DamageTypeIcon type={damageProfile} />
                   {t.damageOptions[damageProfile]}
                 </span>
                 {modifiers.map((m) => (
@@ -560,21 +553,7 @@ export function MatchupControlBar({
               )}
 
               <div className="tuning-row">
-                <div className="tuning-row-head">
-                  <span className="pane-label">{t.damageLabel}</span>
-                  {metaHint && (
-                    <span
-                      className="meta-split-hint"
-                      title={
-                        language === 'de'
-                          ? `Live-Match-Daten (30 Tage): ${metaPct}% Gun-Souls / ${100 - (metaPct ?? 0)}% Spirit-Souls`
-                          : `Live 30-day match data: ${metaPct}% weapon souls / ${100 - (metaPct ?? 0)}% spirit souls`
-                      }
-                    >
-                      {metaHint}
-                    </span>
-                  )}
-                </div>
+                <span className="pane-label">{t.damageLabel}</span>
                 <div className="damage-pills" role="group" aria-label={t.damageLabel}>
                   {DAMAGE_META.map((opt) => (
                     <button
@@ -586,12 +565,30 @@ export function MatchupControlBar({
                       onClick={() => onChangeDamage(opt.id)}
                       aria-pressed={damageProfile === opt.id}
                     >
-                      {opt.id === 'bullet' && <Flame size={13} />}
-                      {opt.id === 'spirit' && <Sparkles size={13} />}
+                      <DamageTypeIcon type={opt.id} />
                       <span>{t.damageOptions[opt.id]}</span>
                     </button>
                   ))}
                 </div>
+                {metaPct !== null && (
+                  <div className="meta-split">
+                    <div
+                      className="meta-split-bar"
+                      role="img"
+                      aria-label={t.metaSplitAria(metaPct, 100 - metaPct)}
+                    >
+                      <span className="meta-split-bar-weapon" style={{ width: `${metaPct}%` }} />
+                      <span className="meta-split-bar-spirit" />
+                    </div>
+                    <div className="meta-split-legend">
+                      <span className="meta-split-num meta-split-num--weapon">{metaPct} % Gun</span>
+                      <span className="meta-split-caption">
+                        {t.metaSplitCaption(focusedEnemyName ?? '')}
+                      </span>
+                      <span className="meta-split-num meta-split-num--spirit">{100 - metaPct} % Spirit</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="tuning-row">
