@@ -38,6 +38,11 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
+
+  /* Unified Typography Scale (consistent across upper controls & lower cards) */
+  --text-body: 0.875rem;
+  --text-sub: 0.8rem;
+  --text-micro: 0.74rem;
 }
 
 *,
@@ -126,7 +131,7 @@ button {
   align-items: center;
   gap: 8px;
   margin-top: 2px;
-  font-size: 0.74rem;
+  font-size: var(--text-sub);
   color: var(--text-muted);
 }
 
@@ -136,7 +141,7 @@ button {
   gap: 4px;
   padding: 1px 6px;
   border-radius: 99px;
-  font-size: 0.67rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0.02em;
   background: rgba(255, 255, 255, 0.05);
@@ -172,7 +177,7 @@ button {
 }
 
 .lang-prefix {
-  font-size: 0.68rem;
+  font-size: var(--text-micro);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -186,7 +191,7 @@ button {
   border-radius: 7px;
   border: 1px solid transparent;
   background: transparent;
-  font-size: 0.76rem;
+  font-size: var(--text-sub);
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--text-secondary);
@@ -213,7 +218,7 @@ button {
   background: var(--bg-surface);
   border: 1px solid var(--border-brass);
   color: var(--brass-bright);
-  font-size: 0.83rem;
+  font-size: var(--text-body);
   font-weight: 600;
   transition: all 0.15s ease;
 }
@@ -262,11 +267,11 @@ button {
 
 .deck-micro-label {
   display: block;
-  font-size: 0.66rem;
+  font-size: var(--text-micro);
   font-weight: 700;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 /* Row 1: Prominent [ YOUR HERO ] VS [ ENEMY THREAT ] */
@@ -392,16 +397,16 @@ button {
 }
 
 .hero-slot-subhint {
-  font-size: 0.7rem;
+  font-size: var(--text-sub);
   color: var(--text-muted);
   margin-top: 1px;
 }
 
 .slot-action-tag {
-  font-size: 0.73rem;
+  font-size: var(--text-sub);
   font-weight: 600;
   color: var(--brass-bright);
-  padding: 5px 10px;
+  padding: 4px 10px;
   border-radius: 7px;
   background: var(--brass-soft);
   border: 1px solid var(--border-brass);
@@ -525,13 +530,13 @@ button {
 }
 
 .seg-btn-main {
-  font-size: 0.84rem;
+  font-size: var(--text-body);
   font-weight: 700;
   color: var(--text-parchment);
 }
 
 .seg-btn-sub {
-  font-size: 0.69rem;
+  font-size: var(--text-sub);
   color: var(--text-muted);
   margin-top: 1px;
 }
@@ -582,13 +587,13 @@ button {
 }
 
 .active-slots-main {
-  font-size: 0.82rem;
+  font-size: var(--text-body);
   font-weight: 700;
   color: var(--text-parchment);
 }
 
 .active-slots-sub {
-  font-size: 0.68rem;
+  font-size: var(--text-sub);
   color: var(--text-muted);
   margin-top: 1px;
 }
@@ -639,7 +644,7 @@ button {
 }
 
 .base-kit-label {
-  font-size: 0.72rem;
+  font-size: var(--text-sub);
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -652,7 +657,7 @@ button {
 }
 
 .base-kit-tag {
-  font-size: 0.7rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 99px;
@@ -700,13 +705,13 @@ button {
   background: transparent;
   border: none;
   color: var(--brass-bright);
-  font-size: 0.7rem;
+  font-size: var(--text-sub);
   font-weight: 600;
   padding: 1px 4px;
 }
 
 .meta-split-hint {
-  font-size: 0.67rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   color: var(--text-muted);
   cursor: help;
@@ -729,11 +734,11 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 6px 12px;
+  padding: 5px 11px;
   border-radius: 7px;
   border: 1px solid transparent;
   background: transparent;
-  font-size: 0.8rem;
+  font-size: var(--text-body);
   font-weight: 600;
   color: var(--text-secondary);
   transition: all 0.14s ease;
@@ -772,11 +777,11 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 11px;
+  padding: 6px 11px;
   border-radius: 9px;
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
-  font-size: 0.79rem;
+  font-size: var(--text-body);
   font-weight: 600;
   color: var(--text-secondary);
   transition: all 0.14s ease;
@@ -1185,7 +1190,7 @@ button {
 
 .counter-why {
   margin: 0;
-  font-size: 0.87rem;
+  font-size: var(--text-body);
   line-height: 1.4;
   color: #dcd6ca;
 }
@@ -1214,10 +1219,10 @@ button {
 }
 
 .slot-badge {
-  font-size: 0.64rem;
+  font-size: var(--text-micro);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   padding: 2px 6px;
   border-radius: 5px;
 }
@@ -1236,7 +1241,7 @@ button {
 }
 
 .role-badge {
-  font-size: 0.67rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 5px;
@@ -1248,7 +1253,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.65rem;
+  font-size: var(--text-micro);
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 5px;
@@ -1261,7 +1266,7 @@ button {
   display: inline-flex;
   align-items: flex-start;
   gap: 5px;
-  font-size: 0.81rem;
+  font-size: var(--text-sub);
   line-height: 1.38;
   color: var(--text-secondary);
 }
@@ -1644,7 +1649,7 @@ button {
   background: rgba(217, 93, 93, 0.12);
   border: 1px solid rgba(217, 93, 93, 0.34);
   color: #f39d9d;
-  font-size: 0.7rem;
+  font-size: var(--text-sub);
   font-weight: 600;
   transition: all 0.14s ease;
 }
@@ -1679,7 +1684,7 @@ button {
   padding: 0 10px;
   border-style: dashed;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: var(--text-sub);
   font-weight: 600;
 }
 
@@ -1799,7 +1804,7 @@ button {
 }
 
 .inline-roster-hint {
-  font-size: 0.72rem;
+  font-size: var(--text-sub);
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -1900,14 +1905,14 @@ button {
 
 .roster-cell-name {
   width: 100%;
-  font-size: 0.63rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   color: var(--text-secondary);
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .roster-cell--enemy .roster-cell-name,
@@ -1919,7 +1924,7 @@ button {
 /* Compact Stage + Per-Enemy Customization Panel */
 .deck-row--stage-compact {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 232px;
+  grid-template-columns: minmax(0, 1fr) 265px;
   gap: 12px;
   align-items: stretch;
 }
@@ -1944,7 +1949,7 @@ button {
 }
 
 .enemy-customize-label {
-  font-size: 0.7rem;
+  font-size: var(--text-micro);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1966,7 +1971,7 @@ button {
   border-radius: 8px;
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
-  font-size: 0.78rem;
+  font-size: var(--text-body);
   font-weight: 600;
   color: var(--text-secondary);
   transition: all 0.14s ease;
@@ -2080,7 +2085,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.65rem;
+  font-size: var(--text-micro);
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 5px;
@@ -2097,7 +2102,7 @@ button {
 .upgrade-path-badge {
   display: inline-flex;
   align-items: center;
-  font-size: 0.65rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 5px;
@@ -2124,7 +2129,7 @@ button {
 }
 
 .counter-reason-row {
-  font-size: 0.87rem;
+  font-size: var(--text-body);
   line-height: 1.42;
   color: #dcd6ca;
 }
@@ -2160,7 +2165,7 @@ button {
 }
 
 .reason-trigger-pill {
-  font-size: 0.76rem;
+  font-size: var(--text-sub);
   font-weight: 600;
   color: var(--brass-bright);
 }
@@ -2285,9 +2290,15 @@ button {
 }
 
 @media (min-width: 2200px) {
+  :root {
+    --text-body: 0.91rem;
+    --text-sub: 0.83rem;
+    --text-micro: 0.76rem;
+  }
+
   .top-header-inner,
   .main-container {
-    max-width: 1420px;
+    max-width: 1440px;
   }
 
   .matchup-vs-row--multi {
@@ -2298,14 +2309,5 @@ button {
   .customize-tab-avatar {
     width: 26px;
     height: 26px;
-  }
-
-  .counter-reason-row,
-  .counter-why {
-    font-size: 0.91rem;
-  }
-
-  .when-to-use {
-    font-size: 0.84rem;
   }
 }
