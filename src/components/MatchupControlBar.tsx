@@ -271,11 +271,6 @@ export function MatchupControlBar({
               </span>
             </span>
           </button>
-          {myHero && !isPickingMyHero && (
-            <div className="me-card-abilities">
-              <HeroAbilityStrip hero={myHero} uiLang={language} inGameLang={itemLanguage} compact />
-            </div>
-          )}
           <button
             type="button"
             className="me-card-action"

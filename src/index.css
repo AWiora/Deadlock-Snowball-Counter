@@ -2367,10 +2367,6 @@ kbd {
   color: var(--text-secondary);
 }
 
-.me-card-abilities {
-  flex-shrink: 0;
-}
-
 .me-card-action {
   flex-shrink: 0;
   font-size: var(--text-sub);
@@ -3160,10 +3156,6 @@ kbd {
   .picker {
     padding: 10px;
     gap: 10px;
-  }
-
-  .me-card-abilities {
-    display: none;
   }
 
   .inline-roster-grid {
