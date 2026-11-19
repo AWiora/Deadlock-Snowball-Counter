@@ -1001,4 +1001,145 @@ describe('Deadlock counter recommendation engine', () => {
     const abilitySegEn = segmentsEn.find((s) => s.type === 'ability');
     expect(abilitySegEn?.text).toBe('Bullet Dance');
   });
+
+  it('penalizes Return Fire on Lady Geist vs Silver due to Soul Exchange anti-synergy and lack of melee reflection', () => {
+    const geistVsSilver = recommendCounters(
+      {
+        myHeroClass: 'hero_ghost', // Lady Geist
+        enemyHeroClass: 'hero_werewolf', // Silver
+        priceTier: '1600',
+        damageProfile: 'bullet',
+        modifiers: ['tanky', 'melee', 'cc'],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    expect(geistVsSilver.defense.map((r) => r.item.className)).not.toContain('upgrade_return_fire');
+
+    // Return Fire rule must not carry false melee counter weight, nor Disarming Hex / Cursed Relic
+    const ruleByClass = new Map(COUNTER_ITEM_RULES.map((r) => [r.className, r]));
+    expect(ruleByClass.get('upgrade_return_fire')?.modifierCounters?.melee).toBeUndefined();
+    expect(ruleByClass.get('upgrade_greater_withering_whip')?.modifierCounters?.melee).toBeUndefined();
+    expect(ruleByClass.get('upgrade_glitch')?.modifierCounters?.melee).toBeUndefined();
+    expect(ruleByClass.get('upgrade_siphon_bullets')?.modifierCounters?.healing).toBeUndefined();
+    expect(ruleByClass.get('upgrade_capacitor')?.threatCounters?.buff_shield_stacker).toBeUndefined();
+  });
+
+  it('recommends accurate counters vs Pocket (Divine Barrier / Counterspell) and Sinclair (Debuff Reducer / Counterspell)', () => {
+    const vsPocket6400 = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_synth',
+        priceTier: '6400',
+        damageProfile: 'spirit',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    expect(vsPocket6400.defense.map((r) => r.item.className)).toContain('upgrade_divine_barrier');
+
+    const vsSinclair1600 = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_magician',
+        priceTier: '1600',
+        damageProfile: 'spirit',
+        modifiers: ['cc'],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    expect(vsSinclair1600.defense.map((r) => r.item.className)).toContain('upgrade_debuff_reducer');
+
+    const vsSinclair3200 = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_magician',
+        priceTier: '3200',
+        damageProfile: 'spirit',
+        modifiers: ['cc'],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    expect(vsSinclair3200.defense.map((r) => r.item.className)).toContain('upgrade_counterspell');
+  });
+
+  it('exposes accurate live Curiosity Shop upgrade paths and non-empty summaries for tooltip_sections items', () => {
+    const vsInferno3200 = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_inferno',
+        priceTier: '3200',
+        damageProfile: 'equal',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const dispel = vsInferno3200.defense.find(
+      (r) => r.item.className === 'upgrade_reduce_debuff_duration',
+    );
+    expect(dispel).toBeDefined();
+    expect(dispel?.upgradeHint).toBeNull();
+
+    const vsTalon6400 = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_orion',
+        priceTier: '6400',
+        damageProfile: 'spirit',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const spellbreaker = vsTalon6400.defense.find(
+      (r) => r.item.className === 'upgrade_spellbreaker',
+    );
+    expect(spellbreaker?.upgradeHint).toEqual(
+      expect.objectContaining({
+        direction: 'from',
+        itemClassName: 'upgrade_debuff_reducer',
+      }),
+    );
+
+    const vsHaze6400 = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_haze',
+        priceTier: '6400',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: true,
+        language: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const juggernaut = vsHaze6400.defense.find((r) => r.item.className === 'upgrade_juggernaut');
+    expect(juggernaut?.upgradeHint).toEqual(
+      expect.objectContaining({
+        direction: 'from',
+        itemClassName: 'upgrade_cardio_calibrator',
+      }),
+    );
+
+    expect(itemsByClass.get('upgrade_juggernaut')?.summary.length).toBeGreaterThan(10);
+    expect(itemsByClass.get('upgrade_auto_cleanse')?.summary.length).toBeGreaterThan(10);
+    expect(itemsByClass.get('upgrade_cheat_death')?.summary.length).toBeGreaterThan(10);
+  });
 });

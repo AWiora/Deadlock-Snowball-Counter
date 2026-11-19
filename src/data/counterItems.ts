@@ -169,10 +169,13 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     role: 'Anti-Gun',
     stageFit: { lane: 0.94, mid: 0.92, late: 0.42 },
     damageCounters: { bullet: 24, equal: 14 },
-    modifierCounters: { melee: 10 },
     threatCounters: { rapid_fire: 22, bullet_ult: 22, close_range_dive: 12, on_hit_procs: 10 },
-    playerSynergy: { preferRange: 'close', penalizeLongRange: true },
-    why: 'Reflects every incoming bullet right back at high-fire-rate carries, forcing them to stop shooting or shred themselves.',
+    playerSynergy: {
+      preferRange: 'close',
+      penalizeLongRange: true,
+      avoidHeroClasses: ['hero_ghost'], // Anti-synergy with Lady Geist's Soul Exchange HP-swap
+    },
+    why: 'Reflects incoming bullet (65%) and spirit (25%) damage back at rapid-fire carries, forcing them to stop shooting or shred themselves (does not reflect melee).',
     whenToUse: 'Pop immediately when they commit to spraying you or channel a bullet ultimate.',
   },
   {
@@ -192,7 +195,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stageFit: { lane: 0.95, mid: 0.72, late: 0.2 },
     modifierCounters: { cc: 24 },
     threatCounters: { cleanseable_debuff: 20, hard_cc: 16, sustained_spirit: 8 },
-    why: 'Passively slashes the duration of stuns, bleeds, burns, and slows — and upgrades cleanly into Dispel Magic.',
+    why: 'Passively slashes the duration of stuns, hexes, bleeds, burns, and slows by 25% — upgrades into Unstoppable or Spellbreaker.',
     whenToUse: 'Passive — buy early when DoTs or crowd control keep locking you down.',
   },
   {
@@ -223,10 +226,10 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stageFit: { lane: 0.96, mid: 0.9, late: 0.42 },
     modifierCounters: { mobility: 34 },
     threatCounters: { high_mobility: 28, fragile_glass_cannon: 18, airborne: 16, close_range_dive: 14 },
-    why: 'Locks out movement abilities & dashes for 1600 souls — traps fragile assassins and mobile divers so you can burst them down.',
-    whenToUse: 'Cast right before they try to dash, grapple, blink, or escape.',
+    why: 'Silences movement abilities & items while cutting dash distance (-26%) for 1600 souls — traps mobile divers and upgrades into Vortex Web.',
+    whenToUse: 'Cast right before they try to grapple, blink, or cast an escape ability (note: does not lock out stamina dashes).',
     contextTips: {
-      mobility: 'Silences movement items (Warp Stone, Leap) & escape abilities for 1600 souls so they cannot slip away.',
+      mobility: 'Silences movement items (Warp Stone, Leap) & escape abilities while cutting dash distance for 1600 souls.',
     },
   },
   {
@@ -332,9 +335,8 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     role: 'Shutdown',
     stageFit: { lane: 0.15, mid: 1.0, late: 0.84 },
     damageCounters: { bullet: 32, equal: 16 },
-    modifierCounters: { melee: 10 },
     threatCounters: { rapid_fire: 28, on_hit_procs: 22, bullet_ult: 18, close_range_dive: 12 },
-    why: 'Completely disarms the enemy carry AND shreds their Bullet Resist — turns a fed gun threat helpless while your team melts them.',
+    why: 'Completely disarms the enemy carry AND shreds their Bullet Resist — shuts down gun threats while your team melts them (does not stop melee).',
     whenToUse: 'Point-and-click as soon as they engage (bait out their Dispel Magic/Unstoppable if late game).',
   },
   {
@@ -353,13 +355,13 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stance: 'defense',
     role: 'Cleanse',
     stageFit: { lane: 0.15, mid: 1.0, late: 0.9 },
-    modifierCounters: { cc: 20 },
+    modifierCounters: { cc: 14 },
     threatCounters: { cleanseable_debuff: 34, hard_cc: 8 },
     playerSynergy: { redundantWithTool: 'cleanse' },
-    why: 'Instantly purges non-ultimate debuffs (bombs, bleeds, burns, marks, roots), healing you and giving a speed burst.',
-    whenToUse: 'Press right after they stick their bomb, mark, burn, or delayed stun onto you.',
+    why: 'Instantly purges non-ultimate debuffs (bombs, bleeds, burns, marks, roots, silences), healing you and giving a speed burst.',
+    whenToUse: 'Press right after they stick a non-ultimate bomb, mark, burn, root, or delayed stun onto you (cannot be pressed while stunned/slept/hexed).',
     contextTips: {
-      cc: 'Cuts incoming CC duration passively and purges roots, slows, and delayed stuns on demand.',
+      cc: 'Instantly purges non-ultimate roots, silences, slows, and delayed stuns on demand with a heal + speed burst.',
     },
   },
   {
@@ -508,10 +510,10 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     role: 'Anti-Gun',
     stageFit: { lane: 0.02, mid: 0.28, late: 1.0 },
     damageCounters: { bullet: 32, equal: 14 },
-    modifierCounters: { melee: 10 },
-    threatCounters: { rapid_fire: 32, bullet_ult: 20, close_range_dive: 14 },
-    why: 'Passive juggernaut armor that heavily slows the Fire Rate of anyone shooting you — brutal against gun carries.',
-    whenToUse: 'Passive — stand your ground in teamfights so any gun carry focusing you loses massive DPS.',
+    modifierCounters: { melee: 18, cc: 10 },
+    threatCounters: { rapid_fire: 32, bullet_ult: 20, melee_brawler: 18, close_range_dive: 14 },
+    why: 'Passive frontline armor (upgrades from Enduring Speed) that cuts attacker Fire Rate by 40% while granting +25% Melee Resist and +50% Slow Resist.',
+    whenToUse: 'Passive — stand your ground in teamfights so gun carries focusing you lose massive DPS while melee and slows bounce off.',
   },
   {
     className: 'upgrade_spellbreaker', // Spellbreaker
@@ -519,9 +521,16 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     role: 'Anti-Spirit',
     stageFit: { lane: 0.02, mid: 0.3, late: 1.0 },
     damageCounters: { spirit: 36, equal: 18 },
-    threatCounters: { telegraphed_burst: 36, ability_spam: 18, long_range_poke: 16 },
-    why: 'Drastically cuts the damage of massive spirit nukes passively — #1 late-game shield against spirit one-shot burst.',
-    whenToUse: 'Passive — absorbs their biggest spell hit so burst casters cannot delete you.',
+    modifierCounters: { cc: 16 },
+    threatCounters: {
+      telegraphed_burst: 36,
+      ability_spam: 18,
+      long_range_poke: 16,
+      hard_cc: 12,
+      cleanseable_debuff: 10,
+    },
+    why: 'Slashes the next big spirit nuke (>175 dmg) by 65% AND grants +25% Debuff Resist (upgrades from Debuff Reducer) — #1 passive anti-burst item.',
+    whenToUse: 'Passive — absorbs their biggest spell hit while passively shortening incoming CC and DoTs.',
   },
   {
     className: 'upgrade_absorbing_armor', // Witchmail
@@ -540,7 +549,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     role: 'Shutdown',
     stageFit: { lane: 0.02, mid: 0.26, late: 1.0 },
     damageCounters: { bullet: 18, spirit: 18, equal: 22 },
-    modifierCounters: { healing: 16, cc: 12, melee: 14, mobility: 24 },
+    modifierCounters: { healing: 16, cc: 12, mobility: 24 },
     threatCounters: {
       channeled_ult: 30,
       high_mobility: 28,
@@ -587,14 +596,14 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
   {
     className: 'upgrade_inhibitor', // Inhibitor
     stance: 'offense',
-    role: 'Anti-Gun',
+    role: 'Shutdown',
     stageFit: { lane: 0.02, mid: 0.26, late: 1.0 },
     damageCounters: { bullet: 22, spirit: 20, equal: 28 },
     modifierCounters: { healing: 24, tanky: 12 },
     threatCounters: { close_range_dive: 18, heavy_healing: 18, rapid_fire: 14 },
     playerSynergy: { preferDamageStyle: 'gun', preferFastFirerate: true, penalizeSlowFirerate: true },
-    why: 'Bullets drastically slash a fed carry\'s total outgoing damage AND cut their healing — shuts down snowballed raid-bosses passively.',
-    whenToUse: 'Passive — prioritize tagging the fed enemy carry early in every fight to gut their DPS.',
+    why: 'Bullets cut a fed carry\'s total outgoing damage (-30%, both bullet & spirit) AND healing (-40%) — shuts down snowballed raid-bosses passively.',
+    whenToUse: 'Passive — prioritize tagging the fed enemy carry early in every fight to gut their DPS and sustain.',
   },
   {
     className: 'upgrade_spirit_burn', // Spirit Burn
@@ -644,7 +653,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stance: 'offense',
     role: 'Shred',
     stageFit: { lane: 0.02, mid: 0.25, late: 0.96 },
-    modifierCounters: { tanky: 28, healing: 14 },
+    modifierCounters: { tanky: 28 },
     threatCounters: { close_range_dive: 14 },
     playerSynergy: { preferDamageStyle: 'gun', preferFastFirerate: true, penalizeSlowFirerate: true },
     why: 'Steals Max HP directly from tanky enemies during prolonged brawls, shrinking their health pool while inflating yours.',
@@ -656,9 +665,9 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     role: 'Shutdown',
     stageFit: { lane: 0.02, mid: 0.25, late: 0.98 },
     modifierCounters: { mobility: 34 },
-    threatCounters: { high_mobility: 30, airborne: 22, close_range_dive: 18, buff_shield_stacker: 16 },
+    threatCounters: { high_mobility: 30, airborne: 22, close_range_dive: 18 },
     playerSynergy: { preferDamageStyle: 'gun' },
-    why: 'High-impact gun active that applies a massive slow, locks out Stamina usage, and silences movement abilities.',
+    why: 'High-impact gun active that applies a heavy decaying slow, prevents Stamina usage, and silences movement abilities & items.',
     whenToUse: 'Fire onto hyper-mobile carries or divers so they cannot dash, slide, or escape.',
     contextTips: {
       mobility: 'Locks out stamina, dashes, Warp Stone, and movement abilities so mobile carries cannot escape.',
@@ -684,8 +693,8 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     damageCounters: { spirit: 24, equal: 16, bullet: 10 },
     modifierCounters: { mobility: 26 },
     threatCounters: { fragile_glass_cannon: 32, high_mobility: 26, ability_spam: 24, heavy_healing: 18, telegraphed_burst: 18 },
-    why: 'Point-and-click Silence + delayed burst echo — locks down low-HP assassins and deletes them before they can escape.',
-    whenToUse: 'Cast right before unloading your burst onto a fragile target.',
+    why: 'Upgrades from Spirit Sap: point-and-click Silence + Spirit Power/Resist shred + 35% delayed burst echo — deletes fragile assassins before they escape.',
+    whenToUse: 'Cast right before unloading your burst onto a fragile or spirit-reliant target.',
   },
   {
     className: 'upgrade_proc_silence', // Silencer
@@ -695,8 +704,8 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     damageCounters: { spirit: 24, equal: 14 },
     threatCounters: { ability_spam: 24, high_mobility: 22, telegraphed_burst: 16 },
     playerSynergy: { preferDamageStyle: 'gun', preferFastFirerate: true, penalizeSlowFirerate: true },
-    why: 'Passively builds up a Silence through gunfire — locks down ability-reliant enemies without spending an active slot.',
-    whenToUse: 'Passive — focus fire on the key caster at the start of a fight to deny their spell rotation.',
+    why: 'Bullets passively cut enemy outgoing Spirit Damage by -25% AND build up a Silence — shuts down casters without using an active slot.',
+    whenToUse: 'Passive — focus fire on the key caster at the start of a fight to cut their spirit DPS and proc Silence.',
   },
   {
     className: 'upgrade_aoe_root', // Vortex Web
@@ -857,10 +866,10 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stageFit: { lane: 0.02, mid: 0.22, late: 0.94 },
     damageCounters: { spirit: 18, equal: 20 },
     modifierCounters: { cc: 22 },
-    threatCounters: { cleanseable_debuff: 22, close_range_dive: 18, hard_cc: 16 },
+    threatCounters: { cleanseable_debuff: 12, close_range_dive: 18, hard_cc: 16 },
     playerSynergy: { preferDamageStyle: 'gun', preferFastFirerate: true, penalizeSlowFirerate: true },
-    why: 'Drops existing debuffs and surges your combat stats below 50% HP — lets gun carries turn around dive & CC bursts passively.',
-    whenToUse: 'Passive — automatically cuts debuffs and spikes your fightback power when bursted low.',
+    why: 'Reduces existing debuffs (40% Debuff Resist) and surges Fire Rate & Move Speed below 50% HP — lets gun carries turn dive & CC bursts passively.',
+    whenToUse: 'Passive — automatically cuts active debuff durations and spikes your fightback power when bursted low.',
   },
 ];
 
@@ -1102,7 +1111,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_debuff_reducer',
       bonus: 28,
       stages: ['lane', 'mid'],
-      tip: 'Significantly shortens Afterburn burn ticks and Concussive Combustion stun — builds into Dispel Magic.',
+      tip: 'Significantly shortens Afterburn burn ticks and Concussive Combustion stun — upgrades into Unstoppable or Spellbreaker.',
     },
     {
       itemClassName: 'upgrade_deflecting_armor',
@@ -1195,10 +1204,16 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
   ],
   hero_synth: [
     {
-      itemClassName: 'upgrade_reduce_debuff_duration',
-      bonus: 42,
+      itemClassName: 'upgrade_divine_barrier',
+      bonus: 38,
+      stages: ['late'],
+      tip: 'One of the few cleanses that purges Pocket\'s Affliction ultimate off yourself or an ally while adding a massive barrier.',
+    },
+    {
+      itemClassName: 'upgrade_counterspell',
+      bonus: 30,
       stages: ['mid', 'late'],
-      tip: 'Cleanses Pocket\'s slows/debuffs & heals back chip (note: non-ultimate purge — pair with Spirit Resilience vs Affliction!).',
+      tip: 'Spell-parry Pocket\'s Affliction cast or Enchanter\'s Satchel burst right on impact to negate the DoT before it lands.',
     },
     {
       itemClassName: 'upgrade_containment',
@@ -1616,7 +1631,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_return_fire',
       bonus: 28,
       stages: ['lane', 'mid'],
-      tip: 'Reflects McGinnis\'s rapid minigun spray & turret shots right back into her.',
+      tip: 'Reflects McGinnis\'s spun-up minigun spray right back into her (and fires back at her turrets when they shoot you).',
     },
     {
       itemClassName: 'upgrade_healbane',
@@ -1717,16 +1732,22 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       tip: 'Rabbit Hex triggers Reactive Barrier so you survive the follow-up Vexing Bolt burst.',
     },
     {
-      itemClassName: 'upgrade_reduce_debuff_duration',
-      bonus: 30,
+      itemClassName: 'upgrade_debuff_reducer',
+      bonus: 28,
+      stages: ['lane', 'mid'],
+      tip: 'Passively cuts Rabbit Hex duration by 25% (active cleanses cannot be pressed while hexed) — upgrades into Spellbreaker or Unstoppable.',
+    },
+    {
+      itemClassName: 'upgrade_counterspell',
+      bonus: 32,
       stages: ['mid', 'late'],
-      tip: 'Cleanses debuffs & cuts Rabbit Hex duration so Sinclair cannot combo you.',
+      tip: 'Spell-parry Rabbit Hex or Vexing Bolt right before impact to negate the polymorph and burst completely.',
     },
     {
       itemClassName: 'upgrade_spellbreaker',
       bonus: 34,
       stages: ['late'],
-      tip: 'Blunts Sinclair\'s massive long-distance Vexing Bolt burst passively.',
+      tip: 'Blunts Sinclair\'s massive long-distance Vexing Bolt burst AND passively cuts Rabbit Hex duration by 25%.',
     },
   ],
   hero_deadpack: [
@@ -1830,9 +1851,9 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
     },
     {
       itemClassName: 'upgrade_reduce_debuff_duration',
-      bonus: 30,
+      bonus: 24,
       stages: ['mid', 'late'],
-      tip: 'Purges Celeste\'s dash-crippling slows and prism silence debuffs with a speed burst.',
+      tip: 'Purges Celeste\'s Dazzling Trick prism silence and Light Eater debuff with a heal and speed burst (note: cannot purge Shining Wonder ult).',
     },
     {
       itemClassName: 'upgrade_spellbreaker',
@@ -2000,7 +2021,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_debuff_reducer',
       bonus: 26,
       stages: ['lane', 'mid'],
-      tip: 'Cuts Rat Swarm DoT ticks in lane and upgrades cleanly into Dispel Magic.',
+      tip: 'Cuts Rat Swarm DoT ticks in lane and upgrades cleanly into Unstoppable or Spellbreaker.',
     },
     {
       itemClassName: 'upgrade_rupture',
@@ -2122,13 +2143,13 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_debuff_reducer',
       bonus: 26,
       stages: ['lane', 'mid'],
-      tip: 'Cuts Still Life stun and Abstract Landscape silence/slow duration — upgrades into Dispel Magic.',
+      tip: 'Cuts Still Life stun and Abstract Landscape silence/slow duration by 25% — upgrades into Unstoppable or Spellbreaker.',
     },
     {
       itemClassName: 'upgrade_reduce_debuff_duration',
-      bonus: 32,
+      bonus: 24,
       stages: ['mid', 'late'],
-      tip: 'Purges Abstract Landscape silence/slow and Still Life debuffs while granting move speed to break tether sightline.',
+      tip: 'Purges Still Life tether and Flow State slows while granting move speed to break sightline (note: cannot purge Abstract Landscape ult).',
     },
     {
       itemClassName: 'upgrade_tech_purge',
@@ -2154,7 +2175,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_vex_barrier',
       bonus: 26,
       stages: ['lane', 'mid'],
-      tip: 'Auto-triggers a protective barrier when Feed The Birds hexes you or Granny Long Legs knocks you up.',
+      tip: 'Auto-triggers a protective barrier when Baba\'s Brew silences you or Feed The Birds hexes you.',
     },
     {
       itemClassName: 'upgrade_target_stun',
@@ -2164,9 +2185,9 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
     },
     {
       itemClassName: 'upgrade_reduce_debuff_duration',
-      bonus: 32,
+      bonus: 26,
       stages: ['mid', 'late'],
-      tip: 'Cleanses Baba\'s Brew Silence/Burn and Feed The Birds stacking slow with a move speed burst to escape.',
+      tip: 'Cleanses Baba\'s Brew Silence/Burn immediately with a heal & speed burst to reposition (note: cannot purge Feed The Birds ult).',
     },
     {
       itemClassName: 'upgrade_tech_purge',

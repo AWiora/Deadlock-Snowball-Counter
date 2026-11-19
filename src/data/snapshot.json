@@ -4571,7 +4571,7 @@
       "cost": 6400,
       "isActive": false,
       "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/cheat_death.webp",
-      "summary": ""
+      "summary": "When you would take lethal damage, instead become temporarily death immune and remove all non-stun debuffs. While death immune, you deal reduced damage and have reduced healing."
     },
     {
       "id": 2407781327,
@@ -4631,7 +4631,7 @@
       "cost": 6400,
       "isActive": false,
       "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/indomitable.webp",
-      "summary": ""
+      "summary": "The next Stun, Chain, Immobilize, Sleep, Silence or Fear is automatically cleansed. When this happens, you gain a barrier and all your ability cooldowns get reduced by 20%."
     },
     {
       "id": 1797283378,
@@ -4667,7 +4667,7 @@
       "cost": 6400,
       "isActive": false,
       "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/items/vitality/juggernaut.webp",
-      "summary": ""
+      "summary": "Enemies that shoot you have their Fire Rate slowed."
     },
     {
       "id": 865846625,

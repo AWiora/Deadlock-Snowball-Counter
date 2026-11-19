@@ -39,18 +39,22 @@ export function getBaseKitTags(heroClassName: string, lang: Language = 'de'): st
 }
 
 /**
- * Upgrade lineages: if both a component and its upgrade score well for the same stage,
+ * Linear upgrade lineages verified against the live Deadlock Curiosity Shop:
+ * if both a component and its direct upgrade score well in the same tier ("all"),
  * keep only the higher-scoring one so the top picks aren't redundant, and expose the build path hint.
  */
 const UPGRADE_FAMILIES: string[][] = [
   ['upgrade_withering_whip', 'upgrade_greater_withering_whip'], // Rusted Barrel -> Disarming Hex
-  ['upgrade_debuff_reducer', 'upgrade_reduce_debuff_duration'], // Debuff Reducer -> Dispel Magic
+  ['upgrade_debuff_reducer', 'upgrade_unstoppable'], // Debuff Reducer -> Unstoppable
   ['upgrade_guardian_ward', 'upgrade_divine_barrier'], // Guardian Ward -> Divine Barrier
-  ['upgrade_weapon_shielding', 'upgrade_improved_bullet_armor'],
-  ['upgrade_spirit_bubble', 'upgrade_tech_purge'],
-  ['upgrade_magic_vulnerability', 'upgrade_escalating_exposure'],
+  ['upgrade_health_stimpak', 'upgrade_rescue_beam'], // Healing Rite -> Rescue Beam
+  ['upgrade_vex_barrier', 'upgrade_auto_cleanse'], // Reactive Barrier -> Indomitable
+  ['upgrade_cardio_calibrator', 'upgrade_juggernaut'], // Enduring Speed -> Juggernaut
+  ['upgrade_containment', 'upgrade_aoe_root'], // Slowing Hex -> Vortex Web
+  ['upgrade_spirit_sap', 'upgrade_focus_lens'], // Spirit Sap -> Focus Lens
+  ['upgrade_magic_vulnerability', 'upgrade_escalating_exposure'], // Mystic Vulnerability -> Escalating Exposure
   ['upgrade_headshot_booster', 'upgrade_headhunter'], // Headshot Booster -> Headhunter
-  ['upgrade_headshot_booster2', 'upgrade_banshee_slugs'],
+  ['upgrade_headshot_booster2', 'upgrade_banshee_slugs'], // Weakening Headshot -> Crippling Headshot
   ['upgrade_magic_burst', 'upgrade_magic_shock'], // Mystic Burst -> Tankbuster
   ['upgrade_cold_front', 'upgrade_arctic_blast'], // Cold Front -> Arctic Blast
   ['upgrade_magic_tempo', 'upgrade_cooldown_reduction', 'upgrade_transcendent_cooldown'], // Compress -> Superior -> Transcendent Cooldown
@@ -58,6 +62,19 @@ const UPGRADE_FAMILIES: string[][] = [
   ['upgrade_arcane_extension', 'upgrade_imbued_duration_extender'], // Duration Extender -> Superior Duration
   ['upgrade_extra_charge', 'upgrade_rapid_recharge'], // Extra Charge -> Rapid Recharge
 ];
+
+/**
+ * Branching component origins for items whose base component upgrades into multiple distinct counters
+ * (e.g. Grit -> Weapon/Spirit Shielding/Reactive Barrier/Guardian Ward, Debuff Reducer -> Spellbreaker/Unstoppable).
+ * Exposes the "Builds from" hint without falsely deduplicating sibling branches against each other.
+ */
+const BRANCH_COMPONENT_FROM: Record<string, string> = {
+  upgrade_weapon_shielding: 'upgrade_grit',
+  upgrade_spirit_bubble: 'upgrade_grit',
+  upgrade_vex_barrier: 'upgrade_grit',
+  upgrade_guardian_ward: 'upgrade_grit',
+  upgrade_spellbreaker: 'upgrade_debuff_reducer',
+};
 
 const UPGRADE_FAMILY_MAP = new Map<string, number>();
 UPGRADE_FAMILIES.forEach((family, idx) => {
@@ -70,21 +87,34 @@ function resolveUpgradeHint(
   lang: Language,
 ): UpgradeHint | null {
   const familyId = UPGRADE_FAMILY_MAP.get(className);
-  if (familyId === undefined) return null;
-  const family = UPGRADE_FAMILIES[familyId];
-  const idx = family.indexOf(className);
-  if (idx === 0 && family[1]) {
-    const target = itemsByClass.get(family[1]);
-    if (!target) return null;
-    return {
-      direction: 'to',
-      itemClassName: target.className,
-      itemName: getItemDisplayName(target, lang),
-      cost: target.cost,
-    };
+  if (familyId !== undefined) {
+    const family = UPGRADE_FAMILIES[familyId];
+    const idx = family.indexOf(className);
+    if (idx === 0 && family[1]) {
+      const target = itemsByClass.get(family[1]);
+      if (!target) return null;
+      return {
+        direction: 'to',
+        itemClassName: target.className,
+        itemName: getItemDisplayName(target, lang),
+        cost: target.cost,
+      };
+    }
+    if (idx > 0 && family[idx - 1]) {
+      const base = itemsByClass.get(family[idx - 1]);
+      if (!base) return null;
+      return {
+        direction: 'from',
+        itemClassName: base.className,
+        itemName: getItemDisplayName(base, lang),
+        cost: base.cost,
+      };
+    }
   }
-  if (idx > 0 && family[idx - 1]) {
-    const base = itemsByClass.get(family[idx - 1]);
+
+  const branchBaseClass = BRANCH_COMPONENT_FROM[className];
+  if (branchBaseClass) {
+    const base = itemsByClass.get(branchBaseClass);
     if (!base) return null;
     return {
       direction: 'from',
@@ -105,7 +135,6 @@ const BULLET_ONLY_ITEMS = new Set([
   'upgrade_metal_skin',
   'upgrade_improved_bullet_armor',
   'upgrade_deflecting_armor',
-  'upgrade_juggernaut',
   'upgrade_reinforcing_casings',
   'upgrade_suppressor',
 ]);
@@ -127,6 +156,7 @@ const THIRD_SLOT_MIN_RATIO = 0.6;
 function computePlayerSynergy(
   rule: CounterItemRule,
   affinity: PlayerAffinity | null,
+  myHeroClass: string | null,
   myHeroName: string | null,
   lang: Language,
 ): { delta: number; multiplier: number; note: string | null } {
@@ -206,6 +236,12 @@ function computePlayerSynergy(
   if (syn.redundantWithTool && affinity.builtInTools?.includes(syn.redundantWithTool)) {
     delta -= 10;
     multiplier *= 0.84;
+  }
+
+  // Explicit kit anti-synergy (e.g. Lady Geist Soul Exchange vs Return Fire)
+  if (myHeroClass && syn.avoidHeroClasses?.includes(myHeroClass)) {
+    delta -= 22;
+    multiplier *= 0.55;
   }
 
   return { delta, multiplier, note };
@@ -437,6 +473,7 @@ export function recommendCounters(
     } = computePlayerSynergy(
       rule,
       myProfile?.playerAffinity ?? null,
+      input.myHeroClass,
       myHeroDisplayName,
       lang,
     );

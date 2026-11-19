@@ -52,6 +52,24 @@ function extractAbilityDesc(rawAbility, lang) {
   return ABILITY_DESC_FALLBACK[rawAbility.class_name]?.[lang] ?? '';
 }
 
+function extractItemSummary(it) {
+  const direct = cleanHtml(
+    it.description?.active || it.description?.passive || it.description?.desc || '',
+  );
+  if (direct) return direct.slice(0, 220);
+
+  const sectionTexts = [];
+  for (const sec of it.tooltip_sections ?? []) {
+    for (const attr of sec.section_attributes ?? []) {
+      if (attr?.loc_string && !attr.loc_string.startsWith('#')) {
+        const cleaned = cleanHtml(attr.loc_string);
+        if (cleaned) sectionTexts.push(cleaned);
+      }
+    }
+  }
+  return sectionTexts.join(' ').slice(0, 220);
+}
+
 async function fetchJson(url) {
   const res = await fetch(url, {
     headers: { 'User-Agent': 'deadlock-build-helper/1.0' },
@@ -143,9 +161,7 @@ async function main() {
       cost: it.cost,
       isActive: Boolean(it.is_active_item),
       icon: it.shop_image_webp || it.shop_image || it.image_webp || it.image || '',
-      summary: cleanHtml(
-        it.description?.active || it.description?.passive || it.description?.desc || '',
-      ).slice(0, 220),
+      summary: extractItemSummary(it),
     }))
     .sort((a, b) => a.slot.localeCompare(b.slot) || a.cost - b.cost || a.name.localeCompare(b.name));
 

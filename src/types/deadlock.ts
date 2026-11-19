@@ -188,6 +188,8 @@ export interface CounterItemRule {
     preferSupportive?: boolean;
     /** Gently penalizes this item if your own hero already has this mechanic built in */
     redundantWithTool?: BuiltInHeroTool;
+    /** Penalizes this item for specific player hero classes with kit anti-synergy (e.g. Lady Geist + Return Fire) */
+    avoidHeroClasses?: string[];
   };
   /** Concise default "Why" explanation */
   why: string;
