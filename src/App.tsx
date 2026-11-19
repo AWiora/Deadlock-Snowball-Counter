@@ -3,10 +3,99 @@ import { useMemo } from 'react';
 import { CounterCard } from './components/CounterCard';
 import { Header } from './components/Header';
 import { MatchupControlBar } from './components/MatchupControlBar';
+import { ResultsToolbar } from './components/ResultsToolbar';
 import { recommendCounters } from './engine/recommend';
 import { useDeadlockData } from './hooks/useDeadlockData';
 import { useMatchupState } from './hooks/useMatchupState';
 import { UI_TEXT } from './i18n/translations';
+import type {
+  CounterRecommendation,
+  DeadlockHero,
+  Language,
+  PriceTier,
+} from './types/deadlock';
+
+interface StanceColumnProps {
+  stance: 'offense' | 'defense';
+  recs: CounterRecommendation[];
+  isRecommended: boolean;
+  stanceReason: string;
+  language: Language;
+  itemLanguage: Language;
+  priceTier: PriceTier;
+  totalSelectedEnemies: number;
+  heroesByClass: Map<string, DeadlockHero>;
+  myHero: DeadlockHero | null;
+  onChangePriceTier: (tier: PriceTier) => void;
+}
+
+function StanceColumn({
+  stance,
+  recs,
+  isRecommended,
+  stanceReason,
+  language,
+  itemLanguage,
+  priceTier,
+  totalSelectedEnemies,
+  heroesByClass,
+  myHero,
+  onChangePriceTier,
+}: StanceColumnProps) {
+  const t = UI_TEXT[language];
+  const isOffense = stance === 'offense';
+  const showEarlyOffenseNote = isOffense && priceTier === '800';
+
+  return (
+    <div className={`stance-column ${isRecommended ? 'stance-column--primary' : ''}`}>
+      <div className="stance-group-header">
+        <div className="stance-title-wrap">
+          <span className={`stance-icon stance-icon--${stance}`}>
+            {isOffense ? <Swords size={15} /> : <Shield size={15} />}
+          </span>
+          <h3 className="stance-heading">
+            {isOffense ? t.offenseSectionTitle : t.defenseSectionTitle}
+          </h3>
+        </div>
+        {isRecommended && (
+          <span className={`stance-rec-pill stance-rec-pill--${stance}`} title={stanceReason}>
+            <Sparkles size={11} />
+            {t.recommendedStanceBadge}
+          </span>
+        )}
+      </div>
+      <div className="cards-list">
+        {recs.length > 0 ? (
+          recs.map((rec) => (
+            <CounterCard
+              key={rec.item.className}
+              rec={rec}
+              language={language}
+              itemLanguage={itemLanguage}
+              totalSelectedEnemies={totalSelectedEnemies}
+              heroesByClass={heroesByClass}
+              myHero={myHero}
+            />
+          ))
+        ) : (
+          <div className="empty-stance-card">
+            <p className="empty-stance-title">
+              {showEarlyOffenseNote ? t.emptyOffense800Title : t.emptyColumnGeneric}
+            </p>
+            {showEarlyOffenseNote && <p className="empty-stance-body">{t.emptyOffense800Body}</p>}
+            <button
+              type="button"
+              className="empty-stance-cta"
+              onClick={() => onChangePriceTier(priceTier === '800' ? '1600' : 'all')}
+            >
+              {priceTier === '800' ? t.switchTo1600Btn : t.switchToAllBtn}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function App() {
   const { heroes, heroesByClass, itemsByClass, status } = useDeadlockData();
@@ -17,6 +106,9 @@ export function App() {
   const focusedEnemy = matchup.focusedEnemyClass
     ? heroesByClass.get(matchup.focusedEnemyClass) ?? null
     : null;
+  const enemyHeroes = matchup.enemyTargets
+    .map((et) => heroesByClass.get(et.heroClass))
+    .filter((h): h is DeadlockHero => Boolean(h));
 
   const result = useMemo(() => {
     if (!matchup.focusedEnemyClass || matchup.orderedEnemyTargets.length === 0) return null;
@@ -49,6 +141,26 @@ export function App() {
     heroesByClass,
   ]);
 
+  // Changes whenever the recommendation inputs change, so the list replays its short reveal
+  const resultsKey = [
+    matchup.myHeroClass ?? '',
+    matchup.orderedEnemyTargets
+      .map((et) => `${et.heroClass}:${et.damageProfile}:${et.modifiers.join('+')}`)
+      .join(','),
+    matchup.priceTier,
+    matchup.activeSlotsFull ? 'p' : 'a',
+  ].join('|');
+
+  const columnProps = {
+    language: matchup.language,
+    itemLanguage: matchup.itemLanguage,
+    priceTier: matchup.priceTier,
+    totalSelectedEnemies: matchup.enemyTargets.length,
+    heroesByClass,
+    myHero,
+    onChangePriceTier: matchup.setPriceTier,
+  };
+
   return (
     <div className="app-shell">
       <Header
@@ -60,187 +172,102 @@ export function App() {
         dataStatus={status}
       />
 
-      <main className="main-container">
-        <MatchupControlBar
-          language={matchup.language}
-          itemLanguage={matchup.itemLanguage}
-          heroes={heroes}
-          heroesByClass={heroesByClass}
-          myHero={myHero}
-          enemyTargets={matchup.enemyTargets}
-          focusedEnemy={focusedEnemy}
-          priceTier={matchup.priceTier}
-          damageProfile={matchup.damageProfile}
-          modifiers={matchup.modifiers}
-          activeSlotsFull={matchup.activeSlotsFull}
-          isCustomized={matchup.isCustomized}
-          onSelectMyHero={matchup.setMyHeroClass}
-          onToggleEnemy={matchup.toggleEnemyHero}
-          onFocusEnemy={matchup.focusEnemyHero}
-          onRemoveEnemy={matchup.removeEnemyHero}
-          onClearAllEnemies={matchup.clearAllEnemies}
-          onChangePriceTier={matchup.setPriceTier}
-          onChangeDamage={matchup.setDamageProfile}
-          onToggleModifier={matchup.toggleModifier}
-          onToggleActiveSlotsFull={() => matchup.setActiveSlotsFull((v) => !v)}
-          onResetDefaults={matchup.resetEnemyDefaults}
-        />
+      <main className="workspace">
+        <aside className="picker-pane">
+          <MatchupControlBar
+            language={matchup.language}
+            itemLanguage={matchup.itemLanguage}
+            heroes={heroes}
+            heroesByClass={heroesByClass}
+            myHero={myHero}
+            enemyTargets={matchup.enemyTargets}
+            focusedEnemy={focusedEnemy}
+            damageProfile={matchup.damageProfile}
+            modifiers={matchup.modifiers}
+            isCustomized={matchup.isCustomized}
+            onSelectMyHero={matchup.setMyHeroClass}
+            onToggleEnemy={matchup.toggleEnemyHero}
+            onFocusEnemy={matchup.focusEnemyHero}
+            onRemoveEnemy={matchup.removeEnemyHero}
+            onClearAllEnemies={matchup.clearAllEnemies}
+            onChangePriceTier={matchup.setPriceTier}
+            onChangeDamage={matchup.setDamageProfile}
+            onToggleModifier={matchup.toggleModifier}
+            onResetDefaults={matchup.resetEnemyDefaults}
+          />
+        </aside>
 
-        {!focusedEnemy || !result ? (
-          <section className="empty-inline-prompt">
-            <Crosshair size={18} className="empty-inline-icon" />
-            <div>
-              <h2 className="empty-inline-title">{t.emptyHeading}</h2>
-              <p className="empty-inline-sub">{t.rosterHintEnemy}</p>
+        <section className="results-pane" aria-label="Recommended counter items">
+          <ResultsToolbar
+            language={matchup.language}
+            enemies={enemyHeroes}
+            priceTier={matchup.priceTier}
+            activeSlotsFull={matchup.activeSlotsFull}
+            onChangePriceTier={matchup.setPriceTier}
+            onToggleActiveSlotsFull={() => matchup.setActiveSlotsFull((v) => !v)}
+          />
+
+          {!focusedEnemy || !result ? (
+            <div className="results-empty">
+              <Crosshair size={22} className="results-empty-icon" aria-hidden="true" />
+              <h2 className="results-empty-title">{t.emptyHeading}</h2>
+              <p className="results-empty-sub">{t.emptySub}</p>
+              <ul className="key-legend" aria-label="Keyboard shortcuts">
+                <li>
+                  <kbd>A–Z</kbd>
+                  {t.keyHintSearch}
+                </li>
+                <li>
+                  <kbd>Enter</kbd>
+                  {t.keyHintAdd}
+                </li>
+                <li>
+                  <kbd>1–5</kbd>
+                  {t.keyHintSouls}
+                </li>
+                <li>
+                  <kbd>Esc</kbd>
+                  {t.keyHintClear}
+                </li>
+              </ul>
             </div>
-          </section>
-        ) : (
-          <section className="results-section" aria-label="Recommended counter items">
-            {matchup.activeSlotsFull && result.hiddenActiveCount > 0 && (
-              <div className="passive-filter-banner">
-                <Layers size={14} />
-                <span>
-                  <strong>{t.passiveBannerLead}</strong>{' '}
-                  {t.passiveBannerBody(result.hiddenActiveCount)}
-                </span>
-                <button
-                  type="button"
-                  className="banner-link-btn"
-                  onClick={() => matchup.setActiveSlotsFull(false)}
-                >
-                  {t.showActivesBtn}
-                </button>
+          ) : (
+            <div className="results-body" key={resultsKey}>
+              {matchup.activeSlotsFull && result.hiddenActiveCount > 0 && (
+                <div className="passive-filter-banner">
+                  <Layers size={14} />
+                  <span>
+                    <strong>{t.passiveBannerLead}</strong>{' '}
+                    {t.passiveBannerBody(result.hiddenActiveCount)}
+                  </span>
+                  <button
+                    type="button"
+                    className="banner-link-btn"
+                    onClick={() => matchup.setActiveSlotsFull(false)}
+                  >
+                    {t.showActivesBtn}
+                  </button>
+                </div>
+              )}
+
+              <div className="stance-grid">
+                {(result.recommendedStance === 'defense'
+                  ? (['defense', 'offense'] as const)
+                  : (['offense', 'defense'] as const)
+                ).map((stance) => (
+                  <StanceColumn
+                    key={stance}
+                    stance={stance}
+                    recs={stance === 'offense' ? result.offense : result.defense}
+                    isRecommended={result.recommendedStance === stance}
+                    stanceReason={result.stanceReason}
+                    {...columnProps}
+                  />
+                ))}
               </div>
-            )}
-
-            {(() => {
-              const offenseSection = (
-                <div
-                  key="offense"
-                  className={`stance-column ${
-                    result.recommendedStance === 'offense' ? 'stance-column--primary' : ''
-                  }`}
-                >
-                  <div className="stance-group-header">
-                    <div className="stance-title-wrap">
-                      <span className="stance-icon stance-icon--offense">
-                        <Swords size={15} />
-                      </span>
-                      <h3 className="stance-heading">{t.offenseSectionTitle}</h3>
-                    </div>
-                    {result.recommendedStance === 'offense' && (
-                      <span
-                        className="stance-rec-pill stance-rec-pill--offense"
-                        title={result.stanceReason}
-                      >
-                        <Sparkles size={11} />
-                        {t.recommendedStanceBadge}
-                      </span>
-                    )}
-                  </div>
-                  <div className="cards-list">
-                    {result.offense.length > 0 ? (
-                      result.offense.map((rec) => (
-                        <CounterCard
-                          key={rec.item.className}
-                          rec={rec}
-                          language={matchup.language}
-                          itemLanguage={matchup.itemLanguage}
-                          totalSelectedEnemies={matchup.enemyTargets.length}
-                          heroesByClass={heroesByClass}
-                          myHero={myHero}
-                        />
-                      ))
-                    ) : (
-                      <div className="empty-stance-card">
-                        <p className="empty-stance-title">
-                          {matchup.priceTier === '800'
-                            ? t.emptyOffense800Title
-                            : t.emptyColumnGeneric}
-                        </p>
-                        {matchup.priceTier === '800' && (
-                          <p className="empty-stance-body">{t.emptyOffense800Body}</p>
-                        )}
-                        <button
-                          type="button"
-                          className="empty-stance-cta"
-                          onClick={() =>
-                            matchup.setPriceTier(matchup.priceTier === '800' ? '1600' : 'all')
-                          }
-                        >
-                          {matchup.priceTier === '800' ? t.switchTo1600Btn : t.switchToAllBtn}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-
-              const defenseSection = (
-                <div
-                  key="defense"
-                  className={`stance-column ${
-                    result.recommendedStance === 'defense' ? 'stance-column--primary' : ''
-                  }`}
-                >
-                  <div className="stance-group-header">
-                    <div className="stance-title-wrap">
-                      <span className="stance-icon stance-icon--defense">
-                        <Shield size={15} />
-                      </span>
-                      <h3 className="stance-heading">{t.defenseSectionTitle}</h3>
-                    </div>
-                    {result.recommendedStance === 'defense' && (
-                      <span
-                        className="stance-rec-pill stance-rec-pill--defense"
-                        title={result.stanceReason}
-                      >
-                        <Sparkles size={11} />
-                        {t.recommendedStanceBadge}
-                      </span>
-                    )}
-                  </div>
-                  <div className="cards-list">
-                    {result.defense.length > 0 ? (
-                      result.defense.map((rec) => (
-                        <CounterCard
-                          key={rec.item.className}
-                          rec={rec}
-                          language={matchup.language}
-                          itemLanguage={matchup.itemLanguage}
-                          totalSelectedEnemies={matchup.enemyTargets.length}
-                          heroesByClass={heroesByClass}
-                          myHero={myHero}
-                        />
-                      ))
-                    ) : (
-                      <div className="empty-stance-card">
-                        <p className="empty-stance-title">{t.emptyColumnGeneric}</p>
-                        <button
-                          type="button"
-                          className="empty-stance-cta"
-                          onClick={() =>
-                            matchup.setPriceTier(matchup.priceTier === '800' ? '1600' : 'all')
-                          }
-                        >
-                          {matchup.priceTier === '800' ? t.switchTo1600Btn : t.switchToAllBtn}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-
-              return (
-                <div className="stance-grid">
-                  {result.recommendedStance === 'defense'
-                    ? [defenseSection, offenseSection]
-                    : [offenseSection, defenseSection]}
-                </div>
-              );
-            })()}
-          </section>
-        )}
+            </div>
+          )}
+        </section>
       </main>
 
       <footer className="app-footer">

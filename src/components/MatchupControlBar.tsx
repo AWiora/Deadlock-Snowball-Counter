@@ -1,22 +1,25 @@
 import {
-  Crosshair,
+  ChevronDown,
+  ChevronUp,
   Flame,
   HeartPulse,
-  Layers,
+  Plus,
   RotateCcw,
+  Search,
   ShieldAlert,
   Sparkles,
   Swords,
-  Trash2,
   User,
   Wind,
   X,
   Zap,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getHeroProfile } from '../data/heroProfiles';
+import { PRICE_TIER_IDS } from '../data/priceTiers';
 import { getBaseKitTags } from '../engine/recommend';
 import { getHeroDisplayName, UI_TEXT } from '../i18n/translations';
+import { searchHeroes } from '../utils/heroSearch';
 import { HeroAbilityStrip } from './HeroAbilityStrip';
 import type {
   DamageProfile,
@@ -35,10 +38,8 @@ interface MatchupControlBarProps {
   myHero: DeadlockHero | null;
   enemyTargets: EnemyTargetConfig[];
   focusedEnemy: DeadlockHero | null;
-  priceTier: PriceTier;
   damageProfile: DamageProfile;
   modifiers: EnemyModifier[];
-  activeSlotsFull: boolean;
   isCustomized: boolean;
   onSelectMyHero: (className: string | null) => void;
   onToggleEnemy: (className: string) => void;
@@ -48,11 +49,12 @@ interface MatchupControlBarProps {
   onChangePriceTier: (tier: PriceTier) => void;
   onChangeDamage: (dmg: DamageProfile) => void;
   onToggleModifier: (mod: EnemyModifier) => void;
-  onToggleActiveSlotsFull: () => void;
   onResetDefaults: () => void;
 }
 
-const PRICE_TIER_IDS: PriceTier[] = ['800', '1600', '3200', '6400', 'all'];
+const MAX_ENEMIES = 3;
+const WIDE_QUERY = '(min-width: 1180px)';
+const FINE_POINTER_QUERY = '(hover: hover) and (pointer: fine)';
 
 const DAMAGE_META: { id: DamageProfile; tone: string }[] = [
   { id: 'bullet', tone: 'weapon' },
@@ -68,6 +70,17 @@ const MODIFIER_META: { id: EnemyModifier; Icon: typeof ShieldAlert }[] = [
   { id: 'mobility', Icon: Wind },
 ];
 
+function matchesMedia(query: string): boolean {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia(query).matches
+    : false;
+}
+
+function isTypingField(el: EventTarget | null): boolean {
+  if (!(el instanceof HTMLElement)) return false;
+  return el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
+}
+
 export function MatchupControlBar({
   language,
   itemLanguage,
@@ -76,10 +89,8 @@ export function MatchupControlBar({
   myHero,
   enemyTargets,
   focusedEnemy,
-  priceTier,
   damageProfile,
   modifiers,
-  activeSlotsFull,
   isCustomized,
   onSelectMyHero,
   onToggleEnemy,
@@ -89,445 +100,523 @@ export function MatchupControlBar({
   onChangePriceTier,
   onChangeDamage,
   onToggleModifier,
-  onToggleActiveSlotsFull,
   onResetDefaults,
 }: MatchupControlBarProps) {
-  const [isPickingMyHero, setIsPickingMyHero] = useState(false);
   const t = UI_TEXT[language];
-  const baseKitTags = focusedEnemy ? getBaseKitTags(focusedEnemy.className, language) : [];
+  const [isPickingMyHero, setIsPickingMyHero] = useState(false);
+  const [query, setQuery] = useState('');
+  const [activeIdx, setActiveIdx] = useState(0);
+  // Only affects narrow layouts: the roster folds away once an enemy is picked so results are on screen.
+  const [rosterOpen, setRosterOpen] = useState(false);
+  const [tuningOpen, setTuningOpen] = useState(() => matchesMedia(WIDE_QUERY));
+  const searchRef = useRef<HTMLInputElement | null>(null);
+
   const myHeroName = myHero ? getHeroDisplayName(myHero, language) : null;
   const focusedEnemyName = focusedEnemy ? getHeroDisplayName(focusedEnemy, language) : null;
+  const baseKitTags = focusedEnemy ? getBaseKitTags(focusedEnemy.className, language) : [];
+  const enemyCount = enemyTargets.length;
 
-  const enemyIndexMap = new Map<string, number>();
-  enemyTargets.forEach((et, idx) => enemyIndexMap.set(et.heroClass, idx + 1));
+  const enemyIndexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    enemyTargets.forEach((et, idx) => map.set(et.heroClass, idx + 1));
+    return map;
+  }, [enemyTargets]);
 
-  const handleRosterClick = (heroClass: string) => {
+  const trimmedQuery = query.trim();
+  const visibleHeroes = useMemo(
+    () => (trimmedQuery ? searchHeroes(heroes, trimmedQuery) : heroes),
+    [heroes, trimmedQuery],
+  );
+  // Enter never targets your own hero while picking enemies
+  const enterCandidates = useMemo(
+    () =>
+      trimmedQuery
+        ? visibleHeroes.filter((h) => isPickingMyHero || h.className !== myHero?.className)
+        : [],
+    [trimmedQuery, visibleHeroes, isPickingMyHero, myHero],
+  );
+  const activeHero =
+    enterCandidates.length > 0
+      ? enterCandidates[Math.min(activeIdx, enterCandidates.length - 1)]
+      : null;
+
+  const rosterCollapsed =
+    enemyCount > 0 && !rosterOpen && !isPickingMyHero && trimmedQuery === '';
+
+  const resetSearch = () => {
+    setQuery('');
+    setActiveIdx(0);
+  };
+
+  /**
+   * source 'click' keeps the roster's existing toggle semantics (click a focused enemy again to remove it);
+   * source 'search' only ever adds or focuses, so a stray Enter can't drop an enemy.
+   */
+  const pickHero = (heroClass: string, source: 'click' | 'search') => {
     if (isPickingMyHero) {
       onSelectMyHero(heroClass);
       setIsPickingMyHero(false);
+      resetSearch();
       return;
     }
-    if (heroClass === myHero?.className) {
-      return;
+    if (heroClass === myHero?.className) return;
+
+    const isEnemy = enemyIndexMap.has(heroClass);
+    if (isEnemy && source === 'search') {
+      onFocusEnemy(heroClass);
+    } else {
+      onToggleEnemy(heroClass);
+      if (!isEnemy) setRosterOpen(false);
     }
-    onToggleEnemy(heroClass);
+    resetSearch();
   };
 
+  const togglePickMyHero = () => {
+    setIsPickingMyHero((v) => !v);
+    resetSearch();
+  };
+
+  const openRosterForAdding = () => {
+    setIsPickingMyHero(false);
+    setRosterOpen(true);
+    // Focusing on touch devices would pop the keyboard over the roster
+    if (matchesMedia(FINE_POINTER_QUERY)) searchRef.current?.focus();
+  };
+
+  // Global hotkeys: 1-5 switch souls tier, letters jump into hero search, Esc backs out
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+      const inSearch = e.target === searchRef.current;
+      if (!inSearch && isTypingField(e.target)) return;
+
+      if (/^[1-5]$/.test(e.key)) {
+        e.preventDefault();
+        onChangePriceTier(PRICE_TIER_IDS[Number(e.key) - 1]);
+        return;
+      }
+      if (inSearch) return;
+
+      if (e.key === 'Escape' && isPickingMyHero) {
+        setIsPickingMyHero(false);
+        return;
+      }
+      if (e.key.length === 1 && /\p{L}/u.test(e.key)) {
+        e.preventDefault();
+        setQuery((q) => q + e.key);
+        setActiveIdx(0);
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onChangePriceTier, isPickingMyHero]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeHero) pickHero(activeHero.className, 'search');
+      return;
+    }
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && enterCandidates.length > 0) {
+      e.preventDefault();
+      const delta = e.key === 'ArrowDown' ? 1 : -1;
+      const current = Math.min(activeIdx, enterCandidates.length - 1);
+      setActiveIdx((current + delta + enterCandidates.length) % enterCandidates.length);
+      return;
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (query) {
+        resetSearch();
+      } else {
+        if (isPickingMyHero) setIsPickingMyHero(false);
+        searchRef.current?.blur();
+      }
+    }
+  };
+
+  const focusedTarget = focusedEnemy
+    ? enemyTargets.find((et) => et.heroClass === focusedEnemy.className)
+    : undefined;
+  const focusedCustomCount = focusedTarget
+    ? focusedTarget.modifiers.length +
+      (focusedTarget.damageProfile !== getHeroProfile(focusedTarget.heroClass).defaultDamage ? 1 : 0)
+    : 0;
+  const metaPct = focusedEnemy?.metaWeaponPct;
+  const metaHint =
+    typeof metaPct === 'number'
+      ? metaPct >= 58
+        ? `Meta ${metaPct}% Gun`
+        : metaPct <= 42
+          ? `Meta ${100 - metaPct}% Spirit`
+          : `Meta ${metaPct}/${100 - metaPct}`
+      : null;
+
   return (
-    <section className="control-deck" aria-label="Matchup configuration">
-      {/* Row 1: [ YOUR HERO ] VS [ UP TO 3 ENEMY SLOTS ] */}
-      <div className="matchup-vs-row matchup-vs-row--multi">
-        {/* Left: YOUR HERO */}
-        <div className="hero-slot-wrap">
-          <div
-            className={`hero-selector-card hero-selector-card--my ${
-              isPickingMyHero
-                ? 'hero-selector-card--picking-my'
-                : myHero
-                  ? 'hero-selector-card--my-filled'
-                  : 'hero-selector-card--prompt'
-            }`}
+    <section className="picker" aria-label="Matchup">
+      {/* Lineup: your hero + up to 3 enemies */}
+      <div className="lineup">
+        <div
+          className={`me-card ${
+            isPickingMyHero ? 'me-card--picking' : myHero ? 'me-card--filled' : 'me-card--empty'
+          }`}
+        >
+          <button
+            type="button"
+            className="me-card-pick"
+            onClick={togglePickMyHero}
+            tabIndex={-1}
+            aria-hidden="true"
           >
-            <div className="hero-selector-main">
-              <button
-                type="button"
-                className="hero-selector-avatar-btn"
-                onClick={() => setIsPickingMyHero((v) => !v)}
-                aria-label={myHero ? t.yourHeroChangeBtn : t.yourHeroSelectBtn}
-              >
-                {myHero?.iconCard || myHero?.iconSmall ? (
-                  <img
-                    src={myHero.iconCard || myHero.iconSmall}
-                    alt={myHeroName ?? ''}
-                    className="hero-slot-avatar hero-slot-avatar--my"
-                  />
-                ) : (
-                  <span className="hero-slot-avatar-empty hero-slot-avatar-empty--my">
-                    <User size={19} />
-                  </span>
-                )}
-              </button>
-              <div className="hero-slot-copy">
-                <button
-                  type="button"
-                  className="hero-selector-name-btn"
-                  onClick={() => setIsPickingMyHero((v) => !v)}
-                >
-                  <span className="deck-micro-label">{t.yourHeroLabel}</span>
-                  <span className={`hero-slot-name ${!myHero ? 'hero-slot-name--placeholder' : ''}`}>
-                    {myHeroName ?? t.yourHeroEmpty}
-                  </span>
-                  {!myHero && <span className="hero-slot-subhint">{t.yourHeroHint}</span>}
-                </button>
-                {myHero && !isPickingMyHero && (
-                  <div className="my-hero-abilities-bar">
-                    <HeroAbilityStrip
-                      hero={myHero}
-                      uiLang={language}
-                      inGameLang={itemLanguage}
-                      compact
-                    />
-                  </div>
-                )}
-              </div>
-              <button
-                type="button"
-                className="slot-action-tag"
-                onClick={() => setIsPickingMyHero((v) => !v)}
-              >
-                {isPickingMyHero
-                  ? t.cancelMyPickBtn
-                  : myHero
-                    ? t.yourHeroChangeBtn
-                    : t.yourHeroSelectBtn}
-              </button>
-            </div>
-            {myHero && !isPickingMyHero && (
-              <button
-                type="button"
-                className="hero-slot-clear"
-                onClick={() => onSelectMyHero(null)}
-                aria-label={t.yourHeroClearAria}
-                title={t.yourHeroClearAria}
-              >
-                <X size={14} />
-              </button>
+            {myHero?.iconCard || myHero?.iconSmall ? (
+              <img src={myHero.iconCard || myHero.iconSmall} alt="" className="me-card-avatar" />
+            ) : (
+              <span className="me-card-avatar me-card-avatar--empty">
+                <User size={18} />
+              </span>
             )}
-          </div>
+            <span className="me-card-copy">
+              <span className="pane-label">{t.yourHeroLabel}</span>
+              <span className={`me-card-name ${myHero ? '' : 'me-card-name--empty'}`}>
+                {myHeroName ?? t.yourHeroEmpty}
+              </span>
+            </span>
+          </button>
+          {myHero && !isPickingMyHero && (
+            <div className="me-card-abilities">
+              <HeroAbilityStrip hero={myHero} uiLang={language} inGameLang={itemLanguage} compact />
+            </div>
+          )}
+          <button
+            type="button"
+            className="me-card-action"
+            onClick={togglePickMyHero}
+            aria-pressed={isPickingMyHero}
+          >
+            {isPickingMyHero
+              ? t.cancelMyPickBtn
+              : myHero
+                ? t.yourHeroChangeBtn
+                : t.yourHeroSelectBtn}
+          </button>
+          {myHero && !isPickingMyHero && (
+            <button
+              type="button"
+              className="me-card-clear"
+              onClick={() => onSelectMyHero(null)}
+              aria-label={t.yourHeroClearAria}
+              title={t.yourHeroClearAria}
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
 
-        <div className="vs-medallion" aria-hidden="true">
-          VS
-        </div>
-
-        {/* Right: 1-3 ENEMY SLOTS + CLEAR ALL */}
-        <div className="enemy-slots-group">
-          <div className="enemy-slots-header">
-            <span className="deck-micro-label">{t.enemyLabel}</span>
-            {enemyTargets.length > 0 && (
+        <div className="lineup-enemies">
+          <div className="lineup-head">
+            <span className="pane-label">
+              {t.enemyLabel}
+              <span className="pane-label-count">
+                {enemyCount}/{MAX_ENEMIES}
+              </span>
+            </span>
+            {enemyCount > 0 && (
               <button
                 type="button"
-                className="clear-enemies-btn"
+                className="lineup-clear"
                 onClick={onClearAllEnemies}
                 title={t.clearEnemiesTitle}
               >
-                <Trash2 size={12} />
-                <span>{t.clearEnemiesBtn}</span>
+                {t.clearEnemiesBtn}
               </button>
             )}
           </div>
 
-          <div className="enemy-slots-bar">
-            {[0, 1, 2].map((slotIdx) => {
-              const target = enemyTargets[slotIdx];
-              const hero = target ? heroesByClass.get(target.heroClass) ?? null : null;
-              const heroName = hero ? getHeroDisplayName(hero, language) : null;
-              const isFocused = Boolean(hero && focusedEnemy?.className === hero.className);
+          <div className="enemy-chips">
+            {enemyTargets.map((target) => {
+              const hero = heroesByClass.get(target.heroClass);
+              if (!hero) return null;
+              const name = getHeroDisplayName(hero, language);
+              const isFocused = focusedEnemy?.className === hero.className;
               const hasCustom =
-                target &&
-                (target.damageProfile !== getHeroProfile(target.heroClass).defaultDamage ||
-                  target.modifiers.length > 0);
-
-              if (!hero || !target) {
-                return (
-                  <div
-                    key={`empty-${slotIdx}`}
-                    className={`enemy-mini-slot enemy-mini-slot--empty ${
-                      slotIdx === 0 && enemyTargets.length === 0 ? 'enemy-mini-slot--first-empty' : ''
-                    }`}
-                  >
-                    <Crosshair size={14} className="enemy-mini-empty-icon" />
-                    <span>
-                      {slotIdx === 0 && enemyTargets.length === 0
-                        ? t.enemyEmpty
-                        : t.enemySlotEmpty(slotIdx + 1)}
-                    </span>
-                  </div>
-                );
-              }
-
+                target.damageProfile !== getHeroProfile(target.heroClass).defaultDamage ||
+                target.modifiers.length > 0;
               return (
                 <div
                   key={hero.className}
-                  className={`enemy-mini-slot enemy-mini-slot--filled ${
-                    isFocused ? 'enemy-mini-slot--focused' : ''
-                  }`}
+                  className={`enemy-chip ${isFocused && enemyCount > 1 ? 'enemy-chip--focused' : ''}`}
                 >
                   <button
                     type="button"
-                    className="enemy-mini-main"
+                    className="enemy-chip-main"
                     onClick={() => onFocusEnemy(hero.className)}
-                    title={heroName ?? ''}
+                    aria-pressed={isFocused}
+                    title={name}
                   >
-                    <span className="enemy-mini-num">#{slotIdx + 1}</span>
                     {(hero.iconSmall || hero.iconCard) && (
-                      <img
-                        src={hero.iconSmall || hero.iconCard}
-                        alt={heroName ?? ''}
-                        className="enemy-mini-avatar"
-                      />
+                      <img src={hero.iconSmall || hero.iconCard} alt="" className="enemy-chip-avatar" />
                     )}
-                    <span className="enemy-mini-name">{heroName}</span>
-                    {hasCustom && <span className="enemy-mini-custom-dot" title="Custom build toggles" />}
+                    <span className="enemy-chip-name">{name}</span>
+                    {hasCustom && <span className="enemy-chip-dot" aria-hidden="true" />}
                   </button>
                   <button
                     type="button"
-                    className="enemy-mini-remove"
+                    className="enemy-chip-remove"
                     onClick={() => onRemoveEnemy(hero.className)}
-                    aria-label={`Remove ${heroName}`}
-                    title={`Remove ${heroName}`}
+                    aria-label={t.removeEnemyAria(name)}
+                    title={t.removeEnemyAria(name)}
                   >
                     <X size={13} />
                   </button>
                 </div>
               );
             })}
+            {enemyCount === 0 && <span className="enemy-chip-placeholder">{t.enemyEmpty}</span>}
+            {enemyCount > 0 && enemyCount < MAX_ENEMIES && (
+              <button
+                type="button"
+                className="enemy-chip-add"
+                onClick={openRosterForAdding}
+                title={t.addEnemyTitle}
+              >
+                <Plus size={14} />
+                <span>{t.addEnemyBtn}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Row 2: Ultra-compact 3-Row Inline Hero Roster (All 42 Heroes, 1-Click Mouse Selection) */}
+      {/* Search + roster */}
       <div
-        className={`inline-roster-block ${
-          isPickingMyHero ? 'inline-roster-block--picking-my' : ''
+        className={`roster ${isPickingMyHero ? 'roster--picking-my' : ''} ${
+          rosterCollapsed ? 'roster--collapsed' : ''
         }`}
       >
-        <div className="inline-roster-header">
-          <span className="inline-roster-hint">
-            {isPickingMyHero ? t.rosterHintMyHero : t.rosterHintEnemy}
-          </span>
-          {focusedEnemy && baseKitTags.length > 0 && !isPickingMyHero && (
-            <div className="base-kit-strip">
-              <span className="base-kit-label">
-                {focusedEnemyName}:
+        <div className="roster-search-row">
+          <label className="roster-search">
+            <Search size={15} className="roster-search-icon" aria-hidden="true" />
+            <input
+              ref={searchRef}
+              type="search"
+              className="roster-search-input"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setActiveIdx(0);
+              }}
+              onKeyDown={handleSearchKeyDown}
+              placeholder={isPickingMyHero ? t.searchPlaceholderMy : t.searchPlaceholderEnemy}
+              aria-label={isPickingMyHero ? t.searchPlaceholderMy : t.searchPlaceholderEnemy}
+              autoComplete="off"
+              spellCheck={false}
+            />
+            {activeHero ? (
+              <span className="roster-search-enter" aria-live="polite">
+                <kbd>{t.searchEnterHint}</kbd>
+                <span className="roster-search-enter-name">
+                  {getHeroDisplayName(activeHero, language)}
+                </span>
               </span>
-              <div className="base-kit-tags">
-                {baseKitTags.map((tag) => (
-                  <span key={tag} className="base-kit-tag">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
+            ) : (
+              !query && <span className="roster-search-hint">{t.searchTypeHint}</span>
+            )}
+          </label>
+          {enemyCount > 0 && !isPickingMyHero && (
+            <button
+              type="button"
+              className="roster-toggle"
+              onClick={() => {
+                if (rosterCollapsed) {
+                  setRosterOpen(true);
+                } else {
+                  setRosterOpen(false);
+                  resetSearch();
+                }
+              }}
+              aria-expanded={!rosterCollapsed}
+            >
+              {rosterCollapsed ? t.rosterToggleBtn : t.rosterDoneBtn}
+              {rosterCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            </button>
           )}
         </div>
 
-        <div className="inline-roster-grid" role="group" aria-label="Hero roster">
-          {heroes.map((hero) => {
-            const name = getHeroDisplayName(hero, language);
-            const isMy = hero.className === myHero?.className;
-            const enemyIdx = enemyIndexMap.get(hero.className);
-            const isEnemy = enemyIdx !== undefined;
-            const isFocusedEnemy = hero.className === focusedEnemy?.className;
+        {isPickingMyHero && <p className="roster-hint">{t.rosterHintMyHero}</p>}
 
-            return (
-              <button
-                key={hero.className}
-                type="button"
-                disabled={!isPickingMyHero && isMy}
-                onClick={() => handleRosterClick(hero.className)}
-                title={name}
-                className={`roster-cell ${isMy ? 'roster-cell--my' : ''} ${
-                  isEnemy ? 'roster-cell--enemy' : ''
-                } ${isFocusedEnemy ? 'roster-cell--focused' : ''}`}
-              >
-                <div className="roster-cell-img-wrap">
-                  {hero.iconSmall || hero.iconCard ? (
-                    <img
-                      src={hero.iconSmall || hero.iconCard}
-                      alt={name}
-                      className="roster-cell-img"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <span className="roster-cell-fallback">{name.slice(0, 2)}</span>
-                  )}
-                  {isMy && <span className="roster-cell-badge roster-cell-badge--my">{t.youBadge}</span>}
-                  {isEnemy && (
-                    <span className="roster-cell-badge roster-cell-badge--enemy">#{enemyIdx}</span>
-                  )}
-                </div>
-                <span className="roster-cell-name">{name}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+        {trimmedQuery && visibleHeroes.length === 0 ? (
+          <p className="roster-empty">{t.searchNoMatch(trimmedQuery)}</p>
+        ) : (
+          <div className="inline-roster-grid" role="group" aria-label="Hero roster">
+            {visibleHeroes.map((hero) => {
+              const name = getHeroDisplayName(hero, language);
+              const isMy = hero.className === myHero?.className;
+              const enemyIdx = enemyIndexMap.get(hero.className);
+              const isEnemy = enemyIdx !== undefined;
+              const isFocusedEnemy = hero.className === focusedEnemy?.className;
+              const isActive = activeHero?.className === hero.className;
 
-      {/* Row 3: Price Tier (Souls) + Active Slots Full */}
-      <div className="deck-row deck-row--stage-compact">
-        <div className="stage-control-wrap">
-          <span className="deck-micro-label">{t.priceTierLabel}</span>
-          <div className="segmented-bar" role="group" aria-label={t.priceTierLabel}>
-            {PRICE_TIER_IDS.map((id) => (
-              <button
-                key={id}
-                type="button"
-                className={`seg-btn ${priceTier === id ? 'seg-btn--active' : ''}`}
-                onClick={() => onChangePriceTier(id)}
-              >
-                <span className="seg-btn-main">{t.priceTiers[id].label}</span>
-                <span className="seg-btn-sub">{t.priceTiers[id].sub}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="active-slots-wrap">
-          <span className="deck-micro-label">{t.activeSlotsFullLabel}</span>
-          <button
-            type="button"
-            className={`active-slots-card ${activeSlotsFull ? 'active-slots-card--on' : ''}`}
-            onClick={onToggleActiveSlotsFull}
-            title={t.activeSlotsFullTitle}
-            aria-pressed={activeSlotsFull}
-          >
-            <Layers size={15} className="active-slots-icon" />
-            <span className="active-slots-text">
-              <span className="active-slots-main">{t.activeSlotsFullBtn}</span>
-              <span className="active-slots-sub">{t.activeSlotsFullSub}</span>
-            </span>
-            <span
-              className={`toggle-switch ${activeSlotsFull ? 'toggle-switch--on' : ''}`}
-              aria-hidden="true"
-            />
-          </button>
-        </div>
-      </div>
-
-      {/* Row 4: Dedicated Per-Enemy Build Customization Panel with 1-Click Enemy Tabs */}
-      {focusedEnemy && (
-        <div className="enemy-customize-panel">
-          <div className="enemy-customize-tabs-bar">
-            <span className="enemy-customize-label">{t.customizeForLabel}</span>
-            <div className="enemy-customize-tabs" role="tablist" aria-label={t.customizeForLabel}>
-              {enemyTargets.map((et, idx) => {
-                const hero = heroesByClass.get(et.heroClass);
-                if (!hero) return null;
-                const hName = getHeroDisplayName(hero, language);
-                const isActiveTab = focusedEnemy.className === et.heroClass;
-                const defDmg = getHeroProfile(et.heroClass).defaultDamage;
-                const customCount =
-                  et.modifiers.length + (et.damageProfile !== defDmg ? 1 : 0);
-
-                return (
-                  <button
-                    key={et.heroClass}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActiveTab}
-                    className={`customize-tab-btn ${
-                      isActiveTab ? 'customize-tab-btn--active' : ''
-                    }`}
-                    onClick={() => onFocusEnemy(et.heroClass)}
-                  >
-                    <span className="customize-tab-num">#{idx + 1}</span>
-                    {(hero.iconSmall || hero.iconCard) && (
+              return (
+                <button
+                  key={hero.className}
+                  type="button"
+                  disabled={!isPickingMyHero && isMy}
+                  onClick={() => pickHero(hero.className, 'click')}
+                  title={name}
+                  className={`roster-cell ${isMy ? 'roster-cell--my' : ''} ${
+                    isEnemy ? 'roster-cell--enemy' : ''
+                  } ${isFocusedEnemy && enemyCount > 1 ? 'roster-cell--focused' : ''} ${
+                    isActive ? 'roster-cell--active' : ''
+                  }`}
+                >
+                  <div className="roster-cell-img-wrap">
+                    {hero.iconSmall || hero.iconCard ? (
                       <img
                         src={hero.iconSmall || hero.iconCard}
                         alt=""
-                        className="customize-tab-avatar"
+                        className="roster-cell-img"
+                        loading="lazy"
                       />
+                    ) : (
+                      <span className="roster-cell-fallback">{name.slice(0, 2)}</span>
                     )}
-                    <span>{hName}</span>
-                    {customCount > 0 && (
-                      <span className="customize-tab-count">+{customCount}</span>
+                    {isMy && <span className="roster-cell-badge roster-cell-badge--my">{t.youBadge}</span>}
+                    {isEnemy && (
+                      <span className="roster-cell-badge roster-cell-badge--enemy">{enemyIdx}</span>
                     )}
-                  </button>
-                );
-              })}
-            </div>
+                  </div>
+                  <span className="roster-cell-name">{name}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
-            <div className="enemy-customize-meta">
-              {focusedEnemy.abilities && focusedEnemy.abilities.length > 0 && (
-                <div className="enemy-customize-abilities">
-                  <span className="enemy-customize-abilities-label">
-                    {focusedEnemyName} {language === 'de' ? 'Fähigkeiten' : 'Abilities'}:
+      {/* Build tuning for the focused enemy */}
+      {focusedEnemy && focusedTarget && (
+        <div className={`tuning ${tuningOpen ? 'tuning--open' : ''}`}>
+          <div className="tuning-head">
+            <span className="tuning-title">{t.tuningTitle(focusedEnemyName ?? '')}</span>
+            {!tuningOpen && (
+              <span className="tuning-summary">
+                <span className={`tuning-summary-dmg tuning-summary-dmg--${damageProfile}`}>
+                  {t.damageOptions[damageProfile]}
+                </span>
+                {modifiers.map((m) => (
+                  <span key={m} className="tuning-summary-mod">
+                    {t.modifiers[m].label}
                   </span>
+                ))}
+              </span>
+            )}
+            <span className="tuning-head-actions">
+              {isCustomized && (
+                <button
+                  type="button"
+                  className="tuning-reset"
+                  onClick={onResetDefaults}
+                  title={t.resetTitle}
+                >
+                  <RotateCcw size={12} />
+                  {t.resetBtn}
+                  {focusedCustomCount > 0 && <span className="tuning-reset-count">{focusedCustomCount}</span>}
+                </button>
+              )}
+              <button
+                type="button"
+                className="tuning-toggle"
+                onClick={() => setTuningOpen((v) => !v)}
+                aria-expanded={tuningOpen}
+              >
+                {tuningOpen ? t.tuningCloseBtn : t.tuningOpenBtn}
+                {tuningOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+            </span>
+          </div>
+
+          {tuningOpen && (
+            <div className="tuning-body">
+              {(baseKitTags.length > 0 || (focusedEnemy.abilities?.length ?? 0) > 0) && (
+                <div className="tuning-kit">
                   <HeroAbilityStrip
                     hero={focusedEnemy}
                     uiLang={language}
                     inGameLang={itemLanguage}
                     compact
                   />
+                  {baseKitTags.length > 0 && (
+                    <div className="tuning-kit-tags">
+                      <span className="tuning-kit-label">{t.baseKitLabel}</span>
+                      {baseKitTags.map((tag) => (
+                        <span key={tag} className="base-kit-tag">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {isCustomized && (
-                <button
-                  type="button"
-                  className="reset-defaults-btn customize-reset-btn"
-                  onClick={onResetDefaults}
-                  title={t.resetTitle}
-                >
-                  <RotateCcw size={11} />
-                  {t.resetBtn}
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="enemy-customize-controls">
-            <div className="override-group">
-              <div className="override-header">
-                <span className="deck-micro-label">{t.damageLabel}</span>
-                {typeof focusedEnemy.metaWeaponPct === 'number' && !isCustomized && (
-                  <span
-                    className="meta-split-hint"
-                    title={
-                      language === 'de'
-                        ? `Live-Match-Daten (30 Tage): ${focusedEnemy.metaWeaponPct}% Gun-Souls / ${100 - focusedEnemy.metaWeaponPct}% Spirit-Souls`
-                        : `Live 30-day match data: ${focusedEnemy.metaWeaponPct}% Weapon souls / ${100 - focusedEnemy.metaWeaponPct}% Spirit souls`
-                    }
-                  >
-                    {focusedEnemy.metaWeaponPct >= 58
-                      ? `Meta: ${focusedEnemy.metaWeaponPct}% Gun`
-                      : focusedEnemy.metaWeaponPct <= 42
-                        ? `Meta: ${100 - focusedEnemy.metaWeaponPct}% Spirit`
-                        : `Meta: ${focusedEnemy.metaWeaponPct}/${100 - focusedEnemy.metaWeaponPct}%`}
-                  </span>
-                )}
-              </div>
-              <div className="damage-pills" role="group" aria-label={t.damageLabel}>
-                {DAMAGE_META.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    className={`dmg-pill dmg-pill--${opt.tone} ${
-                      damageProfile === opt.id ? 'dmg-pill--active' : ''
-                    }`}
-                    onClick={() => onChangeDamage(opt.id)}
-                  >
-                    {opt.id === 'bullet' && <Flame size={13} />}
-                    {opt.id === 'spirit' && <Sparkles size={13} />}
-                    <span>{t.damageOptions[opt.id]}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="override-group override-group--mods">
-              <span className="deck-micro-label">{t.extraTraitsLabel}</span>
-              <div className="modifier-chips" role="group" aria-label={t.extraTraitsLabel}>
-                {MODIFIER_META.map(({ id, Icon }) => {
-                  const active = modifiers.includes(id);
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      className={`mod-chip ${active ? 'mod-chip--active' : ''}`}
-                      onClick={() => onToggleModifier(id)}
-                      title={t.modifiers[id].hint}
-                      aria-pressed={active}
+              <div className="tuning-row">
+                <div className="tuning-row-head">
+                  <span className="pane-label">{t.damageLabel}</span>
+                  {metaHint && (
+                    <span
+                      className="meta-split-hint"
+                      title={
+                        language === 'de'
+                          ? `Live-Match-Daten (30 Tage): ${metaPct}% Gun-Souls / ${100 - (metaPct ?? 0)}% Spirit-Souls`
+                          : `Live 30-day match data: ${metaPct}% weapon souls / ${100 - (metaPct ?? 0)}% spirit souls`
+                      }
                     >
-                      <Icon size={13} />
-                      <span>{t.modifiers[id].label}</span>
+                      {metaHint}
+                    </span>
+                  )}
+                </div>
+                <div className="damage-pills" role="group" aria-label={t.damageLabel}>
+                  {DAMAGE_META.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className={`dmg-pill dmg-pill--${opt.tone} ${
+                        damageProfile === opt.id ? 'dmg-pill--active' : ''
+                      }`}
+                      onClick={() => onChangeDamage(opt.id)}
+                      aria-pressed={damageProfile === opt.id}
+                    >
+                      {opt.id === 'bullet' && <Flame size={13} />}
+                      {opt.id === 'spirit' && <Sparkles size={13} />}
+                      <span>{t.damageOptions[opt.id]}</span>
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
+              </div>
+
+              <div className="tuning-row">
+                <span className="pane-label">{t.extraTraitsLabel}</span>
+                <div className="modifier-chips" role="group" aria-label={t.extraTraitsLabel}>
+                  {MODIFIER_META.map(({ id, Icon }) => {
+                    const active = modifiers.includes(id);
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        className={`mod-chip ${active ? 'mod-chip--active' : ''}`}
+                        onClick={() => onToggleModifier(id)}
+                        title={t.modifiers[id].hint}
+                        aria-pressed={active}
+                      >
+                        <Icon size={13} />
+                        <span>{t.modifiers[id].label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </section>

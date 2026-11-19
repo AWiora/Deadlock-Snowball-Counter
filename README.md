@@ -4,7 +4,8 @@ A fast, mid-game counter-item advisor for Valve's **Deadlock**. Designed for a s
 
 ## Features
 
-- **Sub-5-Second Lookup**: Sticky **Your Hero** selector (pick once per match), instant-search visual **Enemy Hero** picker, and a **Recent Match Enemies** quick-switch bar.
+- **Sub-5-Second Lookup**: Hero select on the left, counter items on the right, all on one screen at 1440×900. On phones and narrow windows the roster folds away after each pick and a sticky souls bar stays above the results.
+- **Keyboard First**: Just start typing a hero name anywhere, then press `Enter` to add them (matches German names and initials like `gt` for Grey Talon). `↑`/`↓` move through matches, `1`–`5` switch the souls tier and `Esc` clears the search.
 - **Smart Mechanical Scoring**: Models each hero's intrinsic threats (e.g., Haze Fixation & Bullet Dance, Vindicta/Grey Talon flight, Seven Storm Cloud, Bebop Sticky Bomb, Abrams melee/regen), your hero's kit affinity (Gun vs Spirit procs, fire rate, range), game stage (Lane / Mid / Late), and hero-specific hard-counter overrides.
 - **1-Click Enemy Build Overrides**: Auto-presets each enemy's typical profile, with 1-click toggles for **Damage Focus** (`Bullet` / `Equal` / `Spirit`) and **4 Traits** (`Tanky / High HP`, `Heavy Healing`, `Heavy CC / Debuffs`, `Melee / Close-Range`).
 - **Active Slots Full Mode**: Filters cleanly to the best passive counters when all 4 of your active slots are taken.
