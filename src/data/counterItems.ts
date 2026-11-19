@@ -688,7 +688,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
   {
     className: 'upgrade_focus_lens', // Focus Lens
     stance: 'offense',
-    role: 'Burst',
+    role: 'Shutdown',
     stageFit: { lane: 0.02, mid: 0.24, late: 1.0 },
     damageCounters: { spirit: 24, equal: 16, bullet: 10 },
     modifierCounters: { mobility: 26 },
@@ -771,7 +771,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
   {
     className: 'upgrade_arctic_blast', // Arctic Blast
     stance: 'offense',
-    role: 'Burst',
+    role: 'Control',
     stageFit: { lane: 0.02, mid: 0.22, late: 0.98 },
     modifierCounters: { mobility: 28 },
     threatCounters: { fragile_glass_cannon: 36, high_mobility: 28, close_range_dive: 20 },

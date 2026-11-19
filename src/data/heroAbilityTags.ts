@@ -610,6 +610,9 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   upgrade_focus_lens: {
     defaultVerb: 'silences',
     abilityMatchThreats: ['high_mobility', 'telegraphed_burst', 'heavy_healing', 'ability_spam'],
+    verbByThreat: {
+      fragile_glass_cannon: 'bursts',
+    },
   },
   upgrade_proc_silence: {
     defaultVerb: 'silences',
@@ -633,8 +636,13 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
     verbByModifier: { tanky: 'shreds' },
   },
   upgrade_arctic_blast: {
-    defaultVerb: 'bursts',
+    defaultVerb: 'controls',
     abilityMatchThreats: ['high_mobility', 'close_range_dive'],
+    verbByThreat: {
+      fragile_glass_cannon: 'bursts',
+      high_mobility: 'controls',
+      close_range_dive: 'controls',
+    },
   },
   upgrade_cheat_death: {
     defaultVerb: 'blocks',
