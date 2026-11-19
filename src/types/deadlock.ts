@@ -162,6 +162,8 @@ export interface MatchupInput {
   enemyTargets?: EnemyTargetConfig[];
   activeSlotsFull: boolean;
   language?: Language;
+  /** Separate display language for Deadlock item names (e.g. English shop names with German UI text) */
+  itemLanguage?: Language;
 }
 
 export interface CounterRecommendation {

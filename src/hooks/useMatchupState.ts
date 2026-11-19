@@ -10,6 +10,7 @@ import type {
 
 const STORAGE_MY_HERO = 'dl_counter_my_hero_v1';
 const STORAGE_LANG = 'dl_counter_lang_v1';
+const STORAGE_ITEM_LANG = 'dl_counter_item_lang_v1';
 
 const VALID_STAGES: GameStage[] = ['lane', 'mid', 'late'];
 const VALID_DAMAGE: DamageProfile[] = ['bullet', 'equal', 'spirit'];
@@ -41,6 +42,7 @@ function parseInitialState() {
   const urlMods = params.get('mods');
   const urlPassive = params.get('passive');
   const urlLang = params.get('lang') as Language | null;
+  const urlItemLang = params.get('ilang') as Language | null;
 
   const storedLang = readStorage<Language>(STORAGE_LANG, 'de');
   const language: Language =
@@ -49,6 +51,14 @@ function parseInitialState() {
       : VALID_LANGS.includes(storedLang)
         ? storedLang
         : 'de';
+
+  const storedItemLang = readStorage<Language>(STORAGE_ITEM_LANG, 'en');
+  const itemLanguage: Language =
+    urlItemLang && VALID_LANGS.includes(urlItemLang)
+      ? urlItemLang
+      : VALID_LANGS.includes(storedItemLang)
+        ? storedItemLang
+        : 'en';
 
   const storedMe = readStorage<string | null>(STORAGE_MY_HERO, null);
   const myHeroClass = urlMe || storedMe;
@@ -85,6 +95,7 @@ function parseInitialState() {
 
   return {
     language,
+    itemLanguage,
     myHeroClass,
     enemyClasses,
     focusedEnemyClass: enemyClasses[0] ?? null,
@@ -98,6 +109,7 @@ export function useMatchupState() {
   const initial = parseInitialState();
 
   const [language, setLanguageState] = useState<Language>(initial.language);
+  const [itemLanguage, setItemLanguageState] = useState<Language>(initial.itemLanguage);
   const [myHeroClass, setMyHeroClassState] = useState<string | null>(initial.myHeroClass);
   const [enemyClasses, setEnemyClasses] = useState<string[]>(initial.enemyClasses);
   const [focusedEnemyClass, setFocusedEnemyClass] = useState<string | null>(
@@ -152,6 +164,15 @@ export function useMatchupState() {
     setLanguageState(lang);
     try {
       localStorage.setItem(STORAGE_LANG, JSON.stringify(lang));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const setItemLanguage = useCallback((lang: Language) => {
+    setItemLanguageState(lang);
+    try {
+      localStorage.setItem(STORAGE_ITEM_LANG, JSON.stringify(lang));
     } catch {
       // ignore
     }
@@ -293,6 +314,7 @@ export function useMatchupState() {
     document.documentElement.lang = language;
     const params = new URLSearchParams();
     if (language !== 'de') params.set('lang', language);
+    if (itemLanguage !== 'en') params.set('ilang', itemLanguage);
     if (myHeroClass) params.set('me', myHeroClass);
     if (enemyClasses.length > 0) {
       params.set('vs', enemyClasses.join(','));
@@ -310,6 +332,7 @@ export function useMatchupState() {
     window.history.replaceState(null, '', newUrl);
   }, [
     language,
+    itemLanguage,
     myHeroClass,
     enemyClasses,
     stage,
@@ -330,6 +353,8 @@ export function useMatchupState() {
   return {
     language,
     setLanguage,
+    itemLanguage,
+    setItemLanguage,
     myHeroClass,
     setMyHeroClass,
     enemyHeroClass: activeFocusedClass,

@@ -6,6 +6,7 @@ import type { CounterRecommendation, DeadlockHero, Language } from '../types/dea
 interface CounterCardProps {
   rec: CounterRecommendation;
   language: Language;
+  itemLanguage?: Language;
   totalSelectedEnemies?: number;
   heroesByClass?: Map<string, DeadlockHero>;
 }
@@ -13,6 +14,7 @@ interface CounterCardProps {
 export function CounterCard({
   rec,
   language,
+  itemLanguage,
   totalSelectedEnemies = 1,
   heroesByClass,
 }: CounterCardProps) {
@@ -30,7 +32,7 @@ export function CounterCard({
   } = rec;
   const isTop = rank === 1;
   const t = UI_TEXT[language];
-  const itemName = getItemDisplayName(item, language);
+  const itemName = getItemDisplayName(item, itemLanguage ?? language);
   const locale = language === 'de' ? 'de-DE' : 'en-US';
   const formattedCost = item.cost.toLocaleString(locale);
 

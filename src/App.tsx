@@ -30,6 +30,7 @@ export function App() {
         enemyTargets: matchup.orderedEnemyTargets,
         activeSlotsFull: matchup.activeSlotsFull,
         language: matchup.language,
+        itemLanguage: matchup.itemLanguage,
       },
       itemsByClass,
       heroesByClass,
@@ -43,6 +44,7 @@ export function App() {
     matchup.modifiers,
     matchup.activeSlotsFull,
     matchup.language,
+    matchup.itemLanguage,
     itemsByClass,
     heroesByClass,
   ]);
@@ -51,7 +53,9 @@ export function App() {
     <div className="app-shell">
       <Header
         language={matchup.language}
+        itemLanguage={matchup.itemLanguage}
         onChangeLanguage={matchup.setLanguage}
+        onChangeItemLanguage={matchup.setItemLanguage}
         hasEnemySelected={matchup.enemyTargets.length > 0}
         dataStatus={status}
       />
@@ -139,6 +143,7 @@ export function App() {
                         key={rec.item.className}
                         rec={rec}
                         language={matchup.language}
+                        itemLanguage={matchup.itemLanguage}
                         totalSelectedEnemies={matchup.enemyTargets.length}
                         heroesByClass={heroesByClass}
                       />
@@ -177,6 +182,7 @@ export function App() {
                         key={rec.item.className}
                         rec={rec}
                         language={matchup.language}
+                        itemLanguage={matchup.itemLanguage}
                         totalSelectedEnemies={matchup.enemyTargets.length}
                         heroesByClass={heroesByClass}
                       />

@@ -576,4 +576,65 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_reduce_debuff_duration: 'Entfernt Turm-Wurzeln & Läufer-Slows sofort mit Lauftempo-Schub.',
     upgrade_glitch: 'Entfernt Springer-Barrieren und unterbindet Solomons taktische Zonenkontrolle.',
   },
+  hero_mirage: {
+    upgrade_reduce_debuff_duration: 'Entfernt gestapelte Dschinn-Male sofort, bevor Mirage sie für hohen Burst auslösen kann.',
+    upgrade_deflecting_armor: 'Blockt On-Hit-Kugel-Procs passiv, sodass Mirage kaum noch Dschinn-Male auf dir stapeln kann.',
+    upgrade_withering_whip: 'Senkt Mirages Feuerrate auf der Lane, damit er keine hohen Dschinn-Mal-Stapel aufbaut.',
+  },
+  hero_frank: {
+    upgrade_rupture: 'Schmilzt Victors riesigen HP-Pool und kappt seine Regeneration sowie seinen Lebensraub.',
+    upgrade_toxic_bullets: 'Konstanter %-Max-HP-Blutungsschaden + Anti-Heilung bricht Victors Frontline-Sustain.',
+    upgrade_healbane: 'Wichtige frühe Anti-Heilung gegen Victors Regeneration und Aura-Sustain.',
+    upgrade_tech_purge: 'Starke passive Spirit-Resistenz gegen permanente Aura-des-Leids-Ticks.',
+    upgrade_spirit_burn: 'Explosiver Anti-Heilungs-Brand kappt Victors enormen Sustain auch nach seiner Wiederbelebung.',
+  },
+  hero_viscous: {
+    upgrade_healbane: 'Reduziert Viscous\' Würfel-Regeneration und seinen Kampf-Sustain spürbar.',
+    upgrade_containment: 'Bremst Viscous\' wendige Mobilität aus und bereitet sichere Kills vor.',
+    upgrade_glitch: 'Verhindert Selbst-Würfel oder Flucht im Schleimball und entfernt seine Buffs.',
+    upgrade_capacitor: 'Sperrt Viscous\' Bewegungsfähigkeiten & Ausdauer, sodass er nach dem Würfel nicht entkommt.',
+  },
+  hero_nano: {
+    upgrade_melee_rebuttal: 'Bestraft Calicos Nahkampf-Trades auf der Lane und dreht kurze Duelle komplett.',
+    upgrade_containment: 'Sperrt ihren Sprungschlag und die Katzen-Flucht, damit Calico nicht wegschlüpft.',
+    upgrade_targeted_silence: 'Verhindert, dass Calico mit ihrer Schatten-Ult oder Dashes entkommt.',
+    upgrade_glitch: 'Schaltet Schatten-Ult & Katzen-Flucht gleichzeitig aus, damit dein Team sie sauber rausnimmt.',
+  },
+  hero_punkgoat: {
+    upgrade_melee_rebuttal: 'Billy lebt von Nahkampftreffern — jede Parade heilt dich und wirft seinen Schaden hart zurück.',
+    upgrade_vex_barrier: 'Kettengang und Ansturm lösen automatisch die Barriere aus und fangen seinen Folge-Burst ab.',
+    upgrade_warp_stone: 'Schafft sofort Abstand zu Billys Nahkampfschlägen und liefert zusätzlich Kugelresistenz.',
+    upgrade_unstoppable: 'Ignoriert Kettengang-Fesseln und Ansturm-Knockups im Teamkampf komplett.',
+  },
+  hero_forge: {
+    upgrade_return_fire: 'Wirft McGinnis\' schnelles Minigun-Feuer und Geschützturm-Schüsse direkt auf sie zurück.',
+    upgrade_healbane: 'Reduziert die starke Flächenheilung ihres Medizinischen Geists.',
+    upgrade_target_stun: 'Bricht ihren Raketenhagel sauber ab, während sie in ihrer Ult stark verlangsamt ist.',
+    upgrade_metal_skin: 'Ignoriert ihre voll hochgedrehte Minigun-DPS komplett, wenn du ihren Push stoppst.',
+  },
+  hero_kelvin: {
+    upgrade_cardio_calibrator: 'Starke Verlangsamungs-Resistenz verhindert, dass Kelvins Eisstrahl & Granate dich festnageln.',
+    upgrade_target_stun: 'Bricht den Eisstrahl ab und holt Kelvin direkt von seinem Eispfad herunter.',
+    upgrade_healbane: 'Reduziert Kelvins Frostgranaten- und Eiskuppel-Heilung im Teamkampf.',
+  },
+  hero_magician: {
+    upgrade_vex_barrier: 'Hasen-Verwandlung löst automatisch die Barriere aus, sodass du den Folge-Burst überlebst.',
+    upgrade_reduce_debuff_duration: 'Entfernt Debuffs und verkürzt die Hasen-Verwandlung, damit Sinclair dich nicht kombot.',
+    upgrade_spellbreaker: 'Kappt Sinclairs extrem starken Langstrecken-Zauberbolzen passiv drastisch.',
+  },
+  hero_deadpack: {
+    upgrade_target_stun: 'Holt Deadman Danny mit verlängertem Luft-Stun direkt aus dem Jetpack-Flug.',
+    upgrade_phantom_strike: 'Reißt Deadman Danny aus der Luft und entwaffnet sein Schnellfeuer sofort.',
+    upgrade_metal_skin: 'Negiert seinen Waffen-DoT und den anschließenden Kugel-Burst komplett.',
+  },
+  hero_doorman: {
+    upgrade_counterspell: 'Pariere Glocken-Explosion, Gepäckwagen oder Hotel-Ult, um Doormans Kombo komplett zu blocken.',
+    upgrade_vex_barrier: 'Fängt Doormans Gepäckwagen-Zug und Glocken-Burst auf der Lane zuverlässig ab.',
+    upgrade_spellbreaker: 'Reduziert den hohen Spirit-Burst von Glocke und Hotel-Ult passiv stark.',
+  },
+  hero_priest: {
+    upgrade_metal_skin: 'Aktivieren, sobald Venator seine Armbrust-Pfähle lädt, um den massiven Waffenburst zu ignorieren.',
+    upgrade_greater_withering_whip: 'Entwaffnet Venator genau in dem Moment, in dem er seine Armbrust-Pfähle zündet.',
+    upgrade_vex_barrier: 'Löst eine Barriere aus, wenn du in eine Falle trittst oder an die Wand betäubt wirst.',
+  },
 };

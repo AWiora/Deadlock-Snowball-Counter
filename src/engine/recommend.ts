@@ -288,6 +288,7 @@ export function recommendCounters(
   heroesByClass: Map<string, DeadlockHero>,
 ): RecommendationResult {
   const lang: Language = input.language ?? 'en';
+  const itemLang: Language = input.itemLanguage ?? lang;
   const targets: EnemyTargetConfig[] =
     input.enemyTargets && input.enemyTargets.length > 0
       ? input.enemyTargets.slice(0, 3)
@@ -481,7 +482,7 @@ export function recommendCounters(
       isHeroSpecific: anyHeroSpecific,
       counteredEnemies:
         counteredEnemies.length > 0 ? counteredEnemies : [bestEval.heroClass],
-      upgradeHint: resolveUpgradeHint(rule.className, itemsByClass, lang),
+      upgradeHint: resolveUpgradeHint(rule.className, itemsByClass, itemLang),
     });
   }
 

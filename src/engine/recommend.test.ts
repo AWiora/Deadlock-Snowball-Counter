@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getBundledSnapshot } from '../data/apiClient';
 import { COUNTER_ITEM_RULES, HERO_SPECIFIC_COUNTERS } from '../data/counterItems';
 import { HERO_PROFILES } from '../data/heroProfiles';
-import { ITEM_COPY_DE } from '../i18n/contentDe';
+import { HERO_OVERRIDE_TIPS_DE, ITEM_COPY_DE } from '../i18n/contentDe';
 import { recommendCounters } from './recommend';
 import type { DeadlockHero, DeadlockItem, GameStage } from '../types/deadlock';
 
@@ -249,10 +249,17 @@ describe('Deadlock counter recommendation engine', () => {
   it('covers all 42 live heroes with profiles, hard-counter overrides, and empirical lifts', () => {
     for (const hero of snapshot.heroes) {
       expect(HERO_PROFILES[hero.className], `Missing HERO_PROFILES for ${hero.name}`).toBeDefined();
+      const overrides = HERO_SPECIFIC_COUNTERS[hero.className] ?? [];
       expect(
-        HERO_SPECIFIC_COUNTERS[hero.className]?.length,
+        overrides.length,
         `Missing HERO_SPECIFIC_COUNTERS for ${hero.name}`,
       ).toBeGreaterThanOrEqual(3);
+      for (const ov of overrides) {
+        expect(
+          HERO_OVERRIDE_TIPS_DE[hero.className]?.[ov.itemClassName],
+          `Missing German override tip for ${hero.className} -> ${ov.itemClassName}`,
+        ).toBeDefined();
+      }
       expect(
         Object.keys(hero.counterLifts ?? {}).length,
         `Missing empirical counterLifts for ${hero.name}`,
@@ -443,5 +450,26 @@ describe('Deadlock counter recommendation engine', () => {
         itemClassName: 'upgrade_withering_whip',
       }),
     );
+
+    // Separate itemLanguage='en' with language='de' keeps German tips & English item/upgrade names
+    const mixedLangRes = recommendCounters(
+      {
+        myHeroClass: 'hero_inferno',
+        enemyHeroClass: 'hero_haze',
+        stage: 'mid',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'de',
+        itemLanguage: 'en',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const disarmMixed = mixedLangRes.offense.find(
+      (r) => r.item.className === 'upgrade_greater_withering_whip',
+    );
+    expect(disarmMixed?.why).toContain('Entwaffnet');
+    expect(disarmMixed?.upgradeHint?.itemName).toBe('Rusted Barrel');
   });
 });
