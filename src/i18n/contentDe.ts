@@ -49,6 +49,8 @@ export const HERO_HEADLINES_DE: Record<string, string> = {
   hero_warden: 'Frontline-Juggernaut mit Willpower-Barrier, Binding Word Root und Last Stand Drain-Ult.',
   hero_wraith: '1v1-Duelistin mit Full Auto Fire Rate, Card Trick Burst, Project Mind Teleport und Telekinesis Point-and-Click-Stun.',
   hero_yamato: 'Dive-Assassine mit Charged Power Slash Burst, Flying Slash Grapple und unsterblicher Shadow Transformation.',
+  hero_artist: 'Spirit-Control-Casterin, die mit Living Ink Flow State resettet, über Still Life stunnt und Gegner mit Abstract Landscape einsperrt & silenced.',
+  hero_baba: 'Disruptive Spirit-Controllerin mit Threadsap Spirit-Steal, Baba\'s Brew Silence/Burn/Barrier-Töpfen und Feed The Birds Tauben-Hex-Ult.',
 };
 
 export const ITEM_COPY_DE: Record<string, { why: string; whenToUse: string }> = {
@@ -671,5 +673,21 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_metal_skin: 'Aktivieren, sobald Venator seine Ira Domini Crossbow-Stakes zieht, um den massiven Bullet-Burst zu ignorieren.',
     upgrade_greater_withering_whip: 'Disarmt Venator genau während seines Ira Domini Fensters und shredded seine Bullet Resist.',
     upgrade_vex_barrier: 'Triggert automatisch eine Barrier, wenn du in eine Snap Trap trittst oder per Stake an die Wand gestunt wirst.',
+  },
+  hero_artist: {
+    upgrade_restorative_locket: 'Sammelt durch Violets Living Ink & Flow State Reset-Spam rasant gratis Heal- & Stamina-Stacks.',
+    upgrade_debuff_reducer: 'Verkürzt Still Life Stun und Abstract Landscape Silence/Slow auf der Lane — upgradet zu Dispel Magic.',
+    upgrade_reduce_debuff_duration: 'Cleansed Abstract Landscape Silence/Slow sowie Still Life Debuffs sofort und gibt Move Speed zum Line-of-Sight-Brechen.',
+    upgrade_tech_purge: 'Hohe passive Spirit Resist gegen Violets anhaltenden Flow State, Still Life und Abstract Landscape Spirit-Damage.',
+    upgrade_targeted_silence: 'Silenced Violet mitten im Fight, bricht ihren Living Ink -> Flow State Reset-Loop und verhindert Abstract Landscape.',
+    upgrade_unstoppable: 'Ignoriert Still Life Stuns und lässt dich ohne Silence oder Slow direkt aus Abstract Landscape herauslaufen.',
+  },
+  hero_baba: {
+    upgrade_vex_barrier: 'Triggert automatisch eine Schutz-Barrier, wenn Feed The Birds dich hexed oder Granny Long Legs dich hochwirft.',
+    upgrade_target_stun: 'Unterbricht Babas gechannelte Feed The Birds Ult aus sicherer Distanz, bevor der Tauben-Hex durchkommt.',
+    upgrade_reduce_debuff_duration: 'Cleansed Baba\'s Brew Silence/Burn und Feed The Birds Slow-Stacks sofort + gibt Move Speed zum Entkommen.',
+    upgrade_tech_purge: 'Reduziert Babas hohen Spirit-Damage aus Threadsap, Brew-Burn und Feed The Birds zuverlässig trotz Spirit-Resist-Shred.',
+    upgrade_glitch: 'Bricht Feed The Birds sofort ab, entfernt Baba\'s Brew Barriers und stoppt Granny Long Legs Escapes.',
+    upgrade_unstoppable: 'Ignoriert Feed The Birds Slow/Tauben-Hex sowie Baba\'s Brew Silence im Teamfight komplett.',
   },
 };

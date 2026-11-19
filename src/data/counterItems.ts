@@ -2111,4 +2111,80 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       tip: 'Strips Kingside Knight barriers and silences Solomon\'s tactical zone control.',
     },
   ],
+  hero_artist: [
+    {
+      itemClassName: 'upgrade_restorative_locket',
+      bonus: 26,
+      stages: ['lane', 'mid'],
+      tip: 'Rapidly stacks free burst heals and stamina from Violet\'s Living Ink and Flow State refresh spam.',
+    },
+    {
+      itemClassName: 'upgrade_debuff_reducer',
+      bonus: 26,
+      stages: ['lane', 'mid'],
+      tip: 'Cuts Still Life stun and Abstract Landscape silence/slow duration — upgrades into Dispel Magic.',
+    },
+    {
+      itemClassName: 'upgrade_reduce_debuff_duration',
+      bonus: 32,
+      stages: ['mid', 'late'],
+      tip: 'Purges Abstract Landscape silence/slow and Still Life debuffs while granting move speed to break tether sightline.',
+    },
+    {
+      itemClassName: 'upgrade_tech_purge',
+      bonus: 28,
+      stages: ['mid', 'late'],
+      tip: 'Heavy passive Spirit Resist against Violet\'s sustained Flow State, Still Life, and Abstract Landscape damage.',
+    },
+    {
+      itemClassName: 'upgrade_targeted_silence',
+      bonus: 30,
+      stages: ['mid', 'late'],
+      tip: 'Silences Violet to break her Living Ink -> Flow State reset loop and deny Abstract Landscape.',
+    },
+    {
+      itemClassName: 'upgrade_unstoppable',
+      bonus: 32,
+      stages: ['late'],
+      tip: 'Ignores Still Life stun and walks straight out of Abstract Landscape without getting silenced or slowed.',
+    },
+  ],
+  hero_baba: [
+    {
+      itemClassName: 'upgrade_vex_barrier',
+      bonus: 26,
+      stages: ['lane', 'mid'],
+      tip: 'Auto-triggers a protective barrier when Feed The Birds hexes you or Granny Long Legs knocks you up.',
+    },
+    {
+      itemClassName: 'upgrade_target_stun',
+      bonus: 32,
+      stages: ['mid', 'late'],
+      tip: 'Interrupts Baba\'s channeled Feed The Birds from safe range before the pigeon hex lands.',
+    },
+    {
+      itemClassName: 'upgrade_reduce_debuff_duration',
+      bonus: 32,
+      stages: ['mid', 'late'],
+      tip: 'Cleanses Baba\'s Brew Silence/Burn and Feed The Birds stacking slow with a move speed burst to escape.',
+    },
+    {
+      itemClassName: 'upgrade_tech_purge',
+      bonus: 28,
+      stages: ['mid', 'late'],
+      tip: 'Cuts Baba\'s heavy Threadsap, Brew burn, and Feed The Birds spirit damage even through Brew\'s resist shred.',
+    },
+    {
+      itemClassName: 'upgrade_glitch',
+      bonus: 34,
+      stages: ['late'],
+      tip: 'Cancels Feed The Birds immediately, purges Baba\'s Brew barriers, and stops Granny Long Legs escapes.',
+    },
+    {
+      itemClassName: 'upgrade_unstoppable',
+      bonus: 30,
+      stages: ['late'],
+      tip: 'Ignores Feed The Birds slow/pigeon hex and Baba\'s Brew Silence completely in teamfights.',
+    },
+  ],
 };

@@ -8,7 +8,7 @@ import type {
 } from '../types/deadlock';
 
 const API_BASE = 'https://api.deadlock-api.com/v1/assets';
-const CACHE_KEY = 'deadlock_counter_helper_assets_v4';
+const CACHE_KEY = 'deadlock_counter_helper_assets_v5';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 const ABILITY_DESC_FALLBACK: Record<string, { en: string; de: string }> = {
@@ -140,7 +140,7 @@ export async function fetchLiveDeadlockData(): Promise<{
     );
 
     const heroes: DeadlockHero[] = rawHeroesEn
-      .filter((h) => !h.disabled && h.player_selectable !== false && !h.in_development)
+      .filter((h) => !h.disabled && h.player_selectable !== false)
       .map((h) => {
         const snapHero = snapHeroByClass.get(h.class_name);
         const abilities: DeadlockAbility[] = [];

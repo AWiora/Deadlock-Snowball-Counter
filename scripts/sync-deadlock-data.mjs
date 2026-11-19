@@ -89,7 +89,7 @@ async function main() {
   const deAbilityByClass = new Map(rawAbilitiesDe.map((a) => [a.class_name, a]));
 
   const heroes = rawHeroesEn
-    .filter((h) => !h.disabled && h.player_selectable !== false && !h.in_development)
+    .filter((h) => !h.disabled && h.player_selectable !== false)
     .map((h) => {
       const abilities = [];
       for (let slot = 1; slot <= 4; slot++) {

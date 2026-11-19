@@ -301,7 +301,7 @@ describe('Deadlock counter recommendation engine', () => {
     expect(res.recommendations.length).toBeGreaterThanOrEqual(4);
   });
 
-  it('covers all 42 live heroes with profiles, hard-counter overrides, and empirical lifts', () => {
+  it('covers all 44 live heroes with profiles, hard-counter overrides, and empirical lifts', () => {
     for (const hero of snapshot.heroes) {
       expect(HERO_PROFILES[hero.className], `Missing HERO_PROFILES for ${hero.name}`).toBeDefined();
       const overrides = HERO_SPECIFIC_COUNTERS[hero.className] ?? [];
@@ -329,7 +329,7 @@ describe('Deadlock counter recommendation engine', () => {
     }
   });
 
-  it('passes quality invariants across all 42 heroes and all 5 price tiers (800, 1600, 3200, 6400, all)', () => {
+  it('passes quality invariants across all 44 heroes and all 5 price tiers (800, 1600, 3200, 6400, all)', () => {
     const tiers: PriceTier[] = ['800', '1600', '3200', '6400', 'all'];
     for (const hero of snapshot.heroes) {
       const profile = HERO_PROFILES[hero.className];
@@ -873,7 +873,7 @@ describe('Deadlock counter recommendation engine', () => {
     expect(wraithReset?.item.className).toBe('upgrade_ability_refresher'); // Refresher
   });
 
-  it('enforces Kit-Amplifier invariants across all 42 player heroes and all 5 tiers (never #1, max 1 per stance)', () => {
+  it('enforces Kit-Amplifier invariants across all 44 player heroes and all 5 tiers (never #1, max 1 per stance)', () => {
     const sampleEnemies = ['hero_hornet', 'hero_bebop', 'hero_haze', 'hero_atlas', 'hero_gigawatt'];
     const tiers: PriceTier[] = ['800', '1600', '3200', '6400', 'all'];
 
