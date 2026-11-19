@@ -1,9 +1,7 @@
-import { Layers, Shield, Sparkles, Swords } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Crosshair, Layers, Shield, Sparkles, Swords } from 'lucide-react';
+import { useMemo } from 'react';
 import { CounterCard } from './components/CounterCard';
-import { EmptyState } from './components/EmptyState';
 import { Header } from './components/Header';
-import { HeroPickerModal } from './components/HeroPickerModal';
 import { MatchupControlBar } from './components/MatchupControlBar';
 import { recommendCounters } from './engine/recommend';
 import { useDeadlockData } from './hooks/useDeadlockData';
@@ -13,26 +11,23 @@ import { UI_TEXT } from './i18n/translations';
 export function App() {
   const { heroes, heroesByClass, itemsByClass, status } = useDeadlockData();
   const matchup = useMatchupState();
-  const [pickerMode, setPickerMode] = useState<'my' | 'enemy' | null>(null);
   const t = UI_TEXT[matchup.language];
 
   const myHero = matchup.myHeroClass ? heroesByClass.get(matchup.myHeroClass) ?? null : null;
-  const enemyHero = matchup.enemyHeroClass
-    ? heroesByClass.get(matchup.enemyHeroClass) ?? null
-    : null;
-  const previousEnemyHero = matchup.previousEnemyClass
-    ? heroesByClass.get(matchup.previousEnemyClass) ?? null
+  const focusedEnemy = matchup.focusedEnemyClass
+    ? heroesByClass.get(matchup.focusedEnemyClass) ?? null
     : null;
 
   const result = useMemo(() => {
-    if (!matchup.enemyHeroClass) return null;
+    if (!matchup.focusedEnemyClass || matchup.orderedEnemyTargets.length === 0) return null;
     return recommendCounters(
       {
         myHeroClass: matchup.myHeroClass,
-        enemyHeroClass: matchup.enemyHeroClass,
+        enemyHeroClass: matchup.focusedEnemyClass,
         stage: matchup.stage,
         damageProfile: matchup.damageProfile,
         modifiers: matchup.modifiers,
+        enemyTargets: matchup.orderedEnemyTargets,
         activeSlotsFull: matchup.activeSlotsFull,
         language: matchup.language,
       },
@@ -41,7 +36,8 @@ export function App() {
     );
   }, [
     matchup.myHeroClass,
-    matchup.enemyHeroClass,
+    matchup.focusedEnemyClass,
+    matchup.orderedEnemyTargets,
     matchup.stage,
     matchup.damageProfile,
     matchup.modifiers,
@@ -56,25 +52,28 @@ export function App() {
       <Header
         language={matchup.language}
         onChangeLanguage={matchup.setLanguage}
-        hasEnemySelected={Boolean(enemyHero)}
+        hasEnemySelected={matchup.enemyTargets.length > 0}
         dataStatus={status}
       />
 
       <main className="main-container">
         <MatchupControlBar
           language={matchup.language}
+          heroes={heroes}
+          heroesByClass={heroesByClass}
           myHero={myHero}
-          enemyHero={enemyHero}
-          previousEnemyHero={previousEnemyHero}
+          enemyTargets={matchup.enemyTargets}
+          focusedEnemy={focusedEnemy}
           stage={matchup.stage}
           damageProfile={matchup.damageProfile}
           modifiers={matchup.modifiers}
           activeSlotsFull={matchup.activeSlotsFull}
           isCustomized={matchup.isCustomized}
-          onOpenMyHeroPicker={() => setPickerMode('my')}
-          onClearMyHero={() => matchup.setMyHeroClass(null)}
-          onOpenEnemyPicker={() => setPickerMode('enemy')}
-          onSwapPreviousEnemy={matchup.selectEnemyHero}
+          onSelectMyHero={matchup.setMyHeroClass}
+          onToggleEnemy={matchup.toggleEnemyHero}
+          onFocusEnemy={matchup.focusEnemyHero}
+          onRemoveEnemy={matchup.removeEnemyHero}
+          onClearAllEnemies={matchup.clearAllEnemies}
           onChangeStage={matchup.setStage}
           onChangeDamage={matchup.setDamageProfile}
           onToggleModifier={matchup.toggleModifier}
@@ -82,13 +81,14 @@ export function App() {
           onResetDefaults={matchup.resetEnemyDefaults}
         />
 
-        {!enemyHero || !result ? (
-          <EmptyState
-            language={matchup.language}
-            heroesByClass={heroesByClass}
-            onSelectEnemy={matchup.selectEnemyHero}
-            onOpenEnemyPicker={() => setPickerMode('enemy')}
-          />
+        {!focusedEnemy || !result ? (
+          <section className="empty-inline-prompt">
+            <Crosshair size={18} className="empty-inline-icon" />
+            <div>
+              <h2 className="empty-inline-title">{t.emptyHeading}</h2>
+              <p className="empty-inline-sub">{t.rosterHintEnemy}</p>
+            </div>
+          </section>
         ) : (
           <section className="results-section" aria-label="Recommended counter items">
             {matchup.activeSlotsFull && result.hiddenActiveCount > 0 && (
@@ -139,6 +139,8 @@ export function App() {
                         key={rec.item.className}
                         rec={rec}
                         language={matchup.language}
+                        totalSelectedEnemies={matchup.enemyTargets.length}
+                        heroesByClass={heroesByClass}
                       />
                     ))}
                   </div>
@@ -175,6 +177,8 @@ export function App() {
                         key={rec.item.className}
                         rec={rec}
                         language={matchup.language}
+                        totalSelectedEnemies={matchup.enemyTargets.length}
+                        heroesByClass={heroesByClass}
                       />
                     ))}
                   </div>
@@ -201,30 +205,6 @@ export function App() {
           </a>
         </span>
       </footer>
-
-      <HeroPickerModal
-        isOpen={pickerMode === 'my'}
-        language={matchup.language}
-        title={t.modalMyTitle}
-        subtitle={t.modalMySub}
-        heroes={heroes}
-        selectedClassName={matchup.myHeroClass}
-        disabledClassName={matchup.enemyHeroClass}
-        onSelect={(c) => matchup.setMyHeroClass(c)}
-        onClose={() => setPickerMode(null)}
-      />
-
-      <HeroPickerModal
-        isOpen={pickerMode === 'enemy'}
-        language={matchup.language}
-        title={t.modalEnemyTitle}
-        subtitle={t.modalEnemySub}
-        heroes={heroes}
-        selectedClassName={matchup.enemyHeroClass}
-        disabledClassName={matchup.myHeroClass}
-        onSelect={(c) => matchup.selectEnemyHero(c)}
-        onClose={() => setPickerMode(null)}
-      />
     </div>
   );
 }

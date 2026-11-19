@@ -1,36 +1,72 @@
-import { ChevronDown, Coins, Sparkles, Target, Zap } from 'lucide-react';
+import { Check, Coins, Copy, Sparkles, Target, Zap } from 'lucide-react';
 import { useState } from 'react';
-import { getItemDisplayName, UI_TEXT } from '../i18n/translations';
-import type { CounterRecommendation, Language } from '../types/deadlock';
+import { getHeroDisplayName, getItemDisplayName, UI_TEXT } from '../i18n/translations';
+import type { CounterRecommendation, DeadlockHero, Language } from '../types/deadlock';
 
 interface CounterCardProps {
   rec: CounterRecommendation;
   language: Language;
+  totalSelectedEnemies?: number;
+  heroesByClass?: Map<string, DeadlockHero>;
 }
 
-export function CounterCard({ rec, language }: CounterCardProps) {
-  const [expanded, setExpanded] = useState(false);
-  const { item, rank, role, why, whenToUse, synergyNote, isHeroSpecific } = rec;
+export function CounterCard({
+  rec,
+  language,
+  totalSelectedEnemies = 1,
+  heroesByClass,
+}: CounterCardProps) {
+  const [copied, setCopied] = useState(false);
+  const {
+    item,
+    rank,
+    role,
+    why,
+    whenToUse,
+    synergyNote,
+    isHeroSpecific,
+    counteredEnemies,
+    upgradeHint,
+  } = rec;
   const isTop = rank === 1;
   const t = UI_TEXT[language];
   const itemName = getItemDisplayName(item, language);
-  const formattedCost = item.cost.toLocaleString(language === 'de' ? 'de-DE' : 'en-US');
+  const locale = language === 'de' ? 'de-DE' : 'en-US';
+  const formattedCost = item.cost.toLocaleString(locale);
+
+  const handleCopyName = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(itemName);
+    } catch {
+      const input = document.createElement('input');
+      input.value = itemName;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+    }
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1400);
+  };
+
+  const counteredNames =
+    counteredEnemies && heroesByClass
+      ? counteredEnemies
+          .map((cls) => {
+            const h = heroesByClass.get(cls);
+            return h ? getHeroDisplayName(h, language) : cls;
+          })
+          .join(' + ')
+      : null;
+
+  const isMultiHit = (counteredEnemies?.length ?? 0) >= 2 && totalSelectedEnemies >= 2;
 
   return (
     <article
       className={`counter-card counter-card--${item.slot} ${
         isTop ? 'counter-card--top' : ''
-      } ${expanded ? 'counter-card--expanded' : ''}`}
-      onClick={() => setExpanded((v) => !v)}
-      role="button"
-      tabIndex={0}
-      aria-expanded={expanded}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          setExpanded((v) => !v);
-        }
-      }}
+      } ${isMultiHit ? 'counter-card--multi' : ''}`}
     >
       <div className="counter-card-stripe" aria-hidden="true" />
 
@@ -56,11 +92,16 @@ export function CounterCard({ rec, language }: CounterCardProps) {
         <div className="counter-card-top">
           <div className="counter-card-title-group">
             <h4 className="counter-item-name">{itemName}</h4>
-            {isHeroSpecific && (
-              <span className="hard-counter-dot" title={t.hardCounterTitle}>
-                <Target size={11} />
-              </span>
-            )}
+            <button
+              type="button"
+              className={`copy-item-btn ${copied ? 'copy-item-btn--copied' : ''}`}
+              onClick={handleCopyName}
+              title={t.copyItemTitle}
+              aria-label={t.copyItemTitle}
+            >
+              {copied ? <Check size={12} /> : <Copy size={12} />}
+              {copied && <span className="copy-item-feedback">{t.copiedItemLabel}</span>}
+            </button>
           </div>
 
           <div className="counter-card-meta">
@@ -68,42 +109,63 @@ export function CounterCard({ rec, language }: CounterCardProps) {
               <Coins size={12} />
               {formattedCost}
             </span>
-            <ChevronDown
-              size={14}
-              className={`card-expand-chevron ${expanded ? 'card-expand-chevron--open' : ''}`}
-              aria-hidden="true"
-            />
           </div>
         </div>
 
-        <p className={`counter-why ${expanded ? '' : 'counter-why--clamped'}`}>{why}</p>
-
-        {expanded && (
-          <div className="counter-expanded-details">
-            <div className="counter-expanded-badges">
-              <span className={`slot-badge slot-badge--${item.slot}`}>
-                {t.slots[item.slot]}
-              </span>
-              <span className="role-badge">{t.roles[role]}</span>
-              {isHeroSpecific && (
-                <span className="hard-counter-badge">
-                  <Target size={10} />
-                  {t.hardCounterBadge}
-                </span>
-              )}
-            </div>
-            <span className="when-to-use">
-              <Zap size={12} className="when-icon" />
-              <strong>{t.useLabel}</strong> {whenToUse}
+        {/* Always-visible compact shop & matchup badges */}
+        <div className="counter-inline-badges">
+          <span className={`slot-badge slot-badge--${item.slot}`}>
+            {t.slots[item.slot]}
+          </span>
+          <span className="role-badge">{t.roles[role]}</span>
+          {isHeroSpecific && (
+            <span className="hard-counter-badge" title={t.hardCounterTitle}>
+              <Target size={10} />
+              {t.hardCounterBadge}
             </span>
-            {synergyNote && (
-              <span className="synergy-pill">
-                <Sparkles size={11} />
-                {synergyNote}
-              </span>
-            )}
-          </div>
-        )}
+          )}
+          {totalSelectedEnemies > 1 && counteredNames && counteredEnemies && (
+            <span
+              className={`multi-counter-badge ${
+                isMultiHit ? 'multi-counter-badge--hit' : ''
+              }`}
+            >
+              {t.countersMultiBadge(
+                counteredEnemies.length,
+                totalSelectedEnemies,
+                counteredNames,
+              )}
+            </span>
+          )}
+          {upgradeHint && (
+            <span className="upgrade-path-badge">
+              {upgradeHint.direction === 'from'
+                ? t.upgradeFromBadge(
+                    upgradeHint.itemName,
+                    upgradeHint.cost.toLocaleString(locale),
+                  )
+                : t.upgradeToBadge(
+                    upgradeHint.itemName,
+                    upgradeHint.cost.toLocaleString(locale),
+                  )}
+            </span>
+          )}
+        </div>
+
+        <p className="counter-why">{why}</p>
+
+        <div className="counter-footer-row">
+          <span className="when-to-use">
+            <Zap size={12} className="when-icon" />
+            <strong>{t.useLabel}</strong> {whenToUse}
+          </span>
+          {synergyNote && (
+            <span className="synergy-pill">
+              <Sparkles size={11} />
+              {synergyNote}
+            </span>
+          )}
+        </div>
       </div>
     </article>
   );

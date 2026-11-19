@@ -368,4 +368,80 @@ describe('Deadlock counter recommendation engine', () => {
     expect(antiHealPick).toBeDefined();
     expect(antiHealPick?.why).toMatch(/Heilung|Anti-Heilung/);
   });
+
+  it('prioritizes multi-target counters when 2-3 enemies are selected (e.g. Bebop + Infernus -> Dispel Magic counters 2/2)', () => {
+    const res = recommendCounters(
+      {
+        myHeroClass: 'hero_wraith',
+        enemyHeroClass: 'hero_bebop',
+        stage: 'mid',
+        damageProfile: 'spirit',
+        modifiers: [],
+        enemyTargets: [
+          { heroClass: 'hero_bebop', damageProfile: 'spirit', modifiers: [] },
+          { heroClass: 'hero_inferno', damageProfile: 'equal', modifiers: ['healing'] },
+        ],
+        activeSlotsFull: false,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+
+    const dispel = res.defense.find(
+      (r) => r.item.className === 'upgrade_reduce_debuff_duration',
+    );
+    expect(dispel).toBeDefined();
+    expect(dispel?.counteredEnemies).toContain('hero_bebop');
+    expect(dispel?.counteredEnemies).toContain('hero_inferno');
+    expect(res.defense[0].item.className).toBe('upgrade_reduce_debuff_duration');
+  });
+
+  it('attaches upgradeHint build paths (from/to component) on upgrade-family items', () => {
+    const laneRes = recommendCounters(
+      {
+        myHeroClass: 'hero_inferno',
+        enemyHeroClass: 'hero_haze',
+        stage: 'lane',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const rustedBarrel = laneRes.offense.find(
+      (r) => r.item.className === 'upgrade_withering_whip',
+    );
+    expect(rustedBarrel?.upgradeHint).toEqual(
+      expect.objectContaining({
+        direction: 'to',
+        itemClassName: 'upgrade_greater_withering_whip',
+      }),
+    );
+
+    const midRes = recommendCounters(
+      {
+        myHeroClass: 'hero_inferno',
+        enemyHeroClass: 'hero_haze',
+        stage: 'mid',
+        damageProfile: 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+    const disarmingHex = midRes.offense.find(
+      (r) => r.item.className === 'upgrade_greater_withering_whip',
+    );
+    expect(disarmingHex?.upgradeHint).toEqual(
+      expect.objectContaining({
+        direction: 'from',
+        itemClassName: 'upgrade_withering_whip',
+      }),
+    );
+  });
 });

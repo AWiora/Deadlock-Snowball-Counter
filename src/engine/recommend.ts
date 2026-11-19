@@ -6,7 +6,7 @@ import {
   ITEM_CONTEXT_TIPS_DE,
   ITEM_COPY_DE,
 } from '../i18n/contentDe';
-import { getHeroDisplayName, UI_TEXT } from '../i18n/translations';
+import { getHeroDisplayName, getItemDisplayName, UI_TEXT } from '../i18n/translations';
 import type {
   CounterItemRule,
   CounterRecommendation,
@@ -14,11 +14,13 @@ import type {
   DeadlockHero,
   DeadlockItem,
   EnemyModifier,
+  EnemyTargetConfig,
   Language,
   MatchupInput,
   PlayerAffinity,
   RecommendationResult,
   ThreatMechanic,
+  UpgradeHint,
 } from '../types/deadlock';
 
 export function getBaseKitTags(heroClassName: string, lang: Language = 'de'): string[] {
@@ -29,7 +31,7 @@ export function getBaseKitTags(heroClassName: string, lang: Language = 'de'): st
 
 /**
  * Upgrade lineages: if both a component and its upgrade score well for the same stage,
- * keep only the higher-scoring one so the top picks aren't redundant.
+ * keep only the higher-scoring one so the top picks aren't redundant, and expose the build path hint.
  */
 const UPGRADE_FAMILIES: string[][] = [
   ['upgrade_withering_whip', 'upgrade_greater_withering_whip'], // Rusted Barrel -> Disarming Hex
@@ -46,6 +48,38 @@ const UPGRADE_FAMILY_MAP = new Map<string, number>();
 UPGRADE_FAMILIES.forEach((family, idx) => {
   family.forEach((className) => UPGRADE_FAMILY_MAP.set(className, idx));
 });
+
+function resolveUpgradeHint(
+  className: string,
+  itemsByClass: Map<string, DeadlockItem>,
+  lang: Language,
+): UpgradeHint | null {
+  const familyId = UPGRADE_FAMILY_MAP.get(className);
+  if (familyId === undefined) return null;
+  const family = UPGRADE_FAMILIES[familyId];
+  const idx = family.indexOf(className);
+  if (idx === 0 && family[1]) {
+    const target = itemsByClass.get(family[1]);
+    if (!target) return null;
+    return {
+      direction: 'to',
+      itemClassName: target.className,
+      itemName: getItemDisplayName(target, lang),
+      cost: target.cost,
+    };
+  }
+  if (idx > 0 && family[idx - 1]) {
+    const base = itemsByClass.get(family[idx - 1]);
+    if (!base) return null;
+    return {
+      direction: 'from',
+      itemClassName: base.className,
+      itemName: getItemDisplayName(base, lang),
+      cost: base.cost,
+    };
+  }
+  return null;
+}
 
 const BULLET_ONLY_ITEMS = new Set([
   'upgrade_withering_whip',
@@ -190,7 +224,6 @@ function scoreThreatMechanics(
       let weight = (rule.threatCounters?.[threat] ?? 0) * tierScale;
       if (!weight) continue;
 
-      // Dampen gun-specific intrinsic threats if enemy went off-meta Spirit (and vice versa)
       if (
         isOffMetaSpirit &&
         (threat === 'rapid_fire' || threat === 'bullet_ult' || threat === 'on_hit_procs')
@@ -231,7 +264,6 @@ function resolveContextTip(
   const enTips = rule.contextTips;
   if (!deTips && !enTips) return null;
 
-  // Prefer the strongest active user modifier that has a tailored context tip
   let bestMod: EnemyModifier | null = null;
   let bestWeight = -1;
   for (const mod of modifiers) {
@@ -256,19 +288,31 @@ export function recommendCounters(
   heroesByClass: Map<string, DeadlockHero>,
 ): RecommendationResult {
   const lang: Language = input.language ?? 'en';
-  const enemyProfile = getHeroProfile(input.enemyHeroClass);
+  const targets: EnemyTargetConfig[] =
+    input.enemyTargets && input.enemyTargets.length > 0
+      ? input.enemyTargets.slice(0, 3)
+      : [
+          {
+            heroClass: input.enemyHeroClass,
+            damageProfile: input.damageProfile,
+            modifiers: input.modifiers,
+          },
+        ];
+
+  const primaryTarget = targets[0];
+  const primaryEnemyProfile = getHeroProfile(primaryTarget.heroClass);
   const myProfile = input.myHeroClass ? getHeroProfile(input.myHeroClass) : null;
   const myHero = input.myHeroClass ? heroesByClass.get(input.myHeroClass) ?? null : null;
-  const enemyHeroObj = heroesByClass.get(input.enemyHeroClass);
   const myHeroDisplayName = myHero ? getHeroDisplayName(myHero, lang) : null;
 
-  const overrides = HERO_SPECIFIC_COUNTERS[input.enemyHeroClass] ?? [];
-  const overrideMap = new Map(overrides.map((o) => [o.itemClassName, o]));
-
-  const isOffMetaSpirit =
-    input.damageProfile === 'spirit' && enemyProfile.defaultDamage === 'bullet';
-  const isOffMetaBullet =
-    input.damageProfile === 'bullet' && enemyProfile.defaultDamage === 'spirit';
+  interface PerEnemyEvaluation {
+    heroClass: string;
+    score: number;
+    isHeroSpecific: boolean;
+    overrideTip: string | null;
+    contextTip: string | null;
+    roleOverride?: CounterRole;
+  }
 
   interface ScoredCandidate {
     item: DeadlockItem;
@@ -279,6 +323,8 @@ export function recommendCounters(
     whenToUse: string;
     synergyNote: string | null;
     isHeroSpecific: boolean;
+    counteredEnemies: string[];
+    upgradeHint: UpgradeHint | null;
   }
 
   const scored: ScoredCandidate[] = [];
@@ -290,63 +336,7 @@ export function recommendCounters(
     const stageMult = rule.stageFit[input.stage];
     if (stageMult <= 0.1) continue;
 
-    let rawScore = 0;
-
-    // 1. Damage profile alignment (Bullet / Equal / Spirit)
-    if (rule.damageCounters) {
-      rawScore += rule.damageCounters[input.damageProfile] ?? 0;
-    }
-
-    // 2. Explicit "Building Extra..." toggles (Tanky, Healing, CC, Melee)
-    // Toggles start OFF by default; turning one ON is a strong user signal that they are stacking it.
-    rawScore += getModifierMatchCount(rule, input.modifiers) * 2.0;
-
-    // 3. Intrinsic enemy hero base-kit threat mechanics (primary + secondary with diminishing returns)
-    rawScore += scoreThreatMechanics(
-      rule,
-      enemyProfile.threats,
-      enemyProfile.secondaryThreats ?? [],
-      isOffMetaSpirit,
-      isOffMetaBullet,
-    );
-
-    // 4. Hero-specific hard-counter override
-    let isHeroSpecific = false;
-    let overrideTip: string | null = null;
-    let resolvedRole: CounterRole = rule.role;
-    const override = overrideMap.get(rule.className);
-    if (override && (!override.stages || override.stages.includes(input.stage))) {
-      let overrideBonus = override.bonus;
-
-      // Respect user's off-meta damage profile override
-      if (input.damageProfile === 'spirit' && BULLET_ONLY_ITEMS.has(rule.className)) {
-        overrideBonus *= 0.25;
-      } else if (input.damageProfile === 'bullet' && SPIRIT_ONLY_ITEMS.has(rule.className)) {
-        overrideBonus *= 0.25;
-      }
-
-      if (overrideBonus >= 14) {
-        isHeroSpecific = true;
-        if (override.roleOverride) {
-          resolvedRole = override.roleOverride;
-        }
-        overrideTip =
-          lang === 'de'
-            ? HERO_OVERRIDE_TIPS_DE[input.enemyHeroClass]?.[rule.className] ?? override.tip
-            : override.tip;
-      }
-      rawScore += overrideBonus;
-    }
-
-    // Penalize pure bullet counters when user explicitly says enemy is Spirit (and vice versa)
-    if (input.damageProfile === 'spirit' && BULLET_ONLY_ITEMS.has(rule.className)) {
-      rawScore *= 0.45;
-    }
-    if (input.damageProfile === 'bullet' && SPIRIT_ONLY_ITEMS.has(rule.className)) {
-      rawScore *= 0.45;
-    }
-
-    // 5. Your hero's kit affinity & built-in tool redundancy
+    // Player hero kit affinity & built-in tool redundancy
     const {
       delta: synergyDelta,
       multiplier: synergyMult,
@@ -358,38 +348,149 @@ export function recommendCounters(
       lang,
     );
 
-    // 6. Gentle empirical calibration from precomputed 30-day match analytics (bounded ±15%)
-    const rawLift = enemyHeroObj?.counterLifts?.[rule.className] ?? 1.0;
-    const clampedLift = Math.max(0.88, Math.min(1.15, rawLift));
-    const empiricalMult =
-      isOffMetaSpirit || isOffMetaBullet
-        ? 1 + (clampedLift - 1) * 0.25
-        : clampedLift;
+    const evals: PerEnemyEvaluation[] = [];
 
-    const finalScore = (rawScore * synergyMult + synergyDelta) * stageMult * empiricalMult;
+    for (const target of targets) {
+      const eProfile = getHeroProfile(target.heroClass);
+      const eHeroObj = heroesByClass.get(target.heroClass);
+      const overrides = HERO_SPECIFIC_COUNTERS[target.heroClass] ?? [];
+      const override = overrides.find((o) => o.itemClassName === rule.className);
 
-    if (finalScore < 14) continue;
+      const isOffMetaSpirit =
+        target.damageProfile === 'spirit' && eProfile.defaultDamage === 'bullet';
+      const isOffMetaBullet =
+        target.damageProfile === 'bullet' && eProfile.defaultDamage === 'spirit';
+
+      let rawScore = 0;
+
+      // 1. Damage profile alignment
+      if (rule.damageCounters) {
+        rawScore += rule.damageCounters[target.damageProfile] ?? 0;
+      }
+
+      // 2. Explicit "Building Extra..." toggles
+      rawScore += getModifierMatchCount(rule, target.modifiers) * 2.0;
+
+      // 3. Intrinsic enemy hero base-kit threat mechanics
+      rawScore += scoreThreatMechanics(
+        rule,
+        eProfile.threats,
+        eProfile.secondaryThreats ?? [],
+        isOffMetaSpirit,
+        isOffMetaBullet,
+      );
+
+      // 4. Hero-specific hard-counter override
+      let isHeroSpecific = false;
+      let overrideTip: string | null = null;
+      let roleOverride: CounterRole | undefined;
+      if (override && (!override.stages || override.stages.includes(input.stage))) {
+        let overrideBonus = override.bonus;
+        if (target.damageProfile === 'spirit' && BULLET_ONLY_ITEMS.has(rule.className)) {
+          overrideBonus *= 0.25;
+        } else if (target.damageProfile === 'bullet' && SPIRIT_ONLY_ITEMS.has(rule.className)) {
+          overrideBonus *= 0.25;
+        }
+
+        if (overrideBonus >= 14) {
+          isHeroSpecific = true;
+          roleOverride = override.roleOverride;
+          overrideTip =
+            lang === 'de'
+              ? HERO_OVERRIDE_TIPS_DE[target.heroClass]?.[rule.className] ?? override.tip
+              : override.tip;
+        }
+        rawScore += overrideBonus;
+      }
+
+      if (target.damageProfile === 'spirit' && BULLET_ONLY_ITEMS.has(rule.className)) {
+        rawScore *= 0.45;
+      }
+      if (target.damageProfile === 'bullet' && SPIRIT_ONLY_ITEMS.has(rule.className)) {
+        rawScore *= 0.45;
+      }
+
+      // 5. Gentle empirical calibration from precomputed 30-day match analytics (bounded ±15%)
+      const rawLift = eHeroObj?.counterLifts?.[rule.className] ?? 1.0;
+      const clampedLift = Math.max(0.88, Math.min(1.15, rawLift));
+      const empiricalMult =
+        isOffMetaSpirit || isOffMetaBullet
+          ? 1 + (clampedLift - 1) * 0.25
+          : clampedLift;
+
+      const enemyScore = (rawScore * synergyMult + synergyDelta) * stageMult * empiricalMult;
+      const contextTip = overrideTip
+        ? null
+        : resolveContextTip(rule, target.modifiers, lang);
+
+      evals.push({
+        heroClass: target.heroClass,
+        score: enemyScore,
+        isHeroSpecific,
+        overrideTip,
+        contextTip,
+        roleOverride,
+      });
+    }
+
+    // Sort enemy evaluations strongest first
+    evals.sort((a, b) => b.score - a.score);
+    const bestEval = evals[0];
+    if (!bestEval) continue;
+
+    // Which selected enemies does this item genuinely counter? (Strong threshold >= 28 or hero-specific hard counter)
+    const counteredEnemies = evals
+      .filter((e) => e.score >= 28 || e.isHeroSpecific)
+      .map((e) => e.heroClass);
+    const hardCounterCount = evals.filter((e) => e.isHeroSpecific).length;
+
+    let combinedScore = bestEval.score;
+    if (targets.length > 1) {
+      const s1 = Math.max(0, evals[1]?.score ?? 0);
+      const s2 = Math.max(0, evals[2]?.score ?? 0);
+      combinedScore = bestEval.score + s1 * 0.48 + s2 * 0.34;
+      if (counteredEnemies.length === 2) {
+        combinedScore *= 1.15;
+      } else if (counteredEnemies.length >= 3) {
+        combinedScore *= 1.28;
+      }
+      if (hardCounterCount >= 2) {
+        combinedScore *= 1 + (hardCounterCount - 1) * 0.1;
+      }
+    }
+
+    if (combinedScore < 14) continue;
 
     const deCopy = lang === 'de' ? ITEM_COPY_DE[rule.className] : undefined;
-    const contextTip = overrideTip
-      ? null
-      : resolveContextTip(rule, input.modifiers, lang);
+    const anyHeroSpecific = evals.some((e) => e.isHeroSpecific);
+    const bestOverrideEval = evals.find((e) => e.overrideTip);
+    const bestContextEval = evals.find((e) => e.contextTip);
 
     scored.push({
       item,
       rule,
-      role: resolvedRole,
-      score: Math.round(finalScore * 10) / 10,
-      why: overrideTip ?? contextTip ?? deCopy?.why ?? rule.why,
+      role: bestEval.roleOverride ?? rule.role,
+      score: Math.round(combinedScore * 10) / 10,
+      why:
+        bestOverrideEval?.overrideTip ??
+        bestContextEval?.contextTip ??
+        deCopy?.why ??
+        rule.why,
       whenToUse: deCopy?.whenToUse ?? rule.whenToUse,
       synergyNote,
-      isHeroSpecific,
+      isHeroSpecific: anyHeroSpecific,
+      counteredEnemies:
+        counteredEnemies.length > 0 ? counteredEnemies : [bestEval.heroClass],
+      upgradeHint: resolveUpgradeHint(rule.className, itemsByClass, lang),
     });
   }
 
-  // Sort highest score first; tie-break by hero-specific, then lower cost (faster power spike)
+  // Sort highest score first; tie-break by multi-enemy counter count, hero-specific, then lower cost
   scored.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
+    if (targets.length > 1 && b.counteredEnemies.length !== a.counteredEnemies.length) {
+      return b.counteredEnemies.length - a.counteredEnemies.length;
+    }
     if (a.isHeroSpecific !== b.isHeroSpecific) return a.isHeroSpecific ? -1 : 1;
     return a.item.cost - b.item.cost;
   });
@@ -406,19 +507,23 @@ export function recommendCounters(
     deduped.push(cand);
   }
 
-  // Dynamic quality selector: always keep up to 2 top picks; only include #3 if truly strong (no weak filler)
+  // Dynamic quality selector: always keep up to 2 top picks; only include #3 if truly strong
   const selectTopForStance = (list: ScoredCandidate[]): ScoredCandidate[] => {
     if (list.length <= 2) return list;
     const topScore = list[0].score;
     const picked = [list[0], list[1]];
     const third = list[2];
-    if (third && (third.score >= topScore * THIRD_SLOT_MIN_RATIO || third.isHeroSpecific)) {
+    if (
+      third &&
+      (third.score >= topScore * THIRD_SLOT_MIN_RATIO ||
+        third.isHeroSpecific ||
+        (targets.length > 1 && third.counteredEnemies.length >= 2))
+    ) {
       picked.push(third);
     }
     return picked;
   };
 
-  // Count how many top slots would have been Active items when activeSlotsFull is enabled
   let hiddenActiveCount = 0;
   let filtered = deduped;
   if (input.activeSlotsFull) {
@@ -455,6 +560,8 @@ export function recommendCounters(
         whenToUse: c.whenToUse,
         synergyNote: c.synergyNote,
         isHeroSpecific: c.isHeroSpecific,
+        counteredEnemies: c.counteredEnemies,
+        upgradeHint: c.upgradeHint,
       };
     });
   };
@@ -471,9 +578,9 @@ export function recommendCounters(
   const topOffScore = offense[0]?.score ?? 0;
   const topDefScore = defense[0]?.score ?? 0;
   const isGlassCannon =
-    (enemyProfile.threats.includes('fragile_glass_cannon') ||
-      Boolean(enemyProfile.secondaryThreats?.includes('fragile_glass_cannon'))) &&
-    !input.modifiers.includes('tanky');
+    (primaryEnemyProfile.threats.includes('fragile_glass_cannon') ||
+      Boolean(primaryEnemyProfile.secondaryThreats?.includes('fragile_glass_cannon'))) &&
+    !primaryTarget.modifiers.includes('tanky');
 
   let recommendedStance: 'offense' | 'defense' | 'balanced' = 'balanced';
   if (
@@ -485,22 +592,25 @@ export function recommendCounters(
     recommendedStance = 'defense';
   }
 
-  const enemyDisplayName = enemyHeroObj
-    ? getHeroDisplayName(enemyHeroObj, lang)
-    : input.enemyHeroClass;
+  const enemyNames = targets
+    .map((t) => {
+      const h = heroesByClass.get(t.heroClass);
+      return h ? getHeroDisplayName(h, lang) : t.heroClass;
+    })
+    .join(' + ');
   const t = UI_TEXT[lang];
   const stanceReason =
     recommendedStance === 'offense'
-      ? t.stanceReasonOffense(enemyDisplayName)
+      ? t.stanceReasonOffense(enemyNames)
       : recommendedStance === 'defense'
-        ? t.stanceReasonDefense(enemyDisplayName)
-        : t.stanceReasonBalanced(enemyDisplayName);
+        ? t.stanceReasonDefense(enemyNames)
+        : t.stanceReasonBalanced(enemyNames);
 
   const enemyThreatHeadline =
     lang === 'de'
-      ? HERO_HEADLINES_DE[input.enemyHeroClass] ??
+      ? HERO_HEADLINES_DE[primaryTarget.heroClass] ??
         'Vielseitige Bedrohung — nutze Schadensfokus und Extra-Toggles oben, um seinen Build gezielt zu kontern.'
-      : enemyProfile.threatHeadline;
+      : primaryEnemyProfile.threatHeadline;
 
   return {
     offense,

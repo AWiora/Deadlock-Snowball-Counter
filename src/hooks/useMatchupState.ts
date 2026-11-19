@@ -1,6 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getHeroProfile } from '../data/heroProfiles';
-import type { DamageProfile, EnemyModifier, GameStage, Language } from '../types/deadlock';
+import type {
+  DamageProfile,
+  EnemyModifier,
+  EnemyTargetConfig,
+  GameStage,
+  Language,
+} from '../types/deadlock';
 
 const STORAGE_MY_HERO = 'dl_counter_my_hero_v1';
 const STORAGE_LANG = 'dl_counter_lang_v1';
@@ -9,6 +15,7 @@ const VALID_STAGES: GameStage[] = ['lane', 'mid', 'late'];
 const VALID_DAMAGE: DamageProfile[] = ['bullet', 'equal', 'spirit'];
 const VALID_MODS: EnemyModifier[] = ['tanky', 'healing', 'cc', 'melee'];
 const VALID_LANGS: Language[] = ['de', 'en'];
+const MAX_ENEMY_TARGETS = 3;
 
 interface SavedEnemyOverride {
   damageProfile: DamageProfile;
@@ -45,23 +52,33 @@ function parseInitialState() {
 
   const storedMe = readStorage<string | null>(STORAGE_MY_HERO, null);
   const myHeroClass = urlMe || storedMe;
-  const enemyHeroClass = urlVs || null;
+
+  const enemyClasses = urlVs
+    ? Array.from(new Set(urlVs.split(',').map((s) => s.trim()).filter(Boolean))).slice(
+        0,
+        MAX_ENEMY_TARGETS,
+      )
+    : [];
 
   const stage: GameStage =
     urlStage && VALID_STAGES.includes(urlStage) ? urlStage : 'mid';
 
-  let damageProfile: DamageProfile = 'bullet';
-  let modifiers: EnemyModifier[] = [];
-
-  if (enemyHeroClass) {
-    const profile = getHeroProfile(enemyHeroClass);
-    damageProfile =
-      urlDmg && VALID_DAMAGE.includes(urlDmg) ? urlDmg : profile.defaultDamage;
-    if (urlMods) {
-      modifiers = urlMods
+  const parsedMods: EnemyModifier[] = urlMods
+    ? urlMods
         .split(',')
-        .filter((m): m is EnemyModifier => VALID_MODS.includes(m as EnemyModifier));
-    }
+        .filter((m): m is EnemyModifier => VALID_MODS.includes(m as EnemyModifier))
+    : [];
+
+  const initialTweaks: Record<string, SavedEnemyOverride> = {};
+  for (let i = 0; i < enemyClasses.length; i++) {
+    const cls = enemyClasses[i];
+    const profile = getHeroProfile(cls);
+    const dmg =
+      i === 0 && urlDmg && VALID_DAMAGE.includes(urlDmg)
+        ? urlDmg
+        : profile.defaultDamage;
+    const mods = i === 0 ? parsedMods : [];
+    initialTweaks[cls] = { damageProfile: dmg, modifiers: mods };
   }
 
   const activeSlotsFull = urlPassive === '1' || urlPassive === 'true';
@@ -69,10 +86,10 @@ function parseInitialState() {
   return {
     language,
     myHeroClass,
-    enemyHeroClass,
+    enemyClasses,
+    focusedEnemyClass: enemyClasses[0] ?? null,
     stage,
-    damageProfile,
-    modifiers,
+    initialTweaks,
     activeSlotsFull,
   };
 }
@@ -82,23 +99,54 @@ export function useMatchupState() {
 
   const [language, setLanguageState] = useState<Language>(initial.language);
   const [myHeroClass, setMyHeroClassState] = useState<string | null>(initial.myHeroClass);
-  const [enemyHeroClass, setEnemyHeroClassState] = useState<string | null>(initial.enemyHeroClass);
-  const [previousEnemyClass, setPreviousEnemyClass] = useState<string | null>(null);
-  const [stage, setStage] = useState<GameStage>(initial.stage);
-  const [damageProfile, setDamageProfileState] = useState<DamageProfile>(initial.damageProfile);
-  const [modifiers, setModifiersState] = useState<EnemyModifier[]>(initial.modifiers);
-  const [activeSlotsFull, setActiveSlotsFull] = useState<boolean>(initial.activeSlotsFull);
-
-  const [sessionEnemyTweaks, setSessionEnemyTweaks] = useState<Record<string, SavedEnemyOverride>>(() =>
-    initial.enemyHeroClass
-      ? {
-          [initial.enemyHeroClass]: {
-            damageProfile: initial.damageProfile,
-            modifiers: initial.modifiers,
-          },
-        }
-      : {},
+  const [enemyClasses, setEnemyClasses] = useState<string[]>(initial.enemyClasses);
+  const [focusedEnemyClass, setFocusedEnemyClass] = useState<string | null>(
+    initial.focusedEnemyClass,
   );
+  const [stage, setStage] = useState<GameStage>(initial.stage);
+  const [activeSlotsFull, setActiveSlotsFull] = useState<boolean>(initial.activeSlotsFull);
+  const [sessionEnemyTweaks, setSessionEnemyTweaks] = useState<
+    Record<string, SavedEnemyOverride>
+  >(initial.initialTweaks);
+
+  const activeFocusedClass = useMemo(() => {
+    if (focusedEnemyClass && enemyClasses.includes(focusedEnemyClass)) {
+      return focusedEnemyClass;
+    }
+    return enemyClasses[0] ?? null;
+  }, [focusedEnemyClass, enemyClasses]);
+
+  const enemyTargets: EnemyTargetConfig[] = useMemo(() => {
+    return enemyClasses.map((cls) => {
+      const saved = sessionEnemyTweaks[cls];
+      const profile = getHeroProfile(cls);
+      return {
+        heroClass: cls,
+        damageProfile: saved?.damageProfile ?? profile.defaultDamage,
+        modifiers: saved?.modifiers ?? [],
+      };
+    });
+  }, [enemyClasses, sessionEnemyTweaks]);
+
+  // Put focused enemy first in scoring targets so their headline/stance leads when focused
+  const orderedEnemyTargets: EnemyTargetConfig[] = useMemo(() => {
+    if (!activeFocusedClass) return enemyTargets;
+    const focused = enemyTargets.find((t) => t.heroClass === activeFocusedClass);
+    const others = enemyTargets.filter((t) => t.heroClass !== activeFocusedClass);
+    return focused ? [focused, ...others] : enemyTargets;
+  }, [enemyTargets, activeFocusedClass]);
+
+  const focusedConfig = useMemo(() => {
+    if (!activeFocusedClass) {
+      return { damageProfile: 'bullet' as DamageProfile, modifiers: [] as EnemyModifier[] };
+    }
+    const saved = sessionEnemyTweaks[activeFocusedClass];
+    const profile = getHeroProfile(activeFocusedClass);
+    return {
+      damageProfile: saved?.damageProfile ?? profile.defaultDamage,
+      modifiers: saved?.modifiers ?? [],
+    };
+  }, [activeFocusedClass, sessionEnemyTweaks]);
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
@@ -111,6 +159,9 @@ export function useMatchupState() {
 
   const setMyHeroClass = useCallback((heroClass: string | null) => {
     setMyHeroClassState(heroClass);
+    if (heroClass) {
+      setEnemyClasses((prev) => prev.filter((c) => c !== heroClass));
+    }
     try {
       localStorage.setItem(STORAGE_MY_HERO, JSON.stringify(heroClass));
     } catch {
@@ -118,73 +169,124 @@ export function useMatchupState() {
     }
   }, []);
 
+  const ensureEnemyTweak = useCallback((heroClass: string) => {
+    setSessionEnemyTweaks((prev) => {
+      if (prev[heroClass]) return prev;
+      const profile = getHeroProfile(heroClass);
+      return {
+        ...prev,
+        [heroClass]: {
+          damageProfile: profile.defaultDamage,
+          modifiers: [],
+        },
+      };
+    });
+  }, []);
+
+  /**
+   * 1-Click toggle in the inline hero roster:
+   * - If already in enemyClasses: removes it
+   * - If not in enemyClasses: adds it (up to 3; if full, replaces the 3rd slot) and focuses it
+   */
+  const toggleEnemyHero = useCallback(
+    (heroClass: string) => {
+      if (heroClass === myHeroClass) return;
+      ensureEnemyTweak(heroClass);
+
+      setEnemyClasses((prev) => {
+        if (prev.includes(heroClass)) {
+          const next = prev.filter((c) => c !== heroClass);
+          setFocusedEnemyClass((currFocus) =>
+            currFocus === heroClass ? next[0] ?? null : currFocus,
+          );
+          return next;
+        }
+        const next =
+          prev.length < MAX_ENEMY_TARGETS
+            ? [...prev, heroClass]
+            : [...prev.slice(0, MAX_ENEMY_TARGETS - 1), heroClass];
+        setFocusedEnemyClass(heroClass);
+        return next;
+      });
+    },
+    [myHeroClass, ensureEnemyTweak],
+  );
+
   const selectEnemyHero = useCallback(
     (heroClass: string) => {
-      if (enemyHeroClass && enemyHeroClass !== heroClass) {
-        setPreviousEnemyClass(enemyHeroClass);
-      }
-      setEnemyHeroClassState(heroClass);
-      const saved = sessionEnemyTweaks[heroClass];
-      if (saved) {
-        setDamageProfileState(saved.damageProfile);
-        setModifiersState(saved.modifiers);
-      } else {
-        const profile = getHeroProfile(heroClass);
-        setDamageProfileState(profile.defaultDamage);
-        setModifiersState([]);
-      }
+      toggleEnemyHero(heroClass);
     },
-    [enemyHeroClass, sessionEnemyTweaks],
+    [toggleEnemyHero],
   );
+
+  const focusEnemyHero = useCallback((heroClass: string) => {
+    setFocusedEnemyClass(heroClass);
+  }, []);
+
+  const removeEnemyHero = useCallback((heroClass: string) => {
+    setEnemyClasses((prev) => {
+      const next = prev.filter((c) => c !== heroClass);
+      setFocusedEnemyClass((currFocus) =>
+        currFocus === heroClass ? next[0] ?? null : currFocus,
+      );
+      return next;
+    });
+  }, []);
+
+  const clearAllEnemies = useCallback(() => {
+    setEnemyClasses([]);
+    setFocusedEnemyClass(null);
+    setSessionEnemyTweaks({});
+  }, []);
 
   const setDamageProfile = useCallback(
     (dmg: DamageProfile) => {
-      setDamageProfileState(dmg);
-      if (enemyHeroClass) {
-        setSessionEnemyTweaks((prev) => ({
-          ...prev,
-          [enemyHeroClass]: {
-            damageProfile: dmg,
-            modifiers: prev[enemyHeroClass]?.modifiers ?? modifiers,
-          },
-        }));
-      }
+      if (!activeFocusedClass) return;
+      setSessionEnemyTweaks((prev) => ({
+        ...prev,
+        [activeFocusedClass]: {
+          damageProfile: dmg,
+          modifiers: prev[activeFocusedClass]?.modifiers ?? [],
+        },
+      }));
     },
-    [enemyHeroClass, modifiers],
+    [activeFocusedClass],
   );
 
   const toggleModifier = useCallback(
     (mod: EnemyModifier) => {
-      setModifiersState((prev) => {
-        const next = prev.includes(mod)
-          ? prev.filter((m) => m !== mod)
-          : [...prev, mod];
-        if (enemyHeroClass) {
-          setSessionEnemyTweaks((tweaks) => ({
-            ...tweaks,
-            [enemyHeroClass]: {
-              damageProfile: tweaks[enemyHeroClass]?.damageProfile ?? damageProfile,
-              modifiers: next,
-            },
-          }));
-        }
-        return next;
+      if (!activeFocusedClass) return;
+      setSessionEnemyTweaks((prev) => {
+        const curr = prev[activeFocusedClass] ?? {
+          damageProfile: getHeroProfile(activeFocusedClass).defaultDamage,
+          modifiers: [],
+        };
+        const nextMods = curr.modifiers.includes(mod)
+          ? curr.modifiers.filter((m) => m !== mod)
+          : [...curr.modifiers, mod];
+        return {
+          ...prev,
+          [activeFocusedClass]: {
+            damageProfile: curr.damageProfile,
+            modifiers: nextMods,
+          },
+        };
       });
     },
-    [enemyHeroClass, damageProfile],
+    [activeFocusedClass],
   );
 
   const resetEnemyDefaults = useCallback(() => {
-    if (!enemyHeroClass) return;
-    const profile = getHeroProfile(enemyHeroClass);
-    setDamageProfileState(profile.defaultDamage);
-    setModifiersState([]);
-    setSessionEnemyTweaks((prev) => {
-      const next = { ...prev };
-      delete next[enemyHeroClass];
-      return next;
-    });
-  }, [enemyHeroClass]);
+    if (!activeFocusedClass) return;
+    const profile = getHeroProfile(activeFocusedClass);
+    setSessionEnemyTweaks((prev) => ({
+      ...prev,
+      [activeFocusedClass]: {
+        damageProfile: profile.defaultDamage,
+        modifiers: [],
+      },
+    }));
+  }, [activeFocusedClass]);
 
   // Keep document lang & URL query params live-synced for instant Discord sharing
   useEffect(() => {
@@ -192,11 +294,13 @@ export function useMatchupState() {
     const params = new URLSearchParams();
     if (language !== 'de') params.set('lang', language);
     if (myHeroClass) params.set('me', myHeroClass);
-    if (enemyHeroClass) {
-      params.set('vs', enemyHeroClass);
+    if (enemyClasses.length > 0) {
+      params.set('vs', enemyClasses.join(','));
       params.set('stage', stage);
-      params.set('dmg', damageProfile);
-      if (modifiers.length > 0) params.set('mods', modifiers.join(','));
+      params.set('dmg', focusedConfig.damageProfile);
+      if (focusedConfig.modifiers.length > 0) {
+        params.set('mods', focusedConfig.modifiers.join(','));
+      }
       if (activeSlotsFull) params.set('passive', '1');
     }
     const query = params.toString();
@@ -204,12 +308,23 @@ export function useMatchupState() {
       ? `${window.location.pathname}?${query}`
       : window.location.pathname;
     window.history.replaceState(null, '', newUrl);
-  }, [language, myHeroClass, enemyHeroClass, stage, damageProfile, modifiers, activeSlotsFull]);
+  }, [
+    language,
+    myHeroClass,
+    enemyClasses,
+    stage,
+    focusedConfig.damageProfile,
+    focusedConfig.modifiers,
+    activeSlotsFull,
+  ]);
 
   const isCustomized = (() => {
-    if (!enemyHeroClass) return false;
-    const def = getHeroProfile(enemyHeroClass);
-    return damageProfile !== def.defaultDamage || modifiers.length > 0;
+    if (!activeFocusedClass) return false;
+    const def = getHeroProfile(activeFocusedClass);
+    return (
+      focusedConfig.damageProfile !== def.defaultDamage ||
+      focusedConfig.modifiers.length > 0
+    );
   })();
 
   return {
@@ -217,14 +332,21 @@ export function useMatchupState() {
     setLanguage,
     myHeroClass,
     setMyHeroClass,
-    enemyHeroClass,
-    previousEnemyClass,
+    enemyHeroClass: activeFocusedClass,
+    enemyClasses,
+    enemyTargets,
+    orderedEnemyTargets,
+    focusedEnemyClass: activeFocusedClass,
     selectEnemyHero,
+    toggleEnemyHero,
+    focusEnemyHero,
+    removeEnemyHero,
+    clearAllEnemies,
     stage,
     setStage,
-    damageProfile,
+    damageProfile: focusedConfig.damageProfile,
     setDamageProfile,
-    modifiers,
+    modifiers: focusedConfig.modifiers,
     toggleModifier,
     activeSlotsFull,
     setActiveSlotsFull,

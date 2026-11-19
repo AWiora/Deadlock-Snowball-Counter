@@ -35,12 +35,21 @@ export const UI_TEXT = {
     yourHeroHint: 'Für passende Item-Synergien',
     yourHeroSelectBtn: 'Wählen',
     yourHeroChangeBtn: 'Ändern',
+    yourHeroPickingBtn: 'Klicke unten...',
     yourHeroClearAria: 'Eigenen Helden entfernen',
 
-    enemyLabel: 'GEGNERISCHE BEDROHUNG',
-    enemyEmpty: 'Gegner-Helden wählen...',
+    enemyLabel: 'GEGNERISCHE BEDROHUNGEN (BIS ZU 3)',
+    enemyEmpty: 'Klicke unten 1–3 Gegner an...',
+    enemySlotEmpty: (slot: number) => `+ Gegner ${slot}`,
     enemySelectBtn: 'Alle 42',
     enemyChangeBtn: 'Wechseln',
+    clearEnemiesBtn: 'Gegner leeren',
+    clearEnemiesTitle: 'Alle gewählten Gegner für das nächste Match zurücksetzen (behält deinen Helden)',
+    rosterHintEnemy: '1-Klick-Roster: Klicke direkt auf bis zu 3 Gegner, die dir im Match Probleme machen',
+    rosterHintMyHero: 'Wähle jetzt unten im Roster deinen eigenen Helden aus (oder klicke auf Abbrechen)',
+    cancelMyPickBtn: 'Abbrechen',
+    youBadge: 'DU',
+    focusedEnemyBadge: 'Toggles aktiv',
     backToPrev: (name: string) => `Zurück zu ${name}`,
 
     stageLabel: 'SPIELPHASE',
@@ -99,6 +108,12 @@ export const UI_TEXT = {
     },
     useLabel: 'Einsatz:',
     soulTitle: (tier: number, cost: number) => `Stufe-${tier}-Item (${cost.toLocaleString('de-DE')} Seelen)`,
+    copyItemTitle: 'Itemnamen für die In-Game-Shop-Suche kopieren',
+    copiedItemLabel: 'Kopiert!',
+    countersMultiBadge: (matched: number, total: number, names: string) =>
+      total > 1 ? `Kontert ${matched}/${total}: ${names}` : `Gegen ${names}`,
+    upgradeFromBadge: (name: string, cost: string) => `↖ Aus: ${name} (${cost})`,
+    upgradeToBadge: (name: string, cost: string) => `→ Wird zu: ${name} (${cost})`,
 
     slots: {
       weapon: 'Waffe',
@@ -193,12 +208,21 @@ export const UI_TEXT = {
     yourHeroHint: 'Tailors item synergy to your kit',
     yourHeroSelectBtn: 'Pick',
     yourHeroChangeBtn: 'Change',
+    yourHeroPickingBtn: 'Click below...',
     yourHeroClearAria: 'Clear your hero',
 
-    enemyLabel: 'ENEMY THREAT',
-    enemyEmpty: 'Select Enemy Hero...',
+    enemyLabel: 'ENEMY THREATS (UP TO 3)',
+    enemyEmpty: 'Click 1–3 enemies below...',
+    enemySlotEmpty: (slot: number) => `+ Enemy ${slot}`,
     enemySelectBtn: 'Browse 42',
     enemyChangeBtn: 'Switch',
+    clearEnemiesBtn: 'Clear Enemies',
+    clearEnemiesTitle: 'Clear all selected enemies for your next match (keeps your hero)',
+    rosterHintEnemy: '1-Click Roster: Click up to 3 problem enemies directly below',
+    rosterHintMyHero: 'Click your own hero in the roster below (or click Cancel)',
+    cancelMyPickBtn: 'Cancel',
+    youBadge: 'YOU',
+    focusedEnemyBadge: 'Toggles active',
     backToPrev: (name: string) => `Back to ${name}`,
 
     stageLabel: 'GAME STAGE',
@@ -257,6 +281,12 @@ export const UI_TEXT = {
     },
     useLabel: 'Use:',
     soulTitle: (tier: number, cost: number) => `Tier ${tier} item (${cost.toLocaleString('en-US')} Souls)`,
+    copyItemTitle: 'Copy item name for Deadlock in-game shop search',
+    copiedItemLabel: 'Copied!',
+    countersMultiBadge: (matched: number, total: number, names: string) =>
+      total > 1 ? `Counters ${matched}/${total}: ${names}` : `vs ${names}`,
+    upgradeFromBadge: (name: string, cost: string) => `↖ From: ${name} (${cost})`,
+    upgradeToBadge: (name: string, cost: string) => `→ Upgrades to: ${name} (${cost})`,
 
     slots: {
       weapon: 'Weapon',

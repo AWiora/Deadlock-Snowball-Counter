@@ -139,12 +139,27 @@ export interface CounterItemRule {
   contextTips?: Partial<Record<ThreatMechanic | EnemyModifier, string>>;
 }
 
+export interface EnemyTargetConfig {
+  heroClass: string;
+  damageProfile: DamageProfile;
+  modifiers: EnemyModifier[];
+}
+
+export interface UpgradeHint {
+  direction: 'from' | 'to';
+  itemClassName: string;
+  itemName: string;
+  cost: number;
+}
+
 export interface MatchupInput {
   myHeroClass: string | null;
   enemyHeroClass: string;
   stage: GameStage;
   damageProfile: DamageProfile;
   modifiers: EnemyModifier[];
+  /** Optional 1-3 active enemy targets for multi-threat match scoring */
+  enemyTargets?: EnemyTargetConfig[];
   activeSlotsFull: boolean;
   language?: Language;
 }
@@ -160,6 +175,10 @@ export interface CounterRecommendation {
   whenToUse: string;
   synergyNote: string | null;
   isHeroSpecific: boolean;
+  /** Enemy hero classNames (from the selected 1-3 enemies) that this item meaningfully counters */
+  counteredEnemies?: string[];
+  /** Direct component or upgrade path hint (e.g. Rusted Barrel <-> Disarming Hex) */
+  upgradeHint?: UpgradeHint | null;
 }
 
 export interface RecommendationResult {
