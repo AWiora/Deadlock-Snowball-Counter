@@ -1992,10 +1992,11 @@ button {
 }
 
 .customize-tab-avatar {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 .customize-tab-count {
@@ -2118,38 +2119,39 @@ button {
 .counter-reasons-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin: 1px 0;
+  gap: 6px;
+  margin: 2px 0;
 }
 
 .counter-reason-row {
-  font-size: 0.81rem;
-  line-height: 1.36;
+  font-size: 0.83rem;
+  line-height: 1.48;
   color: #dcd6ca;
 }
 
 .reason-hero-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  vertical-align: baseline;
+  gap: 5px;
+  vertical-align: middle;
+  margin-top: -2px;
   white-space: nowrap;
 }
 
 .reason-hero-avatars {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  vertical-align: middle;
+  gap: 3px;
 }
 
 .reason-hero-avatar {
-  width: 15px;
-  height: 15px;
-  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
   object-fit: cover;
-  border: 1px solid rgba(217, 93, 93, 0.5);
-  vertical-align: -2px;
+  border: 1px solid rgba(217, 93, 93, 0.55);
+  display: block;
+  flex-shrink: 0;
 }
 
 .reason-hero-name {
@@ -2267,5 +2269,252 @@ button {
     flex: 1;
     justify-content: center;
     padding: 6px 8px;
+  }
+}
+
+/* ==================== LARGE DESKTOP & 4K SCALING ==================== */
+@media (min-width: 1800px) {
+  html {
+    font-size: 17px;
+  }
+
+  .top-header-inner,
+  .main-container {
+    max-width: 1320px;
+  }
+
+  .matchup-vs-row--multi {
+    grid-template-columns: 310px auto minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .hero-slot-avatar,
+  .hero-slot-avatar-empty {
+    width: 52px;
+    height: 52px;
+  }
+
+  .enemy-mini-slot {
+    height: 48px;
+  }
+
+  .enemy-mini-avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .roster-cell-img-wrap {
+    width: 40px;
+    height: 40px;
+  }
+
+  .deck-row--stage,
+  .deck-row--stage-compact {
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+
+  .counter-card {
+    grid-template-columns: 64px 1fr;
+    gap: 14px;
+    padding: 12px 14px 12px 13px;
+  }
+
+  .item-icon-frame {
+    width: 62px;
+    height: 62px;
+  }
+
+  .reason-hero-avatar {
+    width: 24px;
+    height: 24px;
+  }
+
+  .customize-tab-avatar {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media (min-width: 2300px) {
+  html {
+    font-size: 19px;
+  }
+
+  .top-header-inner,
+  .main-container {
+    max-width: 1620px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .brand-emblem {
+    width: 42px;
+    height: 42px;
+  }
+
+  .lang-switcher,
+  .share-btn {
+    height: 44px;
+  }
+
+  .lang-btn {
+    height: 36px;
+    padding: 0 11px;
+  }
+
+  .matchup-vs-row--multi {
+    grid-template-columns: 360px auto minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .hero-slot-avatar,
+  .hero-slot-avatar-empty {
+    width: 58px;
+    height: 58px;
+  }
+
+  .vs-medallion {
+    width: 40px;
+    height: 40px;
+  }
+
+  .enemy-mini-slot {
+    height: 54px;
+  }
+
+  .enemy-mini-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .inline-roster-grid {
+    gap: 5px;
+  }
+
+  .roster-cell {
+    padding: 4px 3px;
+    gap: 3px;
+  }
+
+  .roster-cell-img-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 7px;
+  }
+
+  .deck-row--stage,
+  .deck-row--stage-compact {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+
+  .toggle-switch {
+    width: 40px;
+    height: 24px;
+  }
+
+  .toggle-switch::after {
+    width: 18px;
+    height: 18px;
+  }
+
+  .toggle-switch--on::after {
+    transform: translateX(16px);
+  }
+
+  .stance-grid {
+    gap: 20px;
+  }
+
+  .stance-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .cards-list {
+    gap: 11px;
+  }
+
+  .counter-card {
+    grid-template-columns: 74px 1fr;
+    gap: 16px;
+    padding: 14px 16px 14px 15px;
+  }
+
+  .item-icon-frame {
+    width: 72px;
+    height: 72px;
+    border-radius: 12px;
+  }
+
+  .reason-hero-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+  }
+
+  .customize-tab-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+  }
+}
+
+@media (min-width: 3200px) {
+  html {
+    font-size: 22px;
+  }
+
+  .top-header-inner,
+  .main-container {
+    max-width: 1960px;
+  }
+
+  .matchup-vs-row--multi {
+    grid-template-columns: 420px auto minmax(0, 1fr);
+  }
+
+  .hero-slot-avatar,
+  .hero-slot-avatar-empty {
+    width: 66px;
+    height: 66px;
+  }
+
+  .enemy-mini-slot {
+    height: 62px;
+  }
+
+  .enemy-mini-avatar {
+    width: 44px;
+    height: 44px;
+  }
+
+  .roster-cell-img-wrap {
+    width: 56px;
+    height: 56px;
+  }
+
+  .deck-row--stage,
+  .deck-row--stage-compact {
+    grid-template-columns: minmax(0, 1fr) 350px;
+  }
+
+  .counter-card {
+    grid-template-columns: 84px 1fr;
+    gap: 18px;
+  }
+
+  .item-icon-frame {
+    width: 82px;
+    height: 82px;
+  }
+
+  .reason-hero-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .customize-tab-avatar {
+    width: 30px;
+    height: 30px;
   }
 }
