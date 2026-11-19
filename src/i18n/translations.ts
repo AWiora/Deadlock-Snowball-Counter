@@ -110,8 +110,14 @@ export const UI_TEXT = {
     soulTitle: (tier: number, cost: number) => `Stufe-${tier}-Item (${cost.toLocaleString('de-DE')} Seelen)`,
     copyItemTitle: 'Itemnamen für die In-Game-Shop-Suche kopieren',
     copiedItemLabel: 'Kopiert!',
-    countersMultiBadge: (matched: number, total: number, names: string) =>
-      total > 1 ? `Kontert ${matched}/${total}: ${names}` : `Gegen ${names}`,
+    countersMultiBadge: (matched: number, total: number) => `Kontert ${matched}/${total}`,
+    countersSingleBadge: (name: string) => `Gegen ${name}`,
+    dynamicMechanicReason: (triggers: string) => `Kontert gezielt ${triggers}.`,
+    damageReasonLabel: {
+      bullet: 'Kugelschaden',
+      equal: 'Gemischter Schaden',
+      spirit: 'Spirit-Schaden',
+    } as Record<DamageProfile, string>,
     upgradeFromBadge: (name: string, cost: string) => `↖ Aus: ${name} (${cost})`,
     upgradeToBadge: (name: string, cost: string) => `→ Wird zu: ${name} (${cost})`,
 
@@ -283,8 +289,14 @@ export const UI_TEXT = {
     soulTitle: (tier: number, cost: number) => `Tier ${tier} item (${cost.toLocaleString('en-US')} Souls)`,
     copyItemTitle: 'Copy item name for Deadlock in-game shop search',
     copiedItemLabel: 'Copied!',
-    countersMultiBadge: (matched: number, total: number, names: string) =>
-      total > 1 ? `Counters ${matched}/${total}: ${names}` : `vs ${names}`,
+    countersMultiBadge: (matched: number, total: number) => `Counters ${matched}/${total}`,
+    countersSingleBadge: (name: string) => `vs ${name}`,
+    dynamicMechanicReason: (triggers: string) => `Directly counters ${triggers}.`,
+    damageReasonLabel: {
+      bullet: 'Bullet Damage',
+      equal: 'Mixed Damage',
+      spirit: 'Spirit Damage',
+    } as Record<DamageProfile, string>,
     upgradeFromBadge: (name: string, cost: string) => `↖ From: ${name} (${cost})`,
     upgradeToBadge: (name: string, cost: string) => `→ Upgrades to: ${name} (${cost})`,
 

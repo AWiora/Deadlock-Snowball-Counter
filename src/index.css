@@ -2021,6 +2021,65 @@ button {
   border-top: 1px solid rgba(235, 224, 200, 0.06);
 }
 
+/* Per-Enemy Counter Reason Rows */
+.counter-reasons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 1px 0;
+}
+
+.counter-reason-row {
+  font-size: 0.81rem;
+  line-height: 1.36;
+  color: #dcd6ca;
+}
+
+.reason-hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.reason-hero-avatars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+.reason-hero-avatar {
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid rgba(217, 93, 93, 0.5);
+  vertical-align: -2px;
+}
+
+.reason-hero-name {
+  font-weight: 700;
+  color: var(--text-parchment);
+}
+
+.reason-trigger-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--brass-bright);
+}
+
+.reason-colon {
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-left: -2px;
+}
+
+.reason-text {
+  color: #dcd6ca;
+}
+
 .empty-inline-prompt {
   display: flex;
   align-items: center;

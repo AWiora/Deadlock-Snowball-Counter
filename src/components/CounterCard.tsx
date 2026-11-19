@@ -24,6 +24,7 @@ export function CounterCard({
     rank,
     role,
     why,
+    reasons,
     whenToUse,
     synergyNote,
     isHeroSpecific,
@@ -51,16 +52,6 @@ export function CounterCard({
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1400);
   };
-
-  const counteredNames =
-    counteredEnemies && heroesByClass
-      ? counteredEnemies
-          .map((cls) => {
-            const h = heroesByClass.get(cls);
-            return h ? getHeroDisplayName(h, language) : cls;
-          })
-          .join(' + ')
-      : null;
 
   const isMultiHit = (counteredEnemies?.length ?? 0) >= 2 && totalSelectedEnemies >= 2;
 
@@ -126,17 +117,13 @@ export function CounterCard({
               {t.hardCounterBadge}
             </span>
           )}
-          {totalSelectedEnemies > 1 && counteredNames && counteredEnemies && (
+          {totalSelectedEnemies > 1 && counteredEnemies && (
             <span
               className={`multi-counter-badge ${
                 isMultiHit ? 'multi-counter-badge--hit' : ''
               }`}
             >
-              {t.countersMultiBadge(
-                counteredEnemies.length,
-                totalSelectedEnemies,
-                counteredNames,
-              )}
+              {t.countersMultiBadge(counteredEnemies.length, totalSelectedEnemies)}
             </span>
           )}
           {upgradeHint && (
@@ -154,7 +141,50 @@ export function CounterCard({
           )}
         </div>
 
-        <p className="counter-why">{why}</p>
+        {/* Structured per-enemy counter reasons */}
+        {reasons && reasons.length > 0 ? (
+          <div className="counter-reasons-list">
+            {reasons.map((reason, idx) => {
+              const matchedHeroes = reason.heroClasses.map((cls) => ({
+                cls,
+                hero: heroesByClass?.get(cls) ?? null,
+              }));
+              const heroLabel = matchedHeroes
+                .map(({ cls, hero }) =>
+                  hero ? getHeroDisplayName(hero, language) : cls,
+                )
+                .join(' + ');
+
+              return (
+                <div key={`${reason.heroClasses.join('-')}-${idx}`} className="counter-reason-row">
+                  <span className="reason-hero-tag">
+                    <span className="reason-hero-avatars">
+                      {matchedHeroes.map(({ cls, hero }) =>
+                        hero?.iconSmall || hero?.iconCard ? (
+                          <img
+                            key={cls}
+                            src={hero.iconSmall || hero.iconCard}
+                            alt=""
+                            className="reason-hero-avatar"
+                            loading="lazy"
+                          />
+                        ) : null,
+                      )}
+                    </span>
+                    <strong className="reason-hero-name">{heroLabel}</strong>
+                    {!reason.isHeroSpecific && reason.triggerSummary && (
+                      <span className="reason-trigger-pill">({reason.triggerSummary})</span>
+                    )}
+                    <span className="reason-colon">:</span>
+                  </span>{' '}
+                  <span className="reason-text">{reason.text}</span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="counter-why">{why}</p>
+        )}
 
         <div className="counter-footer-row">
           <span className="when-to-use">

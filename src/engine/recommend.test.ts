@@ -402,6 +402,43 @@ describe('Deadlock counter recommendation engine', () => {
     expect(dispel?.counteredEnemies).toContain('hero_bebop');
     expect(dispel?.counteredEnemies).toContain('hero_inferno');
     expect(res.defense[0].item.className).toBe('upgrade_reduce_debuff_duration');
+
+    // Explains BOTH Bebop and Infernus individually
+    expect(dispel?.reasons.length).toBe(2);
+    const bebopReason = dispel?.reasons.find((r) => r.heroClasses.includes('hero_bebop'));
+    const infernoReason = dispel?.reasons.find((r) => r.heroClasses.includes('hero_inferno'));
+    expect(bebopReason?.text).toContain('Haftbombe');
+    expect(infernoReason?.text).toContain('Nachbrennen');
+  });
+
+  it('collapses shared generic counters across 2 enemies without repeating boilerplate text', () => {
+    const res = recommendCounters(
+      {
+        myHeroClass: 'hero_gigawatt',
+        enemyHeroClass: 'hero_haze',
+        stage: 'mid',
+        damageProfile: 'bullet',
+        modifiers: [],
+        enemyTargets: [
+          { heroClass: 'hero_haze', damageProfile: 'bullet', modifiers: [] },
+          { heroClass: 'hero_wraith', damageProfile: 'bullet', modifiers: [] },
+        ],
+        activeSlotsFull: true,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+
+    const bulletRes = res.defense.find(
+      (r) => r.item.className === 'upgrade_improved_bullet_armor',
+    );
+    expect(bulletRes).toBeDefined();
+    // Neither Haze nor Wraith has a hero-specific override for Bullet Resilience -> collapsed into 1 clean shared line
+    expect(bulletRes?.reasons.length).toBe(1);
+    expect(bulletRes?.reasons[0].heroClasses).toContain('hero_haze');
+    expect(bulletRes?.reasons[0].heroClasses).toContain('hero_wraith');
+    expect(bulletRes?.reasons[0].triggerSummary).toBeTruthy();
   });
 
   it('attaches upgradeHint build paths (from/to component) on upgrade-family items', () => {

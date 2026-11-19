@@ -166,6 +166,17 @@ export interface MatchupInput {
   itemLanguage?: Language;
 }
 
+export interface EnemyCounterReason {
+  /** Enemy hero className(s) covered by this line (1 per enemy, or multiple when collapsed into a shared general reason) */
+  heroClasses: string[];
+  /** Concise matched mechanics/toggles for general picks (e.g. "Kugeln · Hohe Feuerrate") */
+  triggerSummary?: string;
+  /** Concise explanation text */
+  text: string;
+  /** Whether this line is a curated hero-specific hard-counter tip */
+  isHeroSpecific: boolean;
+}
+
 export interface CounterRecommendation {
   item: DeadlockItem;
   stance: CounterStance;
@@ -174,6 +185,8 @@ export interface CounterRecommendation {
   tierLabel: 'Best Counter' | 'Core Counter' | 'Strong Pick';
   role: CounterRole;
   why: string;
+  /** Structured per-enemy counter reasons for both 1-enemy and 2-3-enemy matchups */
+  reasons: EnemyCounterReason[];
   whenToUse: string;
   synergyNote: string | null;
   isHeroSpecific: boolean;

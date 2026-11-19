@@ -13,6 +13,7 @@ import type {
   CounterRole,
   DeadlockHero,
   DeadlockItem,
+  EnemyCounterReason,
   EnemyModifier,
   EnemyTargetConfig,
   Language,
@@ -282,6 +283,79 @@ function resolveContextTip(
   return null;
 }
 
+function collectMatchedTriggers(
+  rule: CounterItemRule,
+  target: EnemyTargetConfig,
+  primaryThreats: ThreatMechanic[],
+  secondaryThreats: ThreatMechanic[],
+  isOffMetaSpirit: boolean,
+  isOffMetaBullet: boolean,
+  lang: Language,
+): string[] {
+  const t = UI_TEXT[lang];
+  const scoredTriggers: { label: string; weight: number }[] = [];
+
+  // 1. Active user modifiers (strongest signal)
+  if (rule.modifierCounters) {
+    for (const mod of target.modifiers) {
+      const w = rule.modifierCounters[mod] ?? 0;
+      if (w >= 10) {
+        scoredTriggers.push({ label: t.modifiers[mod].label, weight: w * 2.2 });
+      }
+    }
+  }
+
+  // 2. Matched damage profile
+  if (rule.damageCounters) {
+    const dmgW = rule.damageCounters[target.damageProfile] ?? 0;
+    if (dmgW >= 16) {
+      scoredTriggers.push({
+        label: t.damageReasonLabel[target.damageProfile],
+        weight: dmgW * 1.05,
+      });
+    }
+  }
+
+  // 3. Matched intrinsic threats
+  if (rule.threatCounters) {
+    const seen = new Set<ThreatMechanic>();
+    const addThreats = (list: ThreatMechanic[], scale: number) => {
+      for (const threat of list) {
+        if (seen.has(threat)) continue;
+        seen.add(threat);
+        let w = (rule.threatCounters?.[threat] ?? 0) * scale;
+        if (
+          isOffMetaSpirit &&
+          (threat === 'rapid_fire' || threat === 'bullet_ult' || threat === 'on_hit_procs')
+        ) {
+          w *= 0.35;
+        }
+        if (
+          isOffMetaBullet &&
+          (threat === 'sustained_spirit' || threat === 'ability_spam')
+        ) {
+          w *= 0.45;
+        }
+        if (w >= 12) {
+          scoredTriggers.push({ label: t.threats[threat], weight: w });
+        }
+      }
+    };
+    addThreats(primaryThreats, 1.0);
+    addThreats(secondaryThreats, SECONDARY_THREAT_SCALE);
+  }
+
+  scoredTriggers.sort((a, b) => b.weight - a.weight);
+  const uniqueLabels: string[] = [];
+  for (const item of scoredTriggers) {
+    if (!uniqueLabels.includes(item.label)) {
+      uniqueLabels.push(item.label);
+    }
+    if (uniqueLabels.length >= 2) break;
+  }
+  return uniqueLabels;
+}
+
 export function recommendCounters(
   input: MatchupInput,
   itemsByClass: Map<string, DeadlockItem>,
@@ -312,6 +386,7 @@ export function recommendCounters(
     isHeroSpecific: boolean;
     overrideTip: string | null;
     contextTip: string | null;
+    matchedTriggers: string[];
     roleOverride?: CounterRole;
   }
 
@@ -321,6 +396,7 @@ export function recommendCounters(
     role: CounterRole;
     score: number;
     why: string;
+    reasons: EnemyCounterReason[];
     whenToUse: string;
     synergyNote: string | null;
     isHeroSpecific: boolean;
@@ -423,6 +499,15 @@ export function recommendCounters(
       const contextTip = overrideTip
         ? null
         : resolveContextTip(rule, target.modifiers, lang);
+      const matchedTriggers = collectMatchedTriggers(
+        rule,
+        target,
+        eProfile.threats,
+        eProfile.secondaryThreats ?? [],
+        isOffMetaSpirit,
+        isOffMetaBullet,
+        lang,
+      );
 
       evals.push({
         heroClass: target.heroClass,
@@ -430,6 +515,7 @@ export function recommendCounters(
         isHeroSpecific,
         overrideTip,
         contextTip,
+        matchedTriggers,
         roleOverride,
       });
     }
@@ -440,9 +526,8 @@ export function recommendCounters(
     if (!bestEval) continue;
 
     // Which selected enemies does this item genuinely counter? (Strong threshold >= 28 or hero-specific hard counter)
-    const counteredEnemies = evals
-      .filter((e) => e.score >= 28 || e.isHeroSpecific)
-      .map((e) => e.heroClass);
+    const counteredEvals = evals.filter((e) => e.score >= 28 || e.isHeroSpecific);
+    const counteredEnemies = counteredEvals.map((e) => e.heroClass);
     const hardCounterCount = evals.filter((e) => e.isHeroSpecific).length;
 
     let combinedScore = bestEval.score;
@@ -463,20 +548,89 @@ export function recommendCounters(
     if (combinedScore < 14) continue;
 
     const deCopy = lang === 'de' ? ITEM_COPY_DE[rule.className] : undefined;
+    const baseWhy = deCopy?.why ?? rule.why;
     const anyHeroSpecific = evals.some((e) => e.isHeroSpecific);
-    const bestOverrideEval = evals.find((e) => e.overrideTip);
-    const bestContextEval = evals.find((e) => e.contextTip);
+    const uiDict = UI_TEXT[lang];
+
+    // Build smart per-enemy reasons so multi-enemy picks explain EVERY countered hero without repeating boilerplate
+    const explainEvals = counteredEvals.length > 0 ? counteredEvals : [bestEval];
+    const hasAnySpecificReason = explainEvals.some(
+      (e) => Boolean(e.overrideTip || e.contextTip),
+    );
+    const reasons: EnemyCounterReason[] = [];
+
+    if (explainEvals.length === 1) {
+      const e = explainEvals[0];
+      if (e.overrideTip) {
+        reasons.push({
+          heroClasses: [e.heroClass],
+          text: e.overrideTip,
+          isHeroSpecific: true,
+        });
+      } else if (e.contextTip) {
+        reasons.push({
+          heroClasses: [e.heroClass],
+          triggerSummary: e.matchedTriggers.join(' · ') || undefined,
+          text: e.contextTip,
+          isHeroSpecific: false,
+        });
+      } else {
+        reasons.push({
+          heroClasses: [e.heroClass],
+          triggerSummary: e.matchedTriggers.join(' · ') || undefined,
+          text: baseWhy,
+          isHeroSpecific: false,
+        });
+      }
+    } else if (!hasAnySpecificReason) {
+      // Collapse shared general mechanics into one crisp line across all countered heroes (no duplicate text)
+      const sharedTriggers = Array.from(
+        new Set(explainEvals.flatMap((e) => e.matchedTriggers)),
+      ).slice(0, 3);
+      reasons.push({
+        heroClasses: explainEvals.map((e) => e.heroClass),
+        triggerSummary: sharedTriggers.join(' · ') || undefined,
+        text: baseWhy,
+        isHeroSpecific: false,
+      });
+    } else {
+      // One crisp reason per countered enemy: curated override/context tip where available, dynamic mechanics otherwise
+      for (const e of explainEvals) {
+        if (e.overrideTip) {
+          reasons.push({
+            heroClasses: [e.heroClass],
+            text: e.overrideTip,
+            isHeroSpecific: true,
+          });
+        } else if (e.contextTip) {
+          reasons.push({
+            heroClasses: [e.heroClass],
+            text: e.contextTip,
+            isHeroSpecific: false,
+          });
+        } else {
+          const triggerList =
+            e.matchedTriggers.length > 0
+              ? e.matchedTriggers.join(' & ')
+              : uiDict.damageReasonLabel[
+                  targets.find((t) => t.heroClass === e.heroClass)?.damageProfile ?? 'equal'
+                ];
+          reasons.push({
+            heroClasses: [e.heroClass],
+            text: uiDict.dynamicMechanicReason(triggerList),
+            isHeroSpecific: false,
+          });
+        }
+      }
+    }
 
     scored.push({
       item,
       rule,
       role: bestEval.roleOverride ?? rule.role,
       score: Math.round(combinedScore * 10) / 10,
-      why:
-        bestOverrideEval?.overrideTip ??
-        bestContextEval?.contextTip ??
-        deCopy?.why ??
-        rule.why,
+      why: reasons[0]?.text ?? baseWhy,
+      reasons,
       whenToUse: deCopy?.whenToUse ?? rule.whenToUse,
       synergyNote,
       isHeroSpecific: anyHeroSpecific,
@@ -558,6 +712,7 @@ export function recommendCounters(
         tierLabel,
         role: c.role,
         why: c.why,
+        reasons: c.reasons,
         whenToUse: c.whenToUse,
         synergyNote: c.synergyNote,
         isHeroSpecific: c.isHeroSpecific,
