@@ -121,19 +121,19 @@ export const UI_TEXT = {
     ): string => {
       switch (axis) {
         case 'cooldown':
-          return `Verstärkt ${ability} (${hero}) — kürzerer Cooldown: ${effect}.`;
+          return `Verkürzt den Cooldown von ${ability} (${hero}). Die Fähigkeit ${effect}.`;
         case 'range':
-          return `Verstärkt ${ability} (${hero}) — mehr Range/Radius: ${effect}.`;
+          return `Mehr Reichweite für ${ability} (${hero}). Die Fähigkeit ${effect}.`;
         case 'duration':
-          return `Verstärkt ${ability} (${hero}) — längere Duration: ${effect}.`;
+          return `${ability} (${hero}) hält länger. Die Fähigkeit ${effect}.`;
         case 'charges':
-          return `Verstärkt ${ability} (${hero}) — extra Charges: ${effect}.`;
+          return `Eine zusätzliche Ladung für ${ability} (${hero}). Die Fähigkeit ${effect}.`;
         case 'echo':
-          return `Resettet ${ability} (${hero}) sofort — Double-Cast: ${effect}.`;
+          return `Setzt ${ability} (${hero}) sofort zurück, du kannst sie zweimal einsetzen. Die Fähigkeit ${effect}.`;
         case 'refresher':
-          return `Resettet ${ability} (${hero}) & Kit sofort — Double-Cast: ${effect}.`;
+          return `Setzt ${ability} und alle Fähigkeiten von ${hero} sofort zurück. Die Fähigkeit ${effect}.`;
         case 'gap_close':
-          return `Bringt ${hero} direkt in Range für ${ability}: ${effect}.`;
+          return `Bringt ${hero} direkt in Reichweite für ${ability}. Die Fähigkeit ${effect}.`;
       }
     },
     kitAmplifierUse: (
@@ -142,21 +142,21 @@ export const UI_TEXT = {
       isImbue: boolean,
     ): string => {
       if (axis === 'echo') {
-        return `Auf ${ability} imbuen und nach dem ersten Cast direkt resetten für einen zweiten Cast.`;
+        return `Auf ${ability} imbuen. Nach dem ersten Einsatz sofort zurücksetzen und ein zweites Mal einsetzen.`;
       }
       if (axis === 'refresher') {
-        return `Direkt nach ${ability} aktivieren, um sofort erneut zu countern oder ein zweites Target zu locken.`;
+        return `Direkt nach ${ability} aktivieren. Dann kannst du sofort noch einmal kontern oder einen zweiten Gegner festhalten.`;
       }
       if (axis === 'gap_close') {
-        return `Per Active in die Luft springen und direkt in Range für ${ability} landen.`;
+        return `Aktivieren, in die Luft springen und direkt in Reichweite für ${ability} landen.`;
       }
       if (isImbue) {
-        return `Auf ${ability} imbuen — halte ${ability} gezielt für das gegnerische Key-Window bereit.`;
+        return `Auf ${ability} imbuen. Halte ${ability} für den Moment bereit, in dem der Gegner seine wichtigste Fähigkeit einsetzt.`;
       }
-      return `Passiv — halte ${ability} gezielt bereit, um gegnerische Key-Abilities sofort zu countern.`;
+      return `Passiv — halte ${ability} bereit, um die wichtigste Fähigkeit des Gegners sofort zu kontern.`;
     },
     kitAmplifierSynergyNote: (hero: string, ability: string) =>
-      `Bufft ${hero}s ${ability}`,
+      `Verstärkt ${hero}s ${ability}`,
     kitBoostPrefix: 'Verstärkt',
     kitBoostAxisLabel: {
       cooldown: '-CD',
@@ -258,25 +258,25 @@ export const UI_TEXT = {
     } as Record<ThreatMechanic, string>,
 
     offenseSectionTitle: 'Ausschalten',
-    offenseSectionSub: 'Lockdown, Silence, Anti-Heal & Burst',
+    offenseSectionSub: 'Festhalten, Fähigkeiten sperren, Heilung senken und schnell ausschalten',
     defenseSectionTitle: 'Überleben',
-    defenseSectionSub: 'Damage mitigieren, Debuffs cleansen & Combos überleben',
+    defenseSectionSub: 'Schaden abfangen, negative Effekte entfernen und Combos überleben',
     recommendedStanceBadge: 'Empfohlener Fokus',
     stanceReasonOffense: (name: string) =>
-      `${name} ist squishy oder hat starke Escapes — Lockdown, Silence & Wegbursten ist oft stärker als reine Defense.`,
+      `${name} hat wenig HP oder flüchtet leicht. Festhalten, Fähigkeiten sperren und schnell ausschalten bringt oft mehr als reine Verteidigung.`,
     stanceReasonDefense: (name: string) =>
-      `${name} droht dich mit Heavy Burst, CC oder DPS zu deleten — erst die Combo überleben, dann zurückschlagen.`,
+      `${name} kann dich mit viel Schaden oder Kontrolle schnell töten. Erst die Combo überleben, dann zurückschlagen.`,
     stanceReasonBalanced: (name: string) =>
-      `Gegen ${name} funktionieren beide Richtungen — wähle Offense für den Shutdown oder Defense zum Überleben.`,
+      `Gegen ${name} funktioniert beides. Ausschalten, um ihn zu stoppen, oder Überleben, um seinen Angriff auszuhalten.`,
 
     synergy: {
-      gun: (hero: string) => `Passt stark zu ${hero}s Weapon-Damage`,
-      spirit: (hero: string) => `Skaliert sauber mit ${hero}s Spirit-Kit`,
-      firerate: (hero: string) => `Procct schnell durch ${hero}s Fire Rate`,
-      spiritProccer: (hero: string) => `Procct zuverlässig über ${hero}s Abilities`,
-      closeRange: (hero: string) => `Passt zu ${hero}s Close-Range-Brawl-Stil`,
-      longRange: (hero: string) => `Hält ${hero} sicher auf Backline-Range`,
-      supportive: (hero: string) => `Doppelt stark als Team-Utility auf ${hero}`,
+      gun: (hero: string) => `Passt gut zu ${hero}s Waffenschaden`,
+      spirit: (hero: string) => `Wird mit ${hero}s Spirit-Fähigkeiten stärker`,
+      firerate: (hero: string) => `Löst durch ${hero}s hohe Feuerrate schnell aus`,
+      spiritProccer: (hero: string) => `Löst über ${hero}s Fähigkeiten zuverlässig aus`,
+      closeRange: (hero: string) => `Passt zu ${hero}s Nahkampf-Stil`,
+      longRange: (hero: string) => `Hält ${hero} sicher auf Abstand`,
+      supportive: (hero: string) => `Doppelt stark, weil ${hero} das Team unterstützt`,
     },
 
     emptyBadge: 'Counter-Lookup unter 5 Sekunden',

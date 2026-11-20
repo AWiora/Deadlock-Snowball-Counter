@@ -572,7 +572,7 @@ describe('Deadlock counter recommendation engine', () => {
     const disarmMixed = mixedLangRes.offense.find(
       (r) => r.item.className === 'upgrade_greater_withering_whip',
     );
-    expect(disarmMixed?.why).toContain('Disarmt');
+    expect(disarmMixed?.why).toContain('Entwaffnet');
     expect(disarmMixed?.upgradeHint?.itemName).toBe('Rusted Barrel');
   });
 
