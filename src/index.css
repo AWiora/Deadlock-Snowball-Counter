@@ -1379,7 +1379,7 @@ button {
   border: 1px solid rgba(240, 120, 120, 0.8);
 }
 
-/* Condensed display face; two-word names may wrap once ("Lady / Geist") */
+/* Condensed display face on one line, so every row keeps the same height */
 .roster-cell-name {
   width: 100%;
   font-family: var(--font-display);
@@ -1387,13 +1387,16 @@ button {
   font-weight: 700;
   color: var(--text-secondary);
   text-align: center;
-  line-height: 1.05;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  line-height: 1.15;
+  white-space: nowrap;
   overflow: hidden;
-  overflow-wrap: normal;
+  text-overflow: ellipsis;
+}
+
+/* "Deadman Danny", "Nurse Harrow": a size step down instead of a second line */
+.roster-cell-name--long {
+  font-size: 0.78rem;
+  letter-spacing: -0.01em;
 }
 
 .roster-cell--enemy .roster-cell-name,

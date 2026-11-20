@@ -469,7 +469,11 @@ export function MatchupControlBar({
                       <span className="roster-cell-badge roster-cell-badge--enemy">{enemyIdx}</span>
                     )}
                   </div>
-                  <span className="roster-cell-name">{name}</span>
+                  <span
+                    className={`roster-cell-name ${name.length > 9 ? 'roster-cell-name--long' : ''}`}
+                  >
+                    {name}
+                  </span>
                 </button>
               );
             })}
