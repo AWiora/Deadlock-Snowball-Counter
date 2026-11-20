@@ -3674,7 +3674,26 @@
           "descEn": "Create a bishop that remains in place indefinitely. Move: Moves the bishop, applying a fading slow and dealing spirit damage to enemies it passes through. After a delay, activates diagonal squares that deal additional spirit damage when stepped on. Re-activate to recall all bishops, ending the ability.",
           "descDe": "Solomon erschafft einen Läufer, der dauerhaft an Ort und Stelle verweilt. Ziehen: Solomon zieht den Läufer, der Gegnern auf dem Weg Magieschaden zufügt und sie verlangsamt (abnehmend). Der Läufer hinterlässt nach einer Verzögerung diagonale Felder, die Magieschaden zufügen, sobald ein Gegner sie betritt. Kann erneut aktiviert werden, um alle Läufer zurückzurufen und die Fähigkeit zu beenden.",
           "isUltimate": false,
-          "damage": []
+          "damage": [
+            {
+              "type": "spirit",
+              "value": "70",
+              "labelEn": "Impact Damage",
+              "labelDe": "Aufprallschaden"
+            },
+            {
+              "type": "spirit",
+              "value": "25",
+              "labelEn": "Damage",
+              "labelDe": "Schaden"
+            },
+            {
+              "type": "spirit",
+              "value": "30",
+              "labelEn": "Damage Per Second",
+              "labelDe": "Schaden pro Sek."
+            }
+          ]
         },
         {
           "className": "ability_chessmaster_knightbuff",
@@ -3696,7 +3715,14 @@
           "descEn": "Release a pair of rooks that travel forward, dealing spirit damage and applying immobilize. If the rooks hit a wall, they reflect back in the opposite direction. Re-Activate: Split the rooks perpendicularly.",
           "descDe": "Solomon entfesselt ein Paar Türme, die nach vorn stürmen, wodurch Gegner Magieschaden erleiden und festgesetzt werden. Wenn die Türme auf eine Wand treffen, ändern sie ihre Richtung und kehren um. Reaktivieren: Die Türme bewegen sich waagrecht in entgegengesetzte Richtungen.",
           "isUltimate": false,
-          "damage": []
+          "damage": [
+            {
+              "type": "spirit",
+              "value": "50",
+              "labelEn": "Damage",
+              "labelDe": "Schaden"
+            }
+          ]
         },
         {
           "className": "ability_chessmaster_queen",
@@ -3707,7 +3733,20 @@
           "descEn": "Summon a queen that crashes down, dealing spirit damage in an area. After a delay, the queen releases squares in straight lines that deal spirit damage again and apply stun. Heroes hit that are low health are checkmated, executing them. Move: The queen leaps to the target location, dealing the same effects again. Re-activate to recall the queen early, ending the ability.",
           "descDe": "Solomon beschwört eine Dame, die herabstürzt und Magieschaden im Wirkungsbereich zufügt. Nach einer Verzögerung beschwört die Dame Felder, die sich in einer geraden Linie bewegen, und erneut Magieschaden zu fügen und betroffene Gegner betäubt. Helden mit niedrigen Lebenspunkten werden Schachmatt gesetzt und hingerichtet. Ziehen: Die Dame springt zum Zielort und verursacht erneut dieselben Effekte. Kann erneut aktiviert werden, um die Dame frühzeitig zurückzurufen und die Fähigkeit zu beenden.",
           "isUltimate": true,
-          "damage": []
+          "damage": [
+            {
+              "type": "spirit",
+              "value": "120",
+              "labelEn": "Damage",
+              "labelDe": "Schaden"
+            },
+            {
+              "type": "spirit",
+              "value": "50",
+              "labelEn": "Damage Per Second",
+              "labelDe": "Schaden pro Sek."
+            }
+          ]
         }
       ],
       "metaWeaponPct": 10,

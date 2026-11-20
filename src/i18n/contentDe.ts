@@ -107,21 +107,13 @@ export const ITEM_COPY_DE: Record<string, { why: string; whenToUse: string }> = 
     why: 'Löst automatisch eine starke Barriere aus, wenn du viel Spirit-Schaden auf einmal bekommst. Bester früher Schutz gegen Spirit.',
     whenToUse: 'Passiv — fängt gegnerische Spirit-Combos ab.',
   },
-  upgrade_regenerating_bullet_shield: {
-    why: 'Frühe Kugelresistenz plus mehr Waffenschaden und Feuerrate, solange du über 65 % HP bist.',
-    whenToUse: 'Passiv — über 65 % HP bleiben, dann gewinnst du jeden Schusswechsel leichter.',
-  },
-  upgrade_magic_shield: {
-    why: 'Frühe Spirit-Resistenz plus Spirit-Kraft und kürzere Cooldowns.',
-    whenToUse: 'Passiv — guter früher Schutz für Spirit-Helden gegen Gegner, die ständig Fähigkeiten einsetzen.',
-  },
   upgrade_return_fire: {
     why: 'Wirft 65 % des Waffenschadens und 25 % des Spirit-Schadens zurück. Schnell feuernde Gegner schaden sich selbst. Wirkt nicht gegen Nahkampf.',
     whenToUse: 'Sofort aktivieren, wenn der Gegner voll auf dich schießt oder seine Waffen-Ult startet.',
   },
   upgrade_vex_barrier: {
     why: 'Löst automatisch eine große Barriere aus, sobald du betäubt, gesperrt, festgehalten, eingeschläfert oder gefesselt wirst.',
-    whenToUse: 'Passiv — verhindert, dass frühe Kontroll-Combos (Hook, Charge, Root, Schlaf) dich sofort töten.',
+    whenToUse: 'Passiv — verhindert, dass frühe Kontroll-Combos (Betäubung, Fessel, Root, Schlaf) dich sofort töten.',
   },
   upgrade_debuff_reducer: {
     why: 'Verkürzt Betäubung, Silence, Root, Blutung, Brand und Verlangsamung um 25 %. Wird zu Unstoppable oder Spellbreaker.',
@@ -229,7 +221,7 @@ export const ITEM_COPY_DE: Record<string, { why: string; whenToUse: string }> = 
   },
   upgrade_deflecting_armor: {
     why: 'Bestes passives Item gegen Waffen: wehrt Kugeln ab und verhindert, dass Treffer-Effekte sich aufbauen (Fixation, Afterburn, Djinn\'s Mark).',
-    whenToUse: 'Passiv — entschärft schnell feuernde Carrys im späten Spiel, ohne Aktiv-Slot.',
+    whenToUse: 'Passiv — wehrt einen Teil der Kugeln ab und blockt viele Treffer-Effekte, ohne Aktiv-Slot.',
   },
   upgrade_juggernaut: {
     why: 'Wird aus Enduring Speed. Jeder, der dich angreift, schießt 40 % langsamer. Dazu Schutz gegen Nahkampf und Verlangsamung.',
@@ -252,8 +244,8 @@ export const ITEM_COPY_DE: Record<string, { why: string; whenToUse: string }> = 
     whenToUse: 'Vor deinem Angriff oder deiner Ult zünden. Geht nicht mehr, wenn du schon betäubt bist.',
   },
   upgrade_auto_cleanse: {
-    why: 'Blockt automatisch die nächste Betäubung, Silence, Schlaf oder Root und gibt dir eine Barriere. Kein Aktiv-Slot nötig.',
-    whenToUse: 'Passiv — schützt vor überraschender Kontrolle (Lasso, Hook, Schlaf, Combo), ganz ohne Reaktion.',
+    why: 'Entfernt automatisch die nächste Betäubung, Fessel, Root, Schlaf, Silence oder Furcht und gibt dir eine Barriere. Kein Aktiv-Slot nötig.',
+    whenToUse: 'Passiv — schützt vor überraschender Kontrolle (Lasso-Betäubung, Schlaf, Combo, Roots), ganz ohne Reaktion.',
   },
   upgrade_self_bubble: {
     why: 'Macht dich kurz unverwundbar. Weicht vorhersehbaren Ults, verzögerten Explosionen und Combos aus.',
@@ -414,11 +406,10 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_healbane: 'Senkt die Heilung aus Siphon Life und Infernal Resilience bei jedem Spirit-Treffer.',
     upgrade_rupture: 'Schmilzt Abrams\' viele HP über Blutung und halbiert seine Regeneration.',
     upgrade_toxic_bullets: 'Blutung und Anti-Heilung über deine Kugeln brechen Abrams\' Selbstheilung.',
-    upgrade_debuff_reducer: 'Verkürzt die Betäubung von Shoulder Charge so weit, dass du seinen Nahkampfschlag danach noch parieren kannst.',
+    upgrade_debuff_reducer: 'Verkürzt die Betäubung von Shoulder Charge, damit du schneller wieder handeln kannst.',
     upgrade_glitch: 'Unterbricht Abrams, sperrt seine Fähigkeiten und entfernt seine Buffs. Dann kann dein Team ihn ausschalten.',
   },
   hero_bebop: {
-    upgrade_vex_barrier: 'Bester Lane-Konter gegen Bebop: Sein Hook löst sofort die Barriere aus und fängt Uppercut und Bombe ab.',
     upgrade_reduce_debuff_duration: 'Bester Konter gegen Bomben-Bebop: direkt nach Sticky Bomb drücken. Die Bombe ist weg, kein Schaden, keine Stacks.',
     upgrade_counterspell: 'Kurz vor der Sticky-Bomb-Explosion oder beim Hook parieren. Das blockt den Schaden komplett und heilt dich.',
     upgrade_target_stun: 'Unterbricht Bebops Hyper Beam aus sicherer Entfernung.',
@@ -440,21 +431,20 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
   },
   hero_orion: {
     upgrade_target_stun: 'Bester Konter gegen Grey Talon: holt ihn mit Knockdown sofort aus Rain of Arrows.',
-    upgrade_spirit_bubble: 'Fängt Charged Shots auf der Lane ab, damit du nicht in Reichweite von Guided Owl fällst.',
+    upgrade_spirit_bubble: 'Fängt Charged Shots auf der Lane ab, damit er dich vor Guided Owl nicht kleinpokt.',
     upgrade_spellbreaker: 'Bester passiver Konter gegen Spirit-Grey-Talon: schluckt den großen Einzeltreffer von Charged Shot und Guided Owl.',
     upgrade_counterspell: 'Genau beim Einschlag von Guided Owl oder Charged Shot parieren. Das blockt den Treffer komplett.',
     upgrade_phantom_strike: 'Teleportiert dich zu Grey Talon, holt ihn aus der Luft und entwaffnet ihn.',
   },
   hero_inferno: {
-    upgrade_reduce_debuff_duration: 'Bester Konter gegen Infernus: entfernt Afterburn und Napalm sofort. Sein Schaden über Zeit und sein Lebensraub fallen weg.',
+    upgrade_reduce_debuff_duration: 'Bester Konter gegen Infernus: entfernt Afterburn und Napalm sofort. Sein Schaden über Zeit fällt weg.',
     upgrade_debuff_reducer: 'Verkürzt Afterburn und die Betäubung seiner Ult spürbar. Wird zu Unstoppable oder Spellbreaker.',
     upgrade_deflecting_armor: 'Bester passiver Konter gegen Infernus: Treffer-Effekte bauen sich nicht auf, Afterburn löst kaum noch aus.',
-    upgrade_healbane: 'Senkt Infernus\' starken Lebensraub aus Afterburn und Flame Dash.',
     upgrade_spirit_bubble: 'Fängt frühe Afterburn-Treffer auf der Lane mit einer Barriere ab.',
   },
   hero_ghost: {
-    upgrade_healbane: 'Senkt Geists Life Drain und Lebensraub, damit sie ihren Eigenschaden nicht mehr heilt.',
-    upgrade_rupture: 'Schmilzt Geists viele HP und senkt die Heilung aus Life Drain stark.',
+    upgrade_healbane: 'Senkt die Heilung aus Life Drain, damit Geist die HP, die sie für Essence Bomb und Malice opfert, nicht zurückholt.',
+    upgrade_rupture: 'Macht Schaden nach ihren aktuellen HP und senkt die Heilung aus Life Drain stark.',
     upgrade_targeted_silence: 'Geist sperren, wenn sie wenig HP hat. Dann kann sie Soul Exchange nicht drücken.',
     upgrade_focus_lens: 'Sperrt Geist vor Soul Exchange und erledigt sie mit dem verzögerten Schaden.',
     upgrade_reduce_debuff_duration: 'Entfernt gestapelte Malice-Splitter, bevor ihre Essence Bomb einschlägt.',
@@ -476,18 +466,18 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_focus_lens: 'Sperrt Satchel und Cloak und erledigt Pocket mit dem verzögerten Schaden.',
   },
   hero_shiv: {
-    upgrade_healbane: 'Senkt Shivs Lebensraub, damit er den verzögerten Schaden aus Bloodletting nicht wegheilt.',
+    upgrade_healbane: 'Senkt Shivs Heilung, damit er den verzögerten Schaden aus Bloodletting nicht wegheilt.',
     upgrade_reduce_debuff_duration: 'Entfernt gestapelte Blutung von Serrated Knives, damit du nicht unter die Killing-Blow-Schwelle fällst.',
     upgrade_containment: 'Sperrt Shivs Slice and Dice und den Sprung von Killing Blow.',
     upgrade_rupture: 'Bestraft Shivs hohe HP durch Bloodletting mit Blutung und starker Anti-Heilung.',
     upgrade_glitch: 'Sperrt Bloodletting und Killing Blow, damit dein Team Shiv sofort ausschalten kann.',
-    upgrade_cheat_death: 'Verhindert passiv den Killing-Blow-Reset, damit Shiv im Teamfight keine Kill-Serie bekommt.',
+    upgrade_cheat_death: 'Überlebt den tödlichen Treffer, damit Shiv im Teamfight keine Killing-Blow-Serie bekommt.',
   },
   hero_krill: {
     upgrade_vex_barrier: 'Bester früher Konter gegen Mo & Krill: Seine Combo-Ult löst automatisch deine Barriere aus.',
     upgrade_rescue_beam: 'Zieht einen festgehaltenen Teammate aus Mo & Krills Combo und heilt ihn.',
     upgrade_unstoppable: 'Kurz bevor Mo & Krill aus dem Boden angreift zünden. Combo und Sand Blast wirken dann nicht.',
-    upgrade_auto_cleanse: 'Blockt Combo oder Sand Blast automatisch und gibt eine Barriere. Rettet dich, wenn deine Aktiv-Slots voll sind.',
+    upgrade_auto_cleanse: 'Entfernt die Betäubung von Combo automatisch und gibt eine Barriere. Rettet dich, wenn deine Aktiv-Slots voll sind.',
     upgrade_rupture: 'Schmilzt Mo & Krills viele HP über Blutung und senkt die Heilung aus Scorn.',
     upgrade_toxic_bullets: 'Blutung nach max. HP frisst sich durch Mo & Krill und hält die Anti-Heilung gegen Scorn aufrecht.',
   },
@@ -532,7 +522,7 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_deflecting_armor: 'Verhindert passiv, dass Mina mit ihrer Waffe schnell Love-Bites-Stacks auf dir aufbaut.',
   },
   hero_astro: {
-    upgrade_vex_barrier: 'Spirit Lasso und die Betäubung von Bounce Pad lösen sofort deine Barriere aus. So überlebst du das Wegziehen.',
+    upgrade_vex_barrier: 'Spirit Lasso löst sofort deine Barriere aus. So überlebst du das Wegziehen.',
     upgrade_counterspell: 'Spirit Lasso oder Powder Keg parieren. Das blockt Hollidays Combo komplett.',
     upgrade_unstoppable: 'Holliday kann dich mit Spirit Lasso nicht mehr wegziehen.',
     upgrade_rescue_beam: 'Zieht einen Teammate aus dem Spirit Lasso zurück und heilt ihn.',
@@ -570,15 +560,15 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_absorbing_armor: 'Graves\' ständige Spirit-Treffer verkürzen deine eigenen Cooldowns.',
   },
   hero_tengu: {
-    upgrade_healbane: 'Senkt Ivys Heilung aus Watcher\'s Covenant und den Lebensraub von Kudzu, schon für 1.600 Souls.',
+    upgrade_healbane: 'Senkt Ivys Heilung aus Kudzu Connection und Stone Form, schon für 1.600 Souls.',
     upgrade_target_stun: 'Holt Ivy mit Knockdown direkt aus ihrem Air Drop.',
     upgrade_vex_barrier: 'Die Betäubung von Stone Form löst sofort deine Barriere aus. So überlebst du den Angriff danach.',
-    upgrade_rupture: 'Bricht Ivys Heilung und Lebensraub in mittleren und späten Kämpfen.',
+    upgrade_rupture: 'Bricht Ivys Heilung aus Kudzu Connection und Stone Form in längeren Kämpfen.',
     upgrade_glitch: 'Sperrt Ivy. Dann kann sie weder Stone Form noch Air Drop zur Flucht nutzen.',
   },
   hero_nurse: {
-    upgrade_healbane: 'Bester günstiger Konter gegen Nurse Harrow: senkt sofort die Heilung aus Healing Needles und Leech Therapy.',
-    upgrade_reduce_debuff_duration: 'Entfernt Leech Therapy auf Knopfdruck. Sie bekommt dann weder Schaden noch Heilung daraus.',
+    upgrade_healbane: 'Bester günstiger Konter gegen Nurse Harrow: senkt sofort die Heilung aus Healing Needles.',
+    upgrade_reduce_debuff_duration: 'Entfernt Leech Therapy auf Knopfdruck. Schaden über Zeit und das Abbauen deiner Buffs hören sofort auf.',
     upgrade_rupture: 'Senkt Nurse Harrows Heilung und schmilzt die Tanks, die sie heilt.',
     upgrade_spirit_burn: 'Starke Anti-Heilung in der Fläche (-70 %) im späten Spiel. Bricht die Heilung ihres ganzen Teams.',
   },
@@ -591,14 +581,13 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
   hero_ratking: {
     upgrade_reduce_debuff_duration: 'Entfernt Rat Swarm sofort, heilt dich und macht dich schneller.',
     upgrade_debuff_reducer: 'Verkürzt den Schaden von Rat Swarm auf der Lane. Wird zu Unstoppable oder Spellbreaker.',
-    upgrade_rupture: 'Schmilzt Rat Kings viele HP und senkt seine Heilung.',
     upgrade_glitch: 'Entfernt seine Royal-Pestments-Barrieren sofort und sperrt seine Granaten und Rat Swarm.',
   },
   hero_familiar: {
     upgrade_healbane: 'Senkt Rems plötzliche Heilung aus Tag Along früh und günstig.',
-    upgrade_vex_barrier: 'Schlaf von Naptime und die Kontrolle von Pillow lösen sofort deine Barriere aus.',
+    upgrade_vex_barrier: 'Der Schlaf von Naptime löst sofort deine Barriere aus.',
     upgrade_containment: 'Sperrt Rems Dashes und seine Flucht mit Tag Along.',
-    upgrade_unstoppable: 'Naptime und Pillow wirken nicht mehr auf dich, auch nicht durch Wände.',
+    upgrade_unstoppable: 'Der Schlaf von Naptime wirkt nicht mehr auf dich, auch nicht durch Wände.',
     upgrade_auto_cleanse: 'Blockt überraschenden Schlaf von Naptime automatisch, ganz ohne Reaktion.',
   },
   hero_werewolf: {
@@ -623,13 +612,13 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
   hero_frank: {
     upgrade_rupture: 'Schmilzt Victors viele HP über Blutung und senkt die Heilung aus Jumpstart stark.',
     upgrade_toxic_bullets: 'Blutung und Anti-Heilung über deine Schüsse brechen Victors Selbstheilung.',
-    upgrade_healbane: 'Pflicht-Anti-Heilung für 1.600 Souls gegen Victors Jumpstart und den Lebensraub seiner Aura.',
+    upgrade_healbane: 'Pflicht-Anti-Heilung für 1.600 Souls gegen die Regeneration aus Victors Jumpstart.',
     upgrade_tech_purge: 'Viel passive Spirit-Resistenz gegen den Dauerschaden von Aura of Suffering.',
     upgrade_spirit_burn: 'Der Brand mit -70 % Heilung verhindert, dass Victor sich vor oder nach seiner Wiederbelebung hochheilt.',
   },
   hero_viscous: {
     upgrade_healbane: 'Senkt die Heilung aus The Cube und Viscous\' Selbstheilung spürbar.',
-    upgrade_containment: 'Sperrt Viscous\' Bewegungsfähigkeiten, damit er nach The Cube nicht wegspringt.',
+    upgrade_containment: 'Sperrt Goo Ball und verlangsamt Viscous, damit er nach The Cube nicht wegrollt.',
     upgrade_glitch: 'Unterbricht Goo Ball sofort, verhindert die Rettung mit The Cube und entfernt seine Buffs.',
     upgrade_capacitor: 'Nimmt Viscous alle Ausdauer und sperrt seine Bewegungsfähigkeiten nach The Cube.',
   },
@@ -641,9 +630,8 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
   },
   hero_punkgoat: {
     upgrade_melee_rebuttal: 'Billy lädt seine Passive über Nahkampftreffer auf. Jeder Parry heilt dich und wirft seinen Schaden zurück.',
-    upgrade_vex_barrier: 'Chain Gang und Rising Ram lösen automatisch deine Barriere aus und fangen seinen Schaden danach ab.',
+    upgrade_vex_barrier: 'Chain Gang löst automatisch deine Barriere aus und fängt seinen Schaden danach ab.',
     upgrade_warp_stone: 'Teleportiert dich sofort aus Billys Nahkampfreichweite und gibt Kugelresistenz.',
-    upgrade_unstoppable: 'Fesseln von Chain Gang und das Hochschleudern von Rising Ram wirken im Teamfight nicht mehr.',
   },
   hero_forge: {
     upgrade_return_fire: 'Wirft den Schaden von McGinnis\' voll aufgedrehter Minigun auf sie zurück. Trifft auch ihre Geschütze, wenn die dich angreifen.',
@@ -657,7 +645,6 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_healbane: 'Senkt Kelvins starke Flächenheilung aus Frost Grenade und Frozen Shelter im Teamfight.',
   },
   hero_magician: {
-    upgrade_vex_barrier: 'Rabbit Hex löst automatisch deine Barriere aus. So überlebst du den Schaden von Vexing Bolt.',
     upgrade_debuff_reducer: 'Verkürzt Rabbit Hex passiv um 25 %. Aktive Cleanses gehen im Hex nicht. Wird zu Spellbreaker oder Unstoppable.',
     upgrade_counterspell: 'Rabbit Hex oder Vexing Bolt beim Einschlag parieren. Das blockt Verwandlung und Schaden komplett.',
     upgrade_spellbreaker: 'Schluckt Sinclairs großen Einzeltreffer von Vexing Bolt und verkürzt Rabbit Hex passiv um 25 %.',
@@ -669,8 +656,8 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
   },
   hero_doorman: {
     upgrade_counterspell: 'Call-Bell-Explosion, Luggage Cart oder Baroness Hotel parieren. Das blockt Doormans Combo.',
-    upgrade_vex_barrier: 'Gibt sofort eine Barriere, sobald Luggage Cart dich zieht oder betäubt.',
     upgrade_spellbreaker: 'Schluckt passiv den großen Spirit-Treffer von Call Bell und Baroness Hotel.',
+    upgrade_reduce_debuff_duration: 'Entfernt Verlangsamung und Zielungenauigkeit von Call Bell sofort.',
   },
   hero_priest: {
     upgrade_metal_skin: 'Aktivieren, sobald Venator für Ira Domini seine Armbrust zieht. Seine Kugeln machen dann keinen Schaden.',
@@ -686,11 +673,11 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_unstoppable: 'Still Life betäubt dich nicht mehr, und du läufst ohne Silence oder Verlangsamung aus Abstract Landscape heraus.',
   },
   hero_baba: {
-    upgrade_vex_barrier: 'Gibt automatisch eine Barriere, wenn Baba\'s Brew dich sperrt oder Feed The Birds dich verhext.',
+    upgrade_vex_barrier: 'Gibt automatisch eine Barriere, wenn Baba\'s Brew dich sperrt.',
     upgrade_target_stun: 'Unterbricht Babas Feed The Birds aus sicherer Entfernung, bevor der Tauben-Fluch wirkt.',
     upgrade_reduce_debuff_duration: 'Entfernt Silence und Brand von Baba\'s Brew sofort. Heilt dich und macht dich schneller. Hilft nicht gegen ihre Ult.',
     upgrade_tech_purge: 'Senkt Babas Spirit-Schaden aus Threadsap, Brew und Feed The Birds zuverlässig, auch wenn sie deine Resistenz senkt.',
     upgrade_glitch: 'Bricht Feed The Birds sofort ab, entfernt Barrieren von Baba\'s Brew und stoppt die Flucht mit Granny Long Legs.',
-    upgrade_unstoppable: 'Verlangsamung und Tauben-Fluch von Feed The Birds und die Silence von Baba\'s Brew wirken im Teamfight nicht mehr.',
+    upgrade_unstoppable: 'Die Silence von Baba\'s Brew sperrt deine Fähigkeiten im Teamfight nicht mehr.',
   },
 };

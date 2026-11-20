@@ -13,7 +13,7 @@ import type {
 } from '../types/deadlock';
 
 const API_BASE = 'https://api.deadlock-api.com/v1/assets';
-const CACHE_KEY = 'deadlock_counter_helper_assets_v8';
+const CACHE_KEY = 'deadlock_counter_helper_assets_v9';
 
 // API property glyph (file name of `prop.icon`) -> stat icon key the tooltip maps to a wiki icon.
 // Keep in sync with scripts/sync-deadlock-data.mjs.
@@ -175,10 +175,41 @@ export function extractAbilityDamage(
       ...(perBullet ? { perBullet: true } : {}),
     });
   }
+  if (damage.length === 0) damage.push(...extractUntypedDamage(abEn, propsEn, propsDe));
   return {
     damage: damage.slice(0, MAX_ABILITY_DAMAGE_STATS),
     ...(empowersWeapon ? { empowersWeapon: true } : {}),
   };
+}
+
+// Some abilities (e.g. Solomon's pieces) list their damage without a css_class. The ability
+// text still names the damage type ("dealing spirit damage"), so take it from there.
+const UNTYPED_DAMAGE_KEY = /^(Damage|ImpactDamage|DPS|ExplodeDamage|ExplosionDamage)$/;
+function extractUntypedDamage(
+  abEn: Record<string, any> | undefined,
+  propsEn: Record<string, any>,
+  propsDe: Record<string, any>,
+): AbilityDamageStat[] {
+  const text = JSON.stringify([abEn?.description ?? '', abEn?.tooltip_details ?? '']);
+  const type: AbilityDamageType = /SpiritDamage|spirit damage/i.test(text)
+    ? 'spirit'
+    : /BulletDamage|weapon damage|bullet damage/i.test(text)
+      ? 'weapon'
+      : /MeleeDamage|melee damage/i.test(text)
+        ? 'melee'
+        : 'spirit';
+  const out: AbilityDamageStat[] = [];
+  for (const [key, p] of Object.entries(propsEn)) {
+    if (!UNTYPED_DAMAGE_KEY.test(key) || p?.css_class || p?.provided_property_type) continue;
+    const num = Number.parseFloat(String(p?.value ?? ''));
+    const labelEn = cleanHtml(p?.label || p?.postvalue_label || '');
+    const value = formatPropertyValue(p);
+    if (!num || num < 0 || !labelEn || labelEn.startsWith('#') || !value) continue;
+    const pDe = propsDe[key];
+    const labelDe = cleanHtml(pDe?.label || pDe?.postvalue_label || '') || labelEn;
+    out.push({ type, value, labelEn, labelDe: labelDe.startsWith('#') ? labelEn : labelDe });
+  }
+  return out;
 }
 
 function extractItemCooldown(it: Record<string, any> | undefined): string | undefined {

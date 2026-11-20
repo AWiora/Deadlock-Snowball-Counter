@@ -5,9 +5,12 @@ import { getItemDamageFocus, HERO_ABILITY_TAGS, ITEM_ACTION_PROFILES } from '../
 import { HERO_PROFILES } from '../data/heroProfiles';
 import { KIT_AMPLIFIER_RULES } from '../data/kitAmplifiers';
 import { HERO_OVERRIDE_TIPS_DE, ITEM_COPY_DE } from '../i18n/contentDe';
-import { abilityFitsDamageFocus, recommendCounters } from './recommend';
+import { itemFitsAbility, recommendCounters } from './recommend';
+import { abilityFitsCounter, abilityHasFit, threatChipAllowed } from './abilityFit';
+import { getAbilityTraits } from '../data/abilityTraits';
+import { UI_TEXT } from '../i18n/translations';
 import { segmentTextWithAbilities } from '../utils/abilities';
-import type { DeadlockHero, DeadlockItem, PriceTier } from '../types/deadlock';
+import type { DeadlockHero, DeadlockItem, PriceTier, ThreatMechanic } from '../types/deadlock';
 
 const snapshot = getBundledSnapshot();
 const itemsByClass = new Map<string, DeadlockItem>(
@@ -718,7 +721,7 @@ describe('Deadlock counter recommendation engine', () => {
     );
     expect(onlyOneMatched.offense.some((r) => r.isKitAmplifier)).toBe(false);
 
-    // Bebop Hook counters BOTH Vindicta (airborne) AND Seven (channeled_ult) -> qualifies!
+    // Bebop Hook counters BOTH Vindicta and Grey Talon (both fight from the air) -> qualifies!
     const twoMatched = recommendCounters(
       {
         myHeroClass: 'hero_bebop',
@@ -728,7 +731,7 @@ describe('Deadlock counter recommendation engine', () => {
         modifiers: [],
         enemyTargets: [
           { heroClass: 'hero_hornet', damageProfile: 'bullet', modifiers: [] },
-          { heroClass: 'hero_gigawatt', damageProfile: 'spirit', modifiers: [] },
+          { heroClass: 'hero_orion', damageProfile: 'bullet', modifiers: [] },
         ],
         activeSlotsFull: false,
         language: 'de',
@@ -740,11 +743,11 @@ describe('Deadlock counter recommendation engine', () => {
     const kitPick = twoMatched.offense.find((r) => r.isKitAmplifier);
     expect(kitPick).toBeDefined();
     expect(kitPick?.counteredEnemies).toContain('hero_hornet');
-    expect(kitPick?.counteredEnemies).toContain('hero_gigawatt');
+    expect(kitPick?.counteredEnemies).toContain('hero_orion');
     // One line per countered enemy, both answered by the same boosted Grapple Arm
     expect(kitPick?.reasons.map((r) => r.heroClasses)).toEqual([
       ['hero_hornet'],
-      ['hero_gigawatt'],
+      ['hero_orion'],
     ]);
     expect(kitPick?.reasons.every((r) => r.text.includes('Greifarm'))).toBe(true);
   });
@@ -1298,7 +1301,7 @@ describe('Deadlock counter recommendation engine', () => {
       kind: 'ability',
       ability: { slot: 2, name: 'Shoulder Charge' },
     });
-    expect(debuffAbrams.whenToUse).toMatch(/parry/i);
+    expect(debuffAbrams.whenToUse).toMatch(/Shoulder Charge/);
 
     // Abrams @ 800: Rebuttal uses unified non-ability mechanic pill (Punishes Heavy Melee)
     const vsAbrams800 = recommendCounters(
@@ -1402,7 +1405,7 @@ describe('Deadlock counter recommendation engine', () => {
         modifiers: [],
         enemyTargets: [
           { heroClass: 'hero_hornet', damageProfile: 'bullet', modifiers: [] },
-          { heroClass: 'hero_gigawatt', damageProfile: 'spirit', modifiers: [] },
+          { heroClass: 'hero_orion', damageProfile: 'bullet', modifiers: [] },
         ],
         activeSlotsFull: false,
         language: 'en',
@@ -1423,11 +1426,11 @@ describe('Deadlock counter recommendation engine', () => {
         .flatMap((r) => r.actionGroups ?? [])
         .flatMap((g) => g.targets);
     const hornetChips = chipsOf('hero_hornet');
-    const sevenChips = chipsOf('hero_gigawatt');
+    const talonChips = chipsOf('hero_orion');
     expect(hornetChips.some((c) => c.kind === 'ability' && c.ability.slot === 2)).toBe(true);
-    expect(sevenChips.some((c) => c.kind === 'ability' && c.ability.slot === 4)).toBe(true);
+    expect(talonChips.some((c) => c.kind === 'ability' && c.ability.slot === 2)).toBe(true); // Rain of Arrows
     expect(hornetChips.every((c) => c.kind !== 'ability' || c.heroClass === 'hero_hornet')).toBe(true);
-    expect(sevenChips.every((c) => c.kind !== 'ability' || c.heroClass === 'hero_gigawatt')).toBe(true);
+    expect(talonChips.every((c) => c.kind !== 'ability' || c.heroClass === 'hero_orion')).toBe(true);
   });
 
   it('provides clean EN and DE in-game item tooltips for all curated counter and kit-amplifier items', () => {
@@ -1558,8 +1561,9 @@ describe('ability damage types from the game data', () => {
                 expect(chip.label, 'Headhunter has no air bonus').not.toMatch(/Luft/);
               }
               if (chip.kind !== 'ability' || !focus) continue;
+              const traits = getAbilityTraits(chip.heroClass, chip.ability.slot)!;
               expect(
-                abilityFitsDamageFocus(chip.ability, focus),
+                abilityHasFit(chip.ability, traits, focus),
                 `${rec.item.name} vs ${chip.ability.name}`,
               ).toBe(true);
             }
@@ -1567,5 +1571,119 @@ describe('ability damage types from the game data', () => {
         }
       }
     }
+  });
+});
+
+describe('every claim on a card is mechanically true', () => {
+  const tiers: PriceTier[] = ['800', '1600', '3200', '6400', 'all'];
+  const heroClasses = snapshot.heroes.map((h) => h.className);
+  const de = UI_TEXT.de;
+  const threatByLabel = new Map(
+    (Object.entries(de.threats) as [ThreatMechanic, string][]).map(([k, v]) => [v, k]),
+  );
+  const run = (enemy: string, priceTier: PriceTier, myHeroClass: string | null) =>
+    recommendCounters(
+      {
+        myHeroClass,
+        enemyHeroClass: enemy,
+        priceTier,
+        damageProfile: heroesByClass.get(enemy)?.metaDamage ?? 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+
+  it('has traits for all 4 abilities of every hero', () => {
+    for (const h of snapshot.heroes) {
+      for (const ab of h.abilities ?? []) {
+        expect(getAbilityTraits(h.className, ab.slot), `${h.name} ${ab.name}`).toBeDefined();
+      }
+    }
+  });
+
+  it('only names abilities an item really works on, and only true mechanic targets', () => {
+    let checked = 0;
+    for (const enemy of heroClasses) {
+      for (const priceTier of tiers) {
+        const res = run(enemy, priceTier, null);
+        for (const rec of [...res.offense, ...res.defense]) {
+          expect(rec.reasons.length, `${rec.item.name} vs ${enemy}`).toBeGreaterThan(0);
+          for (const reason of rec.reasons) {
+            expect(reason.actionGroups?.length, `${rec.item.name} vs ${enemy}: no reason`).toBeGreaterThan(0);
+            for (const g of reason.actionGroups ?? []) {
+              for (const chip of g.targets) {
+                checked++;
+                if (chip.kind === 'ability') {
+                  expect(
+                    itemFitsAbility(rec.item.className, g.verb, chip.ability, chip.heroClass),
+                    `${rec.item.name} ${g.verb} ${chip.ability.name}`,
+                  ).toBe(true);
+                } else {
+                  const threat = threatByLabel.get(chip.label);
+                  if (threat) {
+                    expect(threatChipAllowed(g.verb, threat), `${rec.item.name} ${g.verb} ${chip.label}`).toBe(true);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(500);
+  });
+
+  it('keeps kit-amplifier chips true for every own hero', () => {
+    for (const my of heroClasses) {
+      for (const enemy of ['hero_hornet', 'hero_haze', 'hero_atlas', 'hero_gigawatt', 'hero_orion', 'hero_dynamo']) {
+        if (my === enemy) continue;
+        for (const priceTier of ['1600', '3200', '6400'] as PriceTier[]) {
+          const res = run(enemy, priceTier, my);
+          for (const rec of [...res.offense, ...res.defense].filter((r) => r.isKitAmplifier)) {
+            for (const g of rec.reasons.flatMap((r) => r.actionGroups ?? [])) {
+              for (const chip of g.targets) {
+                if (chip.kind === 'ability') {
+                  expect(
+                    abilityFitsCounter(chip.ability, chip.heroClass, g.verb),
+                    `${my} ${rec.item.name}: ${g.verb} ${chip.ability.name}`,
+                  ).toBe(true);
+                } else {
+                  const threat = threatByLabel.get(chip.label);
+                  if (threat) expect(threatChipAllowed(g.verb, threat), `${my}: ${g.verb} ${chip.label}`).toBe(true);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  it('fixes the claims the user caught', () => {
+    const chipsOf = (enemy: string, priceTier: PriceTier, cls: string) => {
+      const res = run(enemy, priceTier, null);
+      const rec = [...res.offense, ...res.defense].find((r) => r.item.className === cls);
+      return (rec?.reasons ?? []).flatMap((r) => r.actionGroups ?? []).flatMap((g) =>
+        g.targets.map((c) => `${g.verb}:${c.kind === 'ability' ? c.ability.name : c.label}`),
+      );
+    };
+    // A barrier or an escape can't answer an ability that does no damage and can't be dodged
+    for (const cls of ['upgrade_guardian_ward', 'upgrade_colossus', 'upgrade_fleetfoot_boots', 'upgrade_arctic_blast']) {
+      for (const tier of ['1600', '6400'] as PriceTier[]) {
+        expect(chipsOf('hero_drifter', tier, cls).join(' ')).not.toMatch(/Eternal Night/);
+      }
+    }
+    // Healing back doesn't answer an ult, regen doesn't answer a one-shot
+    expect(chipsOf('hero_hornet', '800', 'upgrade_health_stimpak').join(' ')).not.toMatch(/Assassinate/);
+    // Close Quarters doesn't "punish spirit damage"
+    expect(chipsOf('hero_baba', '800', 'upgrade_close_range')).toEqual([]);
+    // Infernus has no self-heal in his kit
+    expect(chipsOf('hero_inferno', '1600', 'upgrade_healbane')).toEqual([]);
+    // Battle Vest / Enchanter's Emblem are no counters in the current game data
+    expect(COUNTER_ITEM_RULES.some((r) => r.className === 'upgrade_magic_shield')).toBe(false);
+    expect(COUNTER_ITEM_RULES.some((r) => r.className === 'upgrade_regenerating_bullet_shield')).toBe(false);
   });
 });

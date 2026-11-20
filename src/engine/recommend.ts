@@ -6,6 +6,7 @@ import {
   ITEM_ACTION_PROFILES,
 } from '../data/heroAbilityTags';
 import { getHeroProfile } from '../data/heroProfiles';
+import { getAbilityTraits, type AbilityTrait } from '../data/abilityTraits';
 import { KIT_AMPLIFIER_RULES } from '../data/kitAmplifiers';
 import {
   HERO_HEADLINES_DE,
@@ -43,6 +44,13 @@ import type {
   ThreatMechanic,
   UpgradeHint,
 } from '../types/deadlock';
+import {
+  abilityFitsCounter,
+  damageChipAllowed,
+  modifierChipAllowed,
+  threatChipAllowed,
+  verbNamesAbilities,
+} from './abilityFit';
 
 export function getBaseKitTags(heroClassName: string, lang: Language = 'de'): string[] {
   const profile = getHeroProfile(heroClassName);
@@ -145,7 +153,6 @@ const BULLET_ONLY_ITEMS = new Set([
   'upgrade_withering_whip',
   'upgrade_greater_withering_whip',
   'upgrade_weapon_shielding',
-  'upgrade_regenerating_bullet_shield',
   'upgrade_return_fire',
   'upgrade_metal_skin',
   'upgrade_improved_bullet_armor',
@@ -156,7 +163,6 @@ const BULLET_ONLY_ITEMS = new Set([
 
 const SPIRIT_ONLY_ITEMS = new Set([
   'upgrade_spirit_bubble',
-  'upgrade_magic_shield',
   'upgrade_spirit_sap',
   'upgrade_tech_purge',
   'upgrade_spellbreaker',
@@ -453,6 +459,7 @@ function pushChipToGroup(
 /**
  * Does an item that only works against one damage type (Metal Skin: bullets) actually help
  * against this ability? Uses the game data; without data (old cache) the ability passes.
+ * Kept for callers that only know the damage focus; the engine uses abilityFitsCounter.
  */
 export function abilityFitsDamageFocus(
   ability: DeadlockAbility,
@@ -461,6 +468,19 @@ export function abilityFitsDamageFocus(
   if (!focus || !ability.damage) return true;
   if (focus === 'weapon' && ability.empowersWeapon) return true;
   return ability.damage.some((d) => d.type === focus);
+}
+
+/** Can this item, with this verb, honestly be shown against this enemy ability? */
+export function itemFitsAbility(
+  itemClassName: string,
+  verb: CounterActionVerb,
+  ability: DeadlockAbility,
+  heroClass: string,
+): boolean {
+  return abilityFitsCounter(ability, heroClass, verb, {
+    fits: ITEM_ACTION_PROFILES[itemClassName]?.fits,
+    focus: getItemDamageFocus(itemClassName),
+  });
 }
 
 function resolveEnemyActionGroups(
@@ -482,9 +502,38 @@ function resolveEnemyActionGroups(
   );
   const heroTags = HERO_ABILITY_TAGS[target.heroClass] ?? [];
   const tagBySlot = new Map(heroTags.map((tag) => [tag.slot, tag]));
-  // Only abilities the item really helps against, e.g. no Metal Skin vs a spirit-damage ult
   const damageFocus = getItemDamageFocus(rule.className);
-  const abilityFits = (ab: DeadlockAbility) => abilityFitsDamageFocus(ab, damageFocus);
+  // Only abilities the item really works on (game data + ABILITY_TRAITS), e.g. no Metal Skin vs
+  // a spirit ult, no barrier vs an ability without damage, no slow vs a passive
+  const abilityFits = (ab: DeadlockAbility, verb: CounterActionVerb) =>
+    itemFitsAbility(rule.className, verb, ab, target.heroClass);
+  // "Weapon-Schaden" / "Spirit-Schaden" as a target, labelled by the item's focus if it has one
+  const damageChip = (verb: CounterActionVerb, damage: DamageProfile): CounterTargetChip | null => {
+    if (profile?.damageChip === false) return null;
+    const shown: DamageProfile = damageFocus === 'weapon' ? 'bullet' : damageFocus === 'spirit' ? 'spirit' : damage;
+    if (!damageChipAllowed(verb, shown)) return null;
+    const label =
+      shown === 'bullet'
+        ? t.mechanicFallbacks.bullet_dps
+        : shown === 'spirit'
+          ? t.mechanicFallbacks.spirit_dps
+          : t.damageReasonLabel.equal;
+    return { kind: 'mechanic', label, tone: 'damage', damageType: shown };
+  };
+
+  // A threat label ("Stuns & Roots") is only a reason if at least one ability of this enemy with
+  // that threat is one the item works on (no "escapes Stuns & Roots" vs a point-and-click stun)
+  const threatTrueForHero = (verb: CounterActionVerb, threat: ThreatMechanic): boolean => {
+    if (!verbNamesAbilities(verb)) return true;
+    const tagged = heroTags.filter((tag) => tag.threats.includes(threat));
+    if (tagged.length === 0) return true;
+    // The damage focus doesn't matter here: "Bestraft: Springt dich an" is about where the
+    // enemy ends up, not about the damage type of the dive
+    return tagged.some((tag) => {
+      const ab = abilityBySlot.get(tag.slot);
+      return ab ? abilityFitsCounter(ab, target.heroClass, verb, { fits: profile?.fits }) : false;
+    });
+  };
 
   const groups: CounterActionGroup[] = [];
   const coveredModifiers = new Set<EnemyModifier>();
@@ -499,6 +548,7 @@ function resolveEnemyActionGroups(
     for (const { mod } of sortedMods) {
       if (added >= maxAdded) break;
       const verb = profile?.verbByModifier?.[mod] ?? defaultVerb;
+      if (!modifierChipAllowed(verb, mod)) continue;
       pushChipToGroup(groups, verb, t.actionVerbs[verb], {
         kind: 'mechanic',
         label: t.modifiers[mod].label,
@@ -518,7 +568,7 @@ function resolveEnemyActionGroups(
     const primaryVerb = overrideMeta.verb ?? defaultVerb;
     for (const slot of overrideMeta.slots ?? []) {
       const ab = abilityBySlot.get(slot);
-      if (!ab || !abilityFits(ab)) continue;
+      if (!ab || !abilityFits(ab, primaryVerb)) continue;
       pushChipToGroup(groups, primaryVerb, t.actionVerbs[primaryVerb], {
         kind: 'ability',
         ability: ab,
@@ -530,22 +580,28 @@ function resolveEnemyActionGroups(
     }
     if (overrideMeta.mechanicFallback) {
       const fb = overrideMeta.mechanicFallback;
-      const tone = fb === 'bullet_dps' || fb === 'spirit_dps' ? 'damage' : fb === 'low_hp' ? 'threat' : 'modifier';
-      pushChipToGroup(groups, primaryVerb, t.actionVerbs[primaryVerb], {
-        kind: 'mechanic',
-        label: t.mechanicFallbacks[fb],
-        tone,
-        damageType: fb === 'bullet_dps' ? 'bullet' : fb === 'spirit_dps' ? 'spirit' : undefined,
-      });
-      if (fb === 'melee') coveredModifiers.add('melee');
-      if (fb === 'tanky') coveredModifiers.add('tanky');
-      if (fb === 'healing') coveredModifiers.add('healing');
+      let chip: CounterTargetChip | null = null;
+      if (fb === 'bullet_dps' || fb === 'spirit_dps') {
+        chip = damageChip(primaryVerb, fb === 'bullet_dps' ? 'bullet' : 'spirit');
+      } else if (fb === 'low_hp') {
+        if (threatChipAllowed(primaryVerb, 'fragile_glass_cannon')) {
+          chip = { kind: 'mechanic', label: t.mechanicFallbacks.low_hp, tone: 'threat' };
+        }
+      } else if (fb === 'melee' ? threatChipAllowed(primaryVerb, 'melee_brawler') : modifierChipAllowed(primaryVerb, fb)) {
+        chip = { kind: 'mechanic', label: t.mechanicFallbacks[fb], tone: 'modifier' };
+      }
+      if (chip) {
+        pushChipToGroup(groups, primaryVerb, t.actionVerbs[primaryVerb], chip);
+        if (fb === 'melee') coveredModifiers.add('melee');
+        if (fb === 'tanky') coveredModifiers.add('tanky');
+        if (fb === 'healing') coveredModifiers.add('healing');
+      }
     }
     if (overrideMeta.extraGroup) {
       const extraVerb = overrideMeta.extraGroup.verb;
       for (const slot of overrideMeta.extraGroup.slots) {
         const ab = abilityBySlot.get(slot);
-        if (!ab || !abilityFits(ab)) continue;
+        if (!ab || !abilityFits(ab, extraVerb)) continue;
         pushChipToGroup(groups, extraVerb, t.actionVerbs[extraVerb], {
           kind: 'ability',
           ability: ab,
@@ -572,14 +628,14 @@ function resolveEnemyActionGroups(
       ability: DeadlockAbility;
       slot: 1 | 2 | 3 | 4;
       score: number;
-      bestThreat: ThreatMechanic;
+      verb: CounterActionVerb;
       modifiers: EnemyModifier[];
     }
     const candidates: AbilityCandidate[] = [];
 
     for (const tag of heroTags) {
       const ab = abilityBySlot.get(tag.slot);
-      if (!ab || !abilityFits(ab)) continue;
+      if (!ab) continue;
       if (profile.skipUltimatesForCleanse && (ab.isUltimate || tag.cleanseable === false)) {
         continue;
       }
@@ -588,11 +644,13 @@ function resolveEnemyActionGroups(
       }
 
       let bestScore = 0;
-      let bestThreat: ThreatMechanic | null = null;
+      let bestVerb: CounterActionVerb | null = null;
 
       for (let i = 0; i < profile.abilityMatchThreats.length; i++) {
         const threat = profile.abilityMatchThreats[i];
         if (!tag.threats.includes(threat)) continue;
+        const verb = profile.verbByThreat?.[threat] ?? defaultVerb;
+        if (!abilityFits(ab, verb)) continue;
 
         let w = (rule.threatCounters?.[threat] ?? 16) + Math.max(0, 6 - i * 2);
         if (
@@ -611,16 +669,16 @@ function resolveEnemyActionGroups(
 
         if (w > bestScore) {
           bestScore = w;
-          bestThreat = threat;
+          bestVerb = verb;
         }
       }
 
-      if (bestThreat && bestScore >= 12) {
+      if (bestVerb && bestScore >= 12) {
         candidates.push({
           ability: ab,
           slot: tag.slot,
           score: bestScore,
-          bestThreat,
+          verb: bestVerb,
           modifiers: tag.modifiers ?? [],
         });
       }
@@ -632,8 +690,7 @@ function resolveEnemyActionGroups(
 
     if (picked.length > 0) {
       for (const p of picked) {
-        const verb = profile.verbByThreat?.[p.bestThreat] ?? defaultVerb;
-        pushChipToGroup(groups, verb, t.actionVerbs[verb], {
+        pushChipToGroup(groups, p.verb, t.actionVerbs[p.verb], {
           kind: 'ability',
           ability: p.ability,
           heroClass: target.heroClass,
@@ -642,13 +699,12 @@ function resolveEnemyActionGroups(
           coveredModifiers.add(m);
         }
       }
-      // For Rebuttal, if a parryable melee ability matched, also keep Heavy Melee covered only if melee isn't already obvious
       appendUncoveredModifiers(1);
       return groups;
     }
   }
 
-  // 3. Unified non-ability mechanic fallback (compact [Verb] + [Target Pill] chips)
+  // 3. Mechanic targets: only pairs that are true for this item ("Burstet: Wenig HP")
   const fallbackChips: { verb: CounterActionVerb; chip: CounterTargetChip; weight: number }[] = [];
 
   if (rule.className === 'upgrade_melee_rebuttal') {
@@ -662,8 +718,8 @@ function resolveEnemyActionGroups(
   if (rule.modifierCounters) {
     for (const mod of target.modifiers) {
       const w = rule.modifierCounters[mod] ?? 0;
-      if (w >= 14) {
-        const verb = profile?.verbByModifier?.[mod] ?? defaultVerb;
+      const verb = profile?.verbByModifier?.[mod] ?? defaultVerb;
+      if (w >= 14 && modifierChipAllowed(verb, mod)) {
         fallbackChips.push({
           verb,
           chip: { kind: 'mechanic', label: t.modifiers[mod].label, tone: 'modifier' },
@@ -675,18 +731,9 @@ function resolveEnemyActionGroups(
 
   if (rule.damageCounters) {
     const dmgW = rule.damageCounters[target.damageProfile] ?? 0;
-    if (dmgW >= 16) {
-      const dmgLabel =
-        target.damageProfile === 'bullet'
-          ? t.mechanicFallbacks.bullet_dps
-          : target.damageProfile === 'spirit'
-            ? t.mechanicFallbacks.spirit_dps
-            : t.damageReasonLabel.equal;
-      fallbackChips.push({
-        verb: defaultVerb,
-        chip: { kind: 'mechanic', label: dmgLabel, tone: 'damage', damageType: target.damageProfile },
-        weight: dmgW * 1.15,
-      });
+    const chip = dmgW >= 16 ? damageChip(defaultVerb, target.damageProfile) : null;
+    if (chip) {
+      fallbackChips.push({ verb: defaultVerb, chip, weight: dmgW * 1.15 });
     }
   }
 
@@ -709,8 +756,8 @@ function resolveEnemyActionGroups(
         ) {
           w *= 0.45;
         }
-        if (w >= 14) {
-          const verb = profile?.verbByThreat?.[threat] ?? defaultVerb;
+        const verb = profile?.verbByThreat?.[threat] ?? defaultVerb;
+        if (w >= 14 && threatChipAllowed(verb, threat) && threatTrueForHero(verb, threat)) {
           fallbackChips.push({
             verb,
             chip: {
@@ -748,24 +795,58 @@ function resolveEnemyActionGroups(
     if (totalAdded >= 2) break;
   }
 
-  if (groups.length === 0) {
-    pushChipToGroup(groups, defaultVerb, t.actionVerbs[defaultVerb], {
-      kind: 'mechanic',
-      label: t.damageReasonLabel[target.damageProfile],
-      tone: 'damage',
-      damageType: target.damageProfile,
-    });
-  }
-
+  // No true reason against this enemy: no groups, and the caller drops the item for them
   return groups;
+}
+
+/** Own abilities whose counter verb can't be read from role + threat alone */
+const KIT_VERB_OVERRIDE: Record<string, CounterActionVerb> = {
+  'Riposte:defense': 'parries',
+  'Time Wall:defense': 'blocks',
+  'Dust Devil:defense': 'mitigates',
+  'Soul Exchange:defense': 'punishes',
+};
+
+/** What YOUR ability does against this enemy threat, from what the ability really does */
+export function kitVerbForThreat(
+  kitAbility: HeroKitCounter,
+  threat: ThreatMechanic | undefined,
+  myTraits: ReadonlySet<AbilityTrait>,
+): CounterActionVerb {
+  const fixed = KIT_VERB_OVERRIDE[`${kitAbility.abilityName}:${kitAbility.stance}`];
+  if (fixed) return fixed;
+  const interrupts = ['stun', 'sleep', 'knock', 'pull', 'petrify'].some((x) =>
+    myTraits.has(x as AbilityTrait),
+  );
+  if (kitAbility.stance === 'offense') {
+    if (threat === 'channeled_ult') return 'cancels';
+    if (threat === 'bullet_ult' && interrupts) return 'cancels';
+    if (threat === 'airborne') return 'grounds';
+    if (threat === 'heavy_healing') return myTraits.has('silence') ? 'silences' : 'cuts_heal';
+    if (threat === 'fragile_glass_cannon') return 'bursts';
+    if (threat === 'long_range_poke') return 'punishes';
+    if (threat === 'rapid_fire' || threat === 'on_hit_procs' || threat === 'bullet_ult') {
+      return myTraits.has('disarm') ? 'disarms' : 'weakens';
+    }
+    if (threat === 'ability_spam') {
+      return myTraits.has('silence') || myTraits.has('hex') ? 'silences' : 'controls';
+    }
+    return 'controls';
+  }
+  if (threat === 'cleanseable_debuff') return 'cleanses';
+  if (myTraits.has('buff')) return threat === 'hard_cc' ? 'blocks' : 'absorbs';
+  if (myTraits.has('heal')) return 'sustains';
+  if (myTraits.has('mobility')) return 'escapes';
+  return 'blocks';
 }
 
 function resolveKitEnemyActionGroups(
   kitAbility: HeroKitCounter,
+  myTraits: ReadonlySet<AbilityTrait>,
   enemyHeroClass: string,
   enemyHero: DeadlockHero | undefined,
   matchedThreats: ThreatMechanic[],
-  matchedTriggerLabels: string[],
+  matchedModifierLabels: string[],
   lang: Language,
 ): CounterActionGroup[] {
   const t = UI_TEXT[lang];
@@ -775,29 +856,21 @@ function resolveKitEnemyActionGroups(
   );
   const heroTags = HERO_ABILITY_TAGS[enemyHeroClass] ?? [];
 
-  const verbForKitThreat = (threat?: ThreatMechanic): CounterActionVerb => {
-    if (threat === 'channeled_ult') return 'cancels';
-    if (threat === 'airborne') return 'grounds';
-    if (threat === 'heavy_healing' || kitAbility.role === 'Anti-Heal') return 'cuts_heal';
-    if (threat === 'cleanseable_debuff' || kitAbility.role === 'Cleanse') return 'cleanses';
-    if (kitAbility.role === 'Control') return 'controls';
-    if (kitAbility.role === 'Survival') return 'blocks';
-    if (kitAbility.role === 'Anti-Spirit') return 'silences';
-    return 'counters';
-  };
-
   if (heroTags.length > 0 && matchedThreats.length > 0) {
-    const scoredAbilities: { ability: DeadlockAbility; slot: number; threat: ThreatMechanic; score: number }[] = [];
+    const scoredAbilities: { ability: DeadlockAbility; slot: number; verb: CounterActionVerb; score: number }[] = [];
     for (const tag of heroTags) {
       const ab = abilityBySlot.get(tag.slot);
       if (!ab) continue;
       for (let i = 0; i < matchedThreats.length; i++) {
         const th = matchedThreats[i];
         if (!tag.threats.includes(th)) continue;
+        const verb = kitVerbForThreat(kitAbility, th, myTraits);
+        // Only enemy abilities your ability really answers (no "cancels" vs a non-channel)
+        if (!abilityFitsCounter(ab, enemyHeroClass, verb)) continue;
         scoredAbilities.push({
           ability: ab,
           slot: tag.slot,
-          threat: th,
+          verb,
           score: (10 - i) + (ab.isUltimate ? 2 : 0),
         });
         break;
@@ -805,8 +878,7 @@ function resolveKitEnemyActionGroups(
     }
     scoredAbilities.sort((a, b) => b.score - a.score || a.slot - b.slot);
     for (const match of scoredAbilities.slice(0, 2)) {
-      const verb = verbForKitThreat(match.threat);
-      pushChipToGroup(groups, verb, t.actionVerbs[verb], {
+      pushChipToGroup(groups, match.verb, t.actionVerbs[match.verb], {
         kind: 'ability',
         ability: match.ability,
         heroClass: enemyHeroClass,
@@ -815,14 +887,31 @@ function resolveKitEnemyActionGroups(
   }
 
   if (groups.length === 0) {
-    const fallbackVerb = verbForKitThreat(matchedThreats[0]);
-    for (const label of matchedTriggerLabels.slice(0, 2)) {
-      pushChipToGroup(groups, fallbackVerb, t.actionVerbs[fallbackVerb], {
+    let added = 0;
+    for (const threat of matchedThreats) {
+      const verb = kitVerbForThreat(kitAbility, threat, myTraits);
+      if (!threatChipAllowed(verb, threat)) continue;
+      if (verbNamesAbilities(verb)) {
+        const tagged = heroTags.filter((tag) => tag.threats.includes(threat));
+        const anyFits = tagged.some((tag) => {
+          const ab = abilityBySlot.get(tag.slot);
+          return ab ? abilityFitsCounter(ab, enemyHeroClass, verb) : false;
+        });
+        if (tagged.length > 0 && !anyFits) continue;
+      }
+      pushChipToGroup(groups, verb, t.actionVerbs[verb], {
         kind: 'mechanic',
-        label,
+        label: t.threats[threat],
         tone: 'threat',
-        damageType: label === t.threats.sustained_spirit ? 'spirit' : undefined,
+        damageType: threat === 'sustained_spirit' ? 'spirit' : undefined,
       });
+      if (++added >= 2) break;
+    }
+    if (added === 0 && matchedModifierLabels.length > 0) {
+      const verb = kitVerbForThreat(kitAbility, undefined, myTraits);
+      for (const label of matchedModifierLabels.slice(0, 2)) {
+        pushChipToGroup(groups, verb, t.actionVerbs[verb], { kind: 'mechanic', label, tone: 'modifier' });
+      }
     }
   }
 
@@ -1013,10 +1102,13 @@ export function recommendCounters(
         lang,
       );
 
+      // Nothing on the card would be true against this enemy: it is no counter for them
+      const hasRealReason = actionGroups.length > 0;
+
       evals.push({
         heroClass: target.heroClass,
-        score: enemyScore,
-        isHeroSpecific,
+        score: hasRealReason ? enemyScore : 0,
+        isHeroSpecific: hasRealReason && isHeroSpecific,
         overrideTip,
         overrideUseTip,
         contextTip,
@@ -1337,13 +1429,20 @@ export function recommendCounters(
           const abName = resolveKitAbilityName(ab);
           const effect = lang === 'de' ? ab.effectDe : ab.effectEn;
           const text = uiDict.kitAmplifierReason(ampRule.axis, abName, myHeroDisplayName, effect);
+          const ownAbility = resolveHeroAbility(myHero, ab.abilityName);
+          const myTraits =
+            (input.myHeroClass && ownAbility
+              ? getAbilityTraits(input.myHeroClass, ownAbility.slot)
+              : undefined) ?? new Set<AbilityTrait>();
+          const threatLabels = new Set(Object.values(uiDict.threats));
           for (const g of group) {
             const enemyGroups = resolveKitEnemyActionGroups(
               ab,
+              myTraits,
               g.heroClass,
               heroesByClass.get(g.heroClass),
               g.matchedThreats,
-              g.matchedTriggers,
+              g.matchedTriggers.filter((label) => !threatLabels.has(label)),
               lang,
             );
             const actionGroups: CounterActionGroup[] = [];

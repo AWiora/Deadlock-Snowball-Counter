@@ -4,6 +4,7 @@ import type {
   HeroAbilityThreatTag,
   ThreatMechanic,
 } from '../types/deadlock';
+import type { AbilityFit } from '../engine/abilityFit';
 
 export interface ItemActionProfile {
   defaultVerb: CounterActionVerb;
@@ -21,6 +22,14 @@ export interface ItemActionProfile {
   preferMechanicFallback?: boolean;
   /** Max ability chips per enemy row (default 2) */
   maxAbilityChips?: number;
+  /**
+   * What an enemy ability must do for this item to work on it (any of). Overrides the verb's
+   * default requirement (see VERB_FIT in src/engine/abilityFit.ts), e.g. Reactive Barrier
+   * triggers on hard CC, not on damage.
+   */
+  fits?: AbilityFit[];
+  /** false: never label the enemy's damage type ("Weapon-Schaden") as this item's target */
+  damageChip?: false;
 }
 
 /**
@@ -32,14 +41,16 @@ const DAMAGE_FOCUS: Record<string, 'weapon' | 'spirit'> = {
   upgrade_weapon_shielding: 'weapon',
   upgrade_deflecting_armor: 'weapon', // Plated Armor
   upgrade_improved_bullet_armor: 'weapon', // Bullet Resilience
-  upgrade_regenerating_bullet_shield: 'weapon', // Battle Vest
+  upgrade_withering_whip: 'weapon', // Rusted Barrel: Fire Rate & Bullet Resist
+  upgrade_greater_withering_whip: 'weapon', // Disarming Hex
+  upgrade_suppressor: 'weapon', // Fire Rate cut
   upgrade_juggernaut: 'weapon',
   upgrade_bullet_armor_reduction_aura: 'weapon', // Hunter's Aura: only cuts their Fire Rate & Bullet Resist
   upgrade_spirit_bubble: 'spirit', // Spirit Shielding
   upgrade_tech_purge: 'spirit', // Spirit Resilience
   upgrade_spellbreaker: 'spirit',
   upgrade_absorbing_armor: 'spirit', // Witchmail
-  upgrade_magic_shield: 'spirit', // Enchanter's Emblem
+  upgrade_spirit_sap: 'spirit', // Spirit Power & Spirit Resist cut
 };
 
 export function getItemDamageFocus(className: string): 'weapon' | 'spirit' | undefined {
@@ -392,14 +403,6 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
     defaultVerb: 'absorbs',
     abilityMatchThreats: ['telegraphed_burst', 'sustained_spirit', 'ability_spam', 'long_range_poke'],
   },
-  upgrade_regenerating_bullet_shield: {
-    defaultVerb: 'mitigates',
-    preferMechanicFallback: true,
-  },
-  upgrade_magic_shield: {
-    defaultVerb: 'mitigates',
-    preferMechanicFallback: true,
-  },
   upgrade_return_fire: {
     defaultVerb: 'reflects',
     abilityMatchThreats: ['bullet_ult', 'rapid_fire'],
@@ -407,6 +410,8 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   upgrade_vex_barrier: {
     defaultVerb: 'absorbs',
     abilityMatchThreats: ['hard_cc'],
+    fits: ['hardCc'], // triggers on Stun, Chain, Immobilize, Sleep, Silence
+    damageChip: false,
   },
   upgrade_debuff_reducer: {
     defaultVerb: 'shortens',
@@ -420,6 +425,7 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   upgrade_restorative_locket: {
     defaultVerb: 'punishes',
     abilityMatchThreats: ['ability_spam', 'sustained_spirit'],
+    fits: ['active'], // any enemy ability cast near you stores a stack
   },
   upgrade_containment: {
     defaultVerb: 'controls',
@@ -436,10 +442,12 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   upgrade_magic_slow: {
     defaultVerb: 'controls',
     abilityMatchThreats: ['high_mobility', 'close_range_dive'],
+    fits: ['dash'], // a slow does not stop teleports
   },
   upgrade_slowing_bullets: {
     defaultVerb: 'controls',
     abilityMatchThreats: ['high_mobility', 'close_range_dive'],
+    fits: ['dash'], // a slow does not stop teleports
   },
   upgrade_headshot_booster2: {
     defaultVerb: 'shreds',
@@ -452,6 +460,8 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   upgrade_cardio_calibrator: {
     defaultVerb: 'escapes',
     abilityMatchThreats: ['sustained_spirit', 'close_range_dive'],
+    fits: ['slow'], // only Slow Resist
+    damageChip: false,
   },
   upgrade_guardian_ward: {
     defaultVerb: 'absorbs',
@@ -460,6 +470,7 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   upgrade_fleetfoot_boots: {
     defaultVerb: 'escapes',
     abilityMatchThreats: ['close_range_dive', 'sustained_spirit'],
+    fits: ['dodgeable', 'slow'],
   },
   upgrade_bullet_resist_shredder: {
     defaultVerb: 'shreds',
@@ -472,6 +483,7 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   upgrade_cold_front: {
     defaultVerb: 'bursts',
     preferMechanicFallback: true,
+    verbByThreat: { high_mobility: 'controls', close_range_dive: 'controls' },
   },
   upgrade_pristine_emblem: {
     defaultVerb: 'bursts',
@@ -493,7 +505,9 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
     verbByThreat: {
       channeled_ult: 'cancels',
       airborne: 'grounds',
+      high_mobility: 'controls',
     },
+    damageChip: false,
   },
   upgrade_reduce_debuff_duration: {
     defaultVerb: 'cleanses',
@@ -545,7 +559,7 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
     preferMechanicFallback: true,
   },
   upgrade_rescue_beam: {
-    defaultVerb: 'escapes',
+    defaultVerb: 'rescues',
     abilityMatchThreats: ['channeled_ult', 'hard_cc'],
   },
   upgrade_headhunter: {
@@ -584,18 +598,23 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   upgrade_unstoppable: {
     defaultVerb: 'blocks',
     abilityMatchThreats: ['hard_cc', 'channeled_ult', 'cleanseable_debuff'],
+    fits: ['ccImmune'], // immune to Stun, Silence, Sleep, Root, Disarm
+    damageChip: false,
   },
   upgrade_auto_cleanse: {
     defaultVerb: 'cleanses',
     abilityMatchThreats: ['hard_cc', 'cleanseable_debuff'],
+    fits: ['hardCc'], // next Stun, Chain, Immobilize, Sleep, Silence or Fear
   },
   upgrade_self_bubble: {
     defaultVerb: 'blocks',
     abilityMatchThreats: ['telegraphed_burst', 'bullet_ult', 'channeled_ult', 'hard_cc'],
+    fits: ['damage', 'hardCc'], // invulnerable
   },
   upgrade_inhibitor: {
     defaultVerb: 'weakens',
     abilityMatchThreats: ['heavy_healing', 'rapid_fire', 'close_range_dive'],
+    fits: ['damage', 'heals'], // cuts their outgoing damage and healing
   },
   upgrade_spirit_burn: {
     defaultVerb: 'cuts_heal',
@@ -629,8 +648,9 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
     verbByThreat: {
       airborne: 'grounds',
       rapid_fire: 'disarms',
-      long_range_poke: 'controls',
+      long_range_poke: 'disarms',
     },
+    damageChip: false,
   },
   upgrade_focus_lens: {
     defaultVerb: 'silences',
@@ -650,6 +670,7 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   upgrade_divine_barrier: {
     defaultVerb: 'cleanses',
     abilityMatchThreats: ['cleanseable_debuff', 'telegraphed_burst'],
+    verbByThreat: { telegraphed_burst: 'absorbs' },
   },
   upgrade_colossus: {
     defaultVerb: 'mitigates',
@@ -659,10 +680,12 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
     defaultVerb: 'mitigates',
     abilityMatchThreats: ['sustained_spirit', 'close_range_dive'],
     verbByModifier: { tanky: 'shreds' },
+    fits: ['spirit', 'debuff'], // Spirit Resist + Debuff Resist
   },
   upgrade_arctic_blast: {
     defaultVerb: 'controls',
     abilityMatchThreats: ['high_mobility', 'close_range_dive'],
+    fits: ['dash'], // freeze + slow, no movement silence
     verbByThreat: {
       fragile_glass_cannon: 'bursts',
       high_mobility: 'controls',
@@ -670,12 +693,13 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
     },
   },
   upgrade_cheat_death: {
-    defaultVerb: 'blocks',
+    defaultVerb: 'survives',
     abilityMatchThreats: ['telegraphed_burst', 'bullet_ult'],
   },
   upgrade_fervor: {
     defaultVerb: 'shortens',
     abilityMatchThreats: ['cleanseable_debuff', 'hard_cc'],
+    damageChip: false,
   },
 };
 
@@ -744,8 +768,8 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
     upgrade_debuff_reducer: {
       slots: [2],
       verb: 'shortens',
-      useTip: 'Passive — shortens Shoulder Charge wall-stun enough to parry his follow-up heavy melee!',
-      useTipDe: 'Passiv — verkürzt die Betäubung von Shoulder Charge, sodass du den Schlag danach noch parieren kannst.',
+      useTip: 'Passive — shortens the Shoulder Charge wall stun so you recover sooner.',
+      useTipDe: 'Passiv — verkürzt die Betäubung von Shoulder Charge, damit du schneller wieder handeln kannst.',
     },
     upgrade_healbane: {
       slots: [1, 3],
@@ -761,12 +785,6 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
     },
   },
   hero_bebop: {
-    upgrade_vex_barrier: {
-      slots: [3, 1],
-      verb: 'absorbs',
-      useTip: 'Passive — Grapple Arm triggers the barrier automatically to soak Uppercut + Sticky Bomb.',
-      useTipDe: 'Passiv — Grapple Arm löst die Barriere automatisch aus und fängt Uppercut und Sticky Bomb ab.',
-    },
     upgrade_reduce_debuff_duration: {
       slots: [2],
       verb: 'cleanses',
@@ -879,8 +897,8 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
     upgrade_reduce_debuff_duration: {
       slots: [3, 1],
       verb: 'cleanses',
-      useTip: 'Press as soon as Afterburn ignites to stop both burn damage and his lifesteal.',
-      useTipDe: 'Sofort zünden, sobald Afterburn auslöst. Stoppt den Schaden über Zeit und seinen Lebensraub.',
+      useTip: 'Press as soon as Afterburn ignites to stop the burn damage.',
+      useTipDe: 'Sofort zünden, sobald Afterburn auslöst. Stoppt den Schaden über Zeit.',
     },
     upgrade_debuff_reducer: {
       slots: [3, 4],
@@ -891,10 +909,6 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
       verb: 'blocks',
       useTip: 'Passive — deflects bullets and blocks on-hit procs so Afterburn barely stacks.',
       useTipDe: 'Passiv — verhindert Treffer-Effekte, Infernus kann Afterburn kaum noch auslösen.',
-    },
-    upgrade_healbane: {
-      slots: [3, 2],
-      verb: 'cuts_heal',
     },
     upgrade_spirit_bubble: {
       slots: [3],
@@ -1018,9 +1032,9 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
     },
     upgrade_cheat_death: {
       slots: [4],
-      verb: 'blocks',
-      useTip: 'Passive — denies Shiv\'s Killing Blow execute chain so he cannot reset.',
-      useTipDe: 'Passiv — verhindert, dass Shiv Killing Blow im Teamfight immer wieder einsetzt.',
+      verb: 'survives',
+      useTip: 'Passive — survive the lethal hit so Shiv cannot reset Killing Blow off your death.',
+      useTipDe: 'Passiv — überlebt den tödlichen Treffer, damit Shiv Killing Blow nicht über deinen Tod zurücksetzt.',
     },
   },
   hero_krill: {
@@ -1030,7 +1044,7 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
     },
     upgrade_rescue_beam: {
       slots: [4],
-      verb: 'escapes',
+      verb: 'rescues',
       useTip: 'Cast on a teammate caught in Combo and press Pull immediately.',
       useTipDe: 'Auf einen gefangenen Teammate setzen und sofort ziehen, um die Combo abzubrechen.',
     },
@@ -1266,10 +1280,6 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
       slots: [4, 1],
       verb: 'escapes',
     },
-    upgrade_unstoppable: {
-      slots: [4, 2],
-      verb: 'blocks',
-    },
   },
   hero_vampirebat: {
     upgrade_containment: {
@@ -1346,7 +1356,7 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
     },
     upgrade_rescue_beam: {
       slots: [4],
-      verb: 'escapes',
+      verb: 'rescues',
     },
   },
   hero_chrono: {
@@ -1364,14 +1374,10 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
     },
     upgrade_rescue_beam: {
       slots: [4],
-      verb: 'escapes',
+      verb: 'rescues',
     },
   },
   hero_magician: {
-    upgrade_vex_barrier: {
-      slots: [3],
-      verb: 'absorbs',
-    },
     upgrade_debuff_reducer: {
       slots: [3],
       verb: 'shortens',
@@ -1408,10 +1414,6 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
     upgrade_counterspell: {
       slots: [1, 3, 4],
       verb: 'parries',
-    },
-    upgrade_vex_barrier: {
-      slots: [3, 4],
-      verb: 'absorbs',
     },
     upgrade_spellbreaker: {
       slots: [1, 4],
@@ -1581,10 +1583,6 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
     upgrade_debuff_reducer: {
       slots: [2],
       verb: 'shortens',
-    },
-    upgrade_rupture: {
-      slots: [3],
-      verb: 'shreds',
     },
     upgrade_glitch: {
       slots: [3],

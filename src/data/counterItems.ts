@@ -141,28 +141,8 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     why: 'Procs a hefty protective barrier the moment heavy spirit burst lands — #1 early anti-spirit lane stabilizer.',
     whenToUse: 'Passive — absorbs their poke/combo burst so you cannot be forced out of lane.',
   },
-  {
-    className: 'upgrade_regenerating_bullet_shield', // Battle Vest
-    stance: 'defense',
-    role: 'Anti-Gun',
-    stageFit: { lane: 0.92, mid: 0.62, late: 0.14 },
-    damageCounters: { bullet: 20, equal: 10 },
-    threatCounters: { rapid_fire: 10 },
-    playerSynergy: { preferDamageStyle: 'gun' },
-    why: 'Combines early Bullet Resist with bonus weapon damage & fire rate so gun heroes can trade back hard.',
-    whenToUse: 'Passive — keep yourself above 65% HP to hold the offensive bonus while shrugging off bullets.',
-  },
-  {
-    className: 'upgrade_magic_shield', // Enchanter's Emblem
-    stance: 'defense',
-    role: 'Anti-Spirit',
-    stageFit: { lane: 0.92, mid: 0.62, late: 0.14 },
-    damageCounters: { spirit: 20, equal: 10 },
-    threatCounters: { ability_spam: 10, sustained_spirit: 8 },
-    playerSynergy: { preferDamageStyle: 'spirit', preferSpiritProccer: true },
-    why: 'Gives early Spirit Resist plus Spirit Power & Cooldown Reduction — defensive stats without slowing your scaling.',
-    whenToUse: 'Passive — ideal defensive tempo buy for spirit heroes trading into heavy ability damage.',
-  },
+  // Battle Vest and Enchanter's Emblem are no counters any more: in the current game data they
+  // only give your own weapon damage / fire rate or Spirit / cooldowns above 65% health.
   {
     className: 'upgrade_return_fire', // Return Fire
     stance: 'defense',
@@ -185,8 +165,8 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stageFit: { lane: 1.0, mid: 0.78, late: 0.24 },
     modifierCounters: { cc: 30 },
     threatCounters: { hard_cc: 24, close_range_dive: 8 },
-    why: 'Automatically pops a massive barrier the instant you get stunned, hooked, rooted, slept, or silenced.',
-    whenToUse: 'Passive — stops early CC combos (hooks, charges, cages, sleeps) from one-shotting you.',
+    why: 'Automatically pops a massive barrier the instant you get stunned, chained, immobilized, slept or silenced.',
+    whenToUse: 'Passive — stops early CC combos (stuns, chains, roots, sleeps) from one-shotting you.',
   },
   {
     className: 'upgrade_debuff_reducer', // Debuff Reducer
@@ -502,7 +482,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     damageCounters: { bullet: 36, equal: 16 },
     threatCounters: { on_hit_procs: 36, rapid_fire: 34, bullet_ult: 28 },
     why: 'Best passive anti-gun item in Deadlock: deflects incoming bullets AND blocks on-hit stacks (Fixation, Afterburn, Djinn\'s Mark).',
-    whenToUse: 'Passive — completely neutralizes late-game rapid-fire & on-hit carries without taking an active slot.',
+    whenToUse: 'Passive — deflects a share of incoming bullets and blocks many on-hit stacks without taking an active slot.',
   },
   {
     className: 'upgrade_juggernaut', // Juggernaut
@@ -579,7 +559,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     modifierCounters: { cc: 34 },
     threatCounters: { hard_cc: 32, cleanseable_debuff: 18 },
     why: 'Passive auto-cleanse + combat barrier on the next Stun, Chain, Root, Sleep, Silence, or Fear — huge when active slots are full.',
-    whenToUse: 'Passive — automatically breaks surprise pick-CC (Lasso, Hook, Sleep, Combo) without needing reaction time.',
+    whenToUse: 'Passive — automatically breaks surprise pick-CC (Lasso stun, Sleep, Combo, roots) without needing reaction time.',
   },
   {
     className: 'upgrade_self_bubble', // Ethereal Shift
@@ -717,7 +697,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     why: 'Pulls enemies together and applies Slowing Hex (alt-cast directly on a target!) — locks down evasive movers.',
     whenToUse: 'Alt-cast directly onto slippery carries or toss into their escape lane.',
     contextTips: {
-      mobility: 'Pulls slippery targets back and applies Slowing Hex (alt-cast directly on them) to shut down all escapes.',
+      mobility: 'Pulls slippery targets back and applies Slowing Hex (alt-cast directly on them) to silence their movement abilities and items.',
     },
   },
   {
@@ -963,7 +943,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_debuff_reducer',
       bonus: 18,
       stages: ['lane', 'mid'],
-      tip: 'Reduces Shoulder Charge wall-stun duration enough that you can parry Abrams\'s follow-up heavy melee!',
+      tip: 'Shortens the Shoulder Charge wall stun so you can act again sooner.',
     },
     {
       itemClassName: 'upgrade_glitch',
@@ -973,12 +953,6 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
     },
   ],
   hero_bebop: [
-    {
-      itemClassName: 'upgrade_vex_barrier',
-      bonus: 34,
-      stages: ['lane', 'mid'],
-      tip: '#1 lane counter to Bebop: Grapple Hook triggers the barrier automatically, absorbing his Uppercut + Bomb combo.',
-    },
     {
       itemClassName: 'upgrade_reduce_debuff_duration',
       bonus: 42,
@@ -1079,7 +1053,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_spirit_bubble',
       bonus: 28,
       stages: ['lane', 'mid'],
-      tip: 'Absorbs Charged Shot poke in lane so he cannot chip you into Guided Owl execute threshold.',
+      tip: 'Absorbs Charged Shot poke in lane so he cannot chip you low before Guided Owl.',
     },
     {
       itemClassName: 'upgrade_spellbreaker',
@@ -1105,7 +1079,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_reduce_debuff_duration',
       bonus: 42,
       stages: ['mid', 'late'],
-      tip: '#1 counter to Infernus: instantly wipes Afterburn stacks & Napalm so he stops burning and lifestealing off you.',
+      tip: '#1 counter to Infernus: instantly wipes Afterburn stacks & Napalm so he stops burning you.',
     },
     {
       itemClassName: 'upgrade_debuff_reducer',
@@ -1120,12 +1094,6 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       tip: '#1 passive counter to Infernus: blocks bullet on-hit procs so he struggles to ever ignite Afterburn.',
     },
     {
-      itemClassName: 'upgrade_healbane',
-      bonus: 22,
-      stages: ['lane', 'mid'],
-      tip: 'Cuts Infernus\'s massive Spirit Lifesteal off Afterburn & Flame Dash.',
-    },
-    {
       itemClassName: 'upgrade_spirit_bubble',
       bonus: 22,
       stages: ['lane', 'mid'],
@@ -1137,13 +1105,13 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_healbane',
       bonus: 32,
       stages: ['lane', 'mid'],
-      tip: 'Cuts Geist\'s Life Drain and Spirit Lifesteal so she cannot out-sustain her own self-damage.',
+      tip: 'Cuts Geist\'s Life Drain healing so she can\'t heal back the health she spends on Essence Bomb and Malice.',
     },
     {
       itemClassName: 'upgrade_rupture',
       bonus: 30,
       stages: ['mid', 'late'],
-      tip: 'Shreds Geist\'s tanky HP bar and slashes her Life Drain healing.',
+      tip: 'Deals damage based on her current HP and slashes her Life Drain healing.',
     },
     {
       itemClassName: 'upgrade_targeted_silence',
@@ -1231,7 +1199,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_tech_purge',
       bonus: 30,
       stages: ['mid', 'late'],
-      tip: 'Best passive mitigation against Pocket\'s un-cleansable Affliction ultimate DoT.',
+      tip: 'Best passive mitigation against Pocket\'s Affliction ultimate DoT.',
     },
     {
       itemClassName: 'upgrade_focus_lens',
@@ -1275,7 +1243,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_cheat_death',
       bonus: 28,
       stages: ['late'],
-      tip: 'Denies Shiv\'s Killing Blow execute chain passively so he cannot reset through your team.',
+      tip: 'Survives the hit that would kill you, so Shiv can\'t chain Killing Blow resets through your team.',
     },
   ],
   hero_krill: [
@@ -1301,7 +1269,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_auto_cleanse',
       bonus: 34,
       stages: ['late'],
-      tip: 'Passively auto-cleanses Combo or Sand Blast and grants a barrier — lifesaver if active slots are full.',
+      tip: 'Passively auto-cleanses Combo\'s stun and grants a barrier — lifesaver if active slots are full.',
     },
     {
       itemClassName: 'upgrade_rupture',
@@ -1365,7 +1333,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_counterspell',
       bonus: 32,
       stages: ['mid', 'late'],
-      tip: 'Parry Wraith\'s Telekinesis lift projectile to cancel her pick combo and heal.',
+      tip: 'Parry right before Wraith\'s Telekinesis lifts you to cancel her pick combo and heal.',
     },
     {
       itemClassName: 'upgrade_vex_barrier',
@@ -1489,7 +1457,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_rupture',
       bonus: 36,
       stages: ['mid', 'late'],
-      tip: 'Melts Victor\'s giant HP pool and cuts his Jumpstart & lifesteal healing.',
+      tip: 'Melts Victor\'s giant HP pool and cuts his Jumpstart healing.',
     },
     {
       itemClassName: 'upgrade_toxic_bullets',
@@ -1501,7 +1469,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_healbane',
       bonus: 30,
       stages: ['lane', 'mid'],
-      tip: 'Essential early anti-heal against Victor\'s Jumpstart regen and Aura sustain.',
+      tip: 'Essential early anti-heal against Victor\'s Jumpstart regeneration.',
     },
     {
       itemClassName: 'upgrade_tech_purge',
@@ -1527,7 +1495,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_containment',
       bonus: 28,
       stages: ['lane', 'mid'],
-      tip: 'Slows Viscous\'s slippery Puddle Punch mobility and sets up kills.',
+      tip: 'Silences Goo Ball and slows Viscous so he can\'t roll away after The Cube.',
     },
     {
       itemClassName: 'upgrade_glitch',
@@ -1579,19 +1547,13 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_vex_barrier',
       bonus: 28,
       stages: ['lane', 'mid'],
-      tip: 'Chain Gang and Rising Ram automatically pop the barrier to soak Billy\'s follow-up burst.',
+      tip: 'Chain Gang automatically pops the barrier to soak Billy\'s follow-up burst.',
     },
     {
       itemClassName: 'upgrade_warp_stone',
       bonus: 28,
       stages: ['mid', 'late'],
       tip: 'Breaks distance from Billy\'s melee swings while giving Bullet Resist.',
-    },
-    {
-      itemClassName: 'upgrade_unstoppable',
-      bonus: 30,
-      stages: ['late'],
-      tip: 'Completely ignores Chain Gang tethers and Rising Ram knockups.',
     },
   ],
   hero_vampirebat: [
@@ -1726,12 +1688,6 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
   ],
   hero_magician: [
     {
-      itemClassName: 'upgrade_vex_barrier',
-      bonus: 30,
-      stages: ['lane', 'mid'],
-      tip: 'Rabbit Hex triggers Reactive Barrier so you survive the follow-up Vexing Bolt burst.',
-    },
-    {
       itemClassName: 'upgrade_debuff_reducer',
       bonus: 28,
       stages: ['lane', 'mid'],
@@ -1778,16 +1734,16 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       tip: 'Parry Call Bell detonation, Luggage Cart, or Hotel Guest to deny Doorman\'s disruption.',
     },
     {
-      itemClassName: 'upgrade_vex_barrier',
-      bonus: 28,
-      stages: ['lane', 'mid'],
-      tip: 'Soaks Doorman\'s Luggage Cart pull & Call Bell burst combo in lane.',
-    },
-    {
       itemClassName: 'upgrade_spellbreaker',
       bonus: 28,
       stages: ['late'],
       tip: 'Blunts Call Bell and Hotel Guest spirit burst passively.',
+    },
+    {
+      itemClassName: 'upgrade_reduce_debuff_duration',
+      bonus: 20,
+      stages: ['mid', 'late'],
+      tip: 'Purges Call Bell\x27s slow and weapon-accuracy debuff right away.',
     },
   ],
   hero_priest: [
@@ -1931,7 +1887,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_healbane',
       bonus: 30,
       stages: ['lane', 'mid'],
-      tip: 'Cuts Ivy\'s Watcher\'s Covenant tether healing and Kudzu sustain cheaply in lane.',
+      tip: 'Cuts Kudzu Connection\'s shared healing and Stone Form\'s self-heal cheaply in lane.',
     },
     {
       itemClassName: 'upgrade_target_stun',
@@ -1949,7 +1905,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_rupture',
       bonus: 26,
       stages: ['mid', 'late'],
-      tip: 'Cuts Ivy\'s tether lifesteal & sustain in extended mid/late skirmishes.',
+      tip: 'Cuts Ivy\'s Kudzu Connection and Stone Form healing in longer mid/late fights.',
     },
     {
       itemClassName: 'upgrade_glitch',
@@ -1963,13 +1919,13 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_healbane',
       bonus: 34,
       stages: ['lane', 'mid'],
-      tip: '#1 cheap counter to Nurse Harrow: slashes her Healing Needles & Leech Therapy sustain.',
+      tip: '#1 cheap counter to Nurse Harrow: slashes the healing from her Healing Needles.',
     },
     {
       itemClassName: 'upgrade_reduce_debuff_duration',
       bonus: 32,
       stages: ['mid', 'late'],
-      tip: 'Instantly purges Leech Therapy DoTs so Nurse Harrow loses both damage and drain healing.',
+      tip: 'Instantly purges Leech Therapy so its damage over time and buff drain stop.',
     },
     {
       itemClassName: 'upgrade_rupture',
@@ -2024,12 +1980,6 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       tip: 'Cuts Rat Swarm DoT ticks in lane and upgrades cleanly into Unstoppable or Spellbreaker.',
     },
     {
-      itemClassName: 'upgrade_rupture',
-      bonus: 28,
-      stages: ['mid', 'late'],
-      tip: 'Shreds Rat King\'s high effective HP through Royal Pestments barrier stacking.',
-    },
-    {
       itemClassName: 'upgrade_glitch',
       bonus: 32,
       stages: ['late'],
@@ -2047,7 +1997,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_vex_barrier',
       bonus: 30,
       stages: ['lane', 'mid'],
-      tip: 'Naptime sleep & Pillow CC instantly pop Reactive Barrier so you survive the follow-up.',
+      tip: 'Naptime sleep instantly pops Reactive Barrier so you survive the follow-up.',
     },
     {
       itemClassName: 'upgrade_containment',
@@ -2059,7 +2009,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_unstoppable',
       bonus: 30,
       stages: ['late'],
-      tip: 'Walks straight through wall-piercing Naptime sleep and Pillow knockbacks.',
+      tip: 'Walks straight through wall-piercing Naptime sleep.',
     },
     {
       itemClassName: 'upgrade_auto_cleanse',
@@ -2175,7 +2125,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_vex_barrier',
       bonus: 26,
       stages: ['lane', 'mid'],
-      tip: 'Auto-triggers a protective barrier when Baba\'s Brew silences you or Feed The Birds hexes you.',
+      tip: 'Auto-triggers a protective barrier when Baba\'s Brew silences you.',
     },
     {
       itemClassName: 'upgrade_target_stun',
@@ -2205,7 +2155,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_unstoppable',
       bonus: 30,
       stages: ['late'],
-      tip: 'Ignores Feed The Birds slow/pigeon hex and Baba\'s Brew Silence completely in teamfights.',
+      tip: 'Baba\'s Brew Silence can\'t lock your abilities in teamfights.',
     },
   ],
 };

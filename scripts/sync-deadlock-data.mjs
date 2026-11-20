@@ -152,10 +152,37 @@ function extractAbilityDamage(abEn, abDe) {
       ...(perBullet ? { perBullet: true } : {}),
     });
   }
+  if (damage.length === 0) damage.push(...extractUntypedDamage(abEn, propsEn, propsDe));
   return {
     damage: damage.slice(0, MAX_ABILITY_DAMAGE_STATS),
     ...(empowersWeapon ? { empowersWeapon: true } : {}),
   };
+}
+
+// Some abilities (e.g. Solomon's pieces) list their damage without a css_class. The ability
+// text still names the damage type ("dealing spirit damage"), so take it from there.
+const UNTYPED_DAMAGE_KEY = /^(Damage|ImpactDamage|DPS|ExplodeDamage|ExplosionDamage)$/;
+function extractUntypedDamage(abEn, propsEn, propsDe) {
+  const text = JSON.stringify([abEn?.description ?? '', abEn?.tooltip_details ?? '']);
+  const type = /SpiritDamage|spirit damage/i.test(text)
+    ? 'spirit'
+    : /BulletDamage|weapon damage|bullet damage/i.test(text)
+      ? 'weapon'
+      : /MeleeDamage|melee damage/i.test(text)
+        ? 'melee'
+        : 'spirit';
+  const out = [];
+  for (const [key, p] of Object.entries(propsEn)) {
+    if (!UNTYPED_DAMAGE_KEY.test(key) || p?.css_class || p?.provided_property_type) continue;
+    const num = Number.parseFloat(String(p?.value ?? ''));
+    const labelEn = cleanHtml(p?.label || p?.postvalue_label || '');
+    const value = formatPropertyValue(p);
+    if (!num || num < 0 || !labelEn || labelEn.startsWith('#') || !value) continue;
+    const pDe = propsDe[key];
+    const labelDe = cleanHtml(pDe?.label || pDe?.postvalue_label || '') || labelEn;
+    out.push({ type, value, labelEn, labelDe: labelDe.startsWith('#') ? labelEn : labelDe });
+  }
+  return out;
 }
 
 function extractItemCooldown(it) {

@@ -39,6 +39,8 @@ export type CounterActionVerb =
   | 'mitigates'
   | 'strips'
   | 'bursts'
+  | 'survives'
+  | 'rescues'
   | 'counters';
 
 export type ThreatMechanic =

@@ -201,6 +201,8 @@ export const UI_TEXT = {
       mitigates: 'Reduziert',
       strips: 'Entfernt',
       bursts: 'Burstet',
+      survives: 'Überlebt',
+      rescues: 'Rettet Verbündete aus',
       counters: 'Kontert',
     } as Record<CounterActionVerb, string>,
     mechanicFallbacks: {
@@ -512,6 +514,8 @@ export const UI_TEXT = {
       mitigates: 'Mitigates',
       strips: 'Strips',
       bursts: 'Bursts',
+      survives: 'Survives',
+      rescues: 'Saves allies from',
       counters: 'Counters',
     } as Record<CounterActionVerb, string>,
     mechanicFallbacks: {
