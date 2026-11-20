@@ -1193,7 +1193,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_self_bubble',
       bonus: 32,
       stages: ['late'],
-      tip: 'Press during Death Slam channel or Ground Strike dive to dodge his entire combo cleanly.',
+      tip: 'Press while Death Slam is still connecting its whips, before you are lifted: once stunned you can\'t use items. You take no slam damage while invulnerable.',
     },
     {
       itemClassName: 'upgrade_spellbreaker',

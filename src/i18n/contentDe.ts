@@ -464,7 +464,7 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_containment: 'Bester günstiger Konter gegen Lash: sperrt seinen Grapple, damit er nicht für Ground Strike hochkommt.',
     upgrade_target_stun: 'Einsetzen, sobald Lash für Death Slam in der Luft hängt. Das bricht die Ult ab.',
     upgrade_counterspell: 'Beim Death-Slam-Wurf oder Ground-Strike-Einschlag parieren. Das blockt die Combo komplett.',
-    upgrade_self_bubble: 'Während Death Slam oder Ground Strike drücken. Du bist dann unverwundbar.',
+    upgrade_self_bubble: 'Drücken, solange sich die Peitschen von Death Slam noch verbinden, also bevor du hochgehoben wirst. Gestunnt kannst du keine Items mehr nutzen. Unverwundbar trifft dich der Aufprall nicht.',
     upgrade_spellbreaker: 'Schluckt passiv den großen Einzeltreffer von Lashs Ground Strike.',
   },
   hero_synth: {
