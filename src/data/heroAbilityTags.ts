@@ -34,6 +34,7 @@ const DAMAGE_FOCUS: Record<string, 'weapon' | 'spirit'> = {
   upgrade_improved_bullet_armor: 'weapon', // Bullet Resilience
   upgrade_regenerating_bullet_shield: 'weapon', // Battle Vest
   upgrade_juggernaut: 'weapon',
+  upgrade_bullet_armor_reduction_aura: 'weapon', // Hunter's Aura: only cuts their Fire Rate & Bullet Resist
   upgrade_spirit_bubble: 'spirit', // Spirit Shielding
   upgrade_tech_purge: 'spirit', // Spirit Resilience
   upgrade_spellbreaker: 'spirit',
@@ -535,7 +536,9 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   },
   upgrade_bullet_armor_reduction_aura: {
     defaultVerb: 'weakens',
-    abilityMatchThreats: ['rapid_fire', 'close_range_dive'],
+    // The aura weakens their gun, not a dive: a diver just ends up inside it
+    abilityMatchThreats: ['rapid_fire', 'bullet_ult'],
+    verbByThreat: { close_range_dive: 'punishes' },
   },
   upgrade_reinforcing_casings: {
     defaultVerb: 'mitigates',

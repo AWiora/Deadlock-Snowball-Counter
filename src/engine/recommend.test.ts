@@ -1513,6 +1513,20 @@ describe('ability damage types from the game data', () => {
     expect(abilityChips(card('hero_haze', '3200', 'upgrade_metal_skin'))).toContain('Bullet Dance');
   });
 
+  it("Hunter's Aura only weakens gun abilities; a diver just walks into the aura", () => {
+    // Seismic Impact / Siphon Life are spirit damage: the aura's Fire Rate cut does nothing to them
+    const auraAbrams = card('hero_atlas', '3200', 'upgrade_bullet_armor_reduction_aura');
+    expect(auraAbrams).toBeDefined();
+    expect(abilityChips(auraAbrams)).toEqual([]);
+    const groups = auraAbrams!.reasons.flatMap((r) => r.actionGroups ?? []);
+    const punish = groups.find((g) => g.verb === 'punishes');
+    expect(punish?.targets.map((c) => (c.kind === 'mechanic' ? c.label : ''))).toContain('Springt dich an');
+
+    // Silver's werewolf form and Slam Fire shoot: the aura really slows them
+    const auraSilver = abilityChips(card('hero_werewolf', '3200', 'upgrade_bullet_armor_reduction_aura'));
+    expect(auraSilver.some((n) => n === 'Lycan Curse' || n === 'Slam Fire')).toBe(true);
+  });
+
   it('never pairs a damage-type item with an ability of another damage type', () => {
     const all = snapshot.heroes.map((h) => h.className);
     for (let a = 0; a < all.length; a++) {
