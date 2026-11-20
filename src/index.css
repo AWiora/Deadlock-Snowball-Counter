@@ -2542,15 +2542,6 @@ kbd {
   text-overflow: ellipsis;
 }
 
-.enemy-chip-dot {
-  width: 7px;
-  height: 7px;
-  margin: 0 2px 0 auto;
-  border-radius: 50%;
-  background: var(--brass-bright);
-  flex-shrink: 0;
-}
-
 .enemy-chip-remove {
   width: 26px;
   flex-shrink: 0;
@@ -2789,6 +2780,70 @@ kbd {
   font-size: 1.22rem;
   font-weight: 700;
   color: var(--text-parchment);
+}
+
+/* Enemy tabs: pick whose build you tune right where you tune it */
+.tuning-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tuning-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
+  transition: border-color 0.14s ease, background-color 0.14s ease, color 0.14s ease;
+}
+
+.tuning-tab:hover {
+  border-color: rgba(217, 93, 93, 0.45);
+  color: var(--text-parchment);
+}
+
+.tuning-tab--active {
+  border-color: #f08a7b;
+  background: rgba(217, 93, 93, 0.18);
+  color: var(--text-parchment);
+}
+
+.tuning-tab-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  object-fit: cover;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.14s ease;
+}
+
+.tuning-tab:hover .tuning-tab-avatar,
+.tuning-tab--active .tuning-tab-avatar {
+  opacity: 1;
+}
+
+.tuning-tab-name {
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tuning-tab-count {
+  padding: 0 5px;
+  border-radius: 99px;
+  border: 1px solid var(--border-brass);
+  background: var(--brass-soft);
+  color: var(--brass-bright);
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1.5;
 }
 
 .tuning-summary {

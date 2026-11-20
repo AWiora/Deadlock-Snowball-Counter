@@ -65,6 +65,14 @@ const MODIFIER_META: { id: EnemyModifier; icon: string }[] = [
   { id: 'mobility', icon: 'https://cdn.deadlock.wiki/Move_speed.png' },
 ];
 
+/** Extra stacks plus a changed damage focus: what "Zurücksetzen" would undo. */
+function countCustomizations(target: EnemyTargetConfig): number {
+  return (
+    target.modifiers.length +
+    (target.damageProfile !== getHeroProfile(target.heroClass).defaultDamage ? 1 : 0)
+  );
+}
+
 function matchesMedia(query: string): boolean {
   return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
     ? window.matchMedia(query).matches
@@ -234,10 +242,7 @@ export function MatchupControlBar({
   const focusedTarget = focusedEnemy
     ? enemyTargets.find((et) => et.heroClass === focusedEnemy.className)
     : undefined;
-  const focusedCustomCount = focusedTarget
-    ? focusedTarget.modifiers.length +
-      (focusedTarget.damageProfile !== getHeroProfile(focusedTarget.heroClass).defaultDamage ? 1 : 0)
-    : 0;
+  const focusedCustomCount = focusedTarget ? countCustomizations(focusedTarget) : 0;
   const metaPct =
     typeof focusedEnemy?.metaWeaponPct === 'number' ? Math.round(focusedEnemy.metaWeaponPct) : null;
 
@@ -322,9 +327,6 @@ export function MatchupControlBar({
               if (!hero) return null;
               const name = getHeroDisplayName(hero, language);
               const isFocused = focusedEnemy?.className === hero.className;
-              const hasCustom =
-                target.damageProfile !== getHeroProfile(target.heroClass).defaultDamage ||
-                target.modifiers.length > 0;
               return (
                 <div
                   key={hero.className}
@@ -341,7 +343,6 @@ export function MatchupControlBar({
                       <img src={hero.iconSmall || hero.iconCard} alt="" className="enemy-chip-avatar" />
                     )}
                     <span className="enemy-chip-name">{name}</span>
-                    {hasCustom && <span className="enemy-chip-dot" aria-hidden="true" />}
                   </button>
                   <button
                     type="button"
@@ -485,7 +486,43 @@ export function MatchupControlBar({
       {focusedEnemy && focusedTarget && (
         <div className={`tuning ${tuningOpen ? 'tuning--open' : ''}`}>
           <div className="tuning-head">
-            <span className="tuning-title">{t.tuningTitle(focusedEnemyName ?? '')}</span>
+            {enemyCount > 1 ? (
+              <>
+                <span className="tuning-title">{t.tuningTitlePrefix}</span>
+                <span className="tuning-tabs" role="tablist" aria-label={t.tuningTabsAria}>
+                  {enemyTargets.map((target) => {
+                    const hero = heroesByClass.get(target.heroClass);
+                    if (!hero) return null;
+                    const name = getHeroDisplayName(hero, language);
+                    const selected = focusedEnemy?.className === hero.className;
+                    const changes = countCustomizations(target);
+                    return (
+                      <button
+                        key={hero.className}
+                        type="button"
+                        role="tab"
+                        aria-selected={selected}
+                        className={`tuning-tab ${selected ? 'tuning-tab--active' : ''}`}
+                        onClick={() => onFocusEnemy(hero.className)}
+                      >
+                        {(hero.iconSmall || hero.iconCard) && (
+                          <img src={hero.iconSmall || hero.iconCard} alt="" className="tuning-tab-avatar" />
+                        )}
+                        <span className="tuning-tab-name">{name}</span>
+                        {changes > 0 && (
+                          <span className="tuning-tab-count" title={t.customCountTitle(changes)}>
+                            {changes}
+                            <span className="sr-only">{t.customCountTitle(changes)}</span>
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </span>
+              </>
+            ) : (
+              <span className="tuning-title">{t.tuningTitle(focusedEnemyName ?? '')}</span>
+            )}
             {!tuningOpen && (
               <span className="tuning-summary">
                 <span className={`tuning-summary-dmg tuning-summary-dmg--${damageProfile}`}>
