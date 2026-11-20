@@ -227,7 +227,7 @@ export const ABILITY_TRAITS: Record<string, Slots> = {
     ['poke'], // Pain Battery
     ['heal', 'buff', 'mobility'], // Jumpstart
     ['dot', 'channel', 'dodge'], // Aura of Suffering
-    ['stun', 'slow', 'channel', 'dodge'], // Shocking Reanimation
+    ['stun', 'slow', 'delayed', 'dodge'], // Shocking Reanimation (wiki: Victor is invincible during the channel, it can't be interrupted)
   ],
   hero_bookworm: [
     ['dot', 'dodge', 'poke'], // Bookwyrm

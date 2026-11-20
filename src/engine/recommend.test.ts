@@ -7,6 +7,7 @@ import { KIT_AMPLIFIER_RULES } from '../data/kitAmplifiers';
 import { HERO_OVERRIDE_TIPS_DE, ITEM_COPY_DE } from '../i18n/contentDe';
 import { itemFitsAbility, recommendCounters } from './recommend';
 import { abilityFitsCounter, abilityHasFit, threatChipAllowed } from './abilityFit';
+import { executionCheck } from './execution';
 import { getAbilityTraits } from '../data/abilityTraits';
 import { UI_TEXT } from '../i18n/translations';
 import { segmentTextWithAbilities } from '../utils/abilities';
@@ -1714,5 +1715,41 @@ describe('every claim on a card is mechanically true', () => {
     expect(chipsOf('1600', 'upgrade_healbane')).toEqual(['cuts_heal:Lycan Curse', 'cuts_heal:Go For The Throat']);
     // Wiki: Unstoppable suppresses Tail Whack and Entangling Bola
     expect(chipsOf('6400', 'upgrade_unstoppable')).toContain('blocks:Tail Whack');
+  });
+});
+
+describe('items that are hard to land count less', () => {
+  const ab = (heroClass: string, name: string) =>
+    heroesByClass.get(heroClass)!.abilities!.find((a) => a.name === name)!;
+
+  it('knows when a self-cast item comes too late because the stun already landed', () => {
+    // Wiki: Unstoppable / Dispel Magic can't be used while stunned or asleep
+    expect(executionCheck('upgrade_unstoppable', 'blocks', ab('hero_deadpack', 'Close The Deal'), 'hero_deadpack').factor).toBeLessThanOrEqual(0.5);
+    expect(executionCheck('upgrade_unstoppable', 'blocks', ab('hero_krill', 'Combo'), 'hero_krill').factor).toBeLessThanOrEqual(0.5);
+    // Death Slam channels 2.3s before the lift, Static Charge stuns after 3.5s: plenty of time
+    expect(executionCheck('upgrade_self_bubble', 'blocks', ab('hero_lash', 'Death Slam'), 'hero_lash').factor).toBe(1);
+    expect(executionCheck('upgrade_reduce_debuff_duration', 'cleanses', ab('hero_gigawatt', 'Static Charge'), 'hero_gigawatt').factor).toBe(1);
+    // Silence or slows don't stop item use
+    expect(executionCheck('upgrade_reduce_debuff_duration', 'cleanses', ab('hero_werewolf', 'Tail Whack'), 'hero_werewolf').factor).toBe(1);
+  });
+
+  it('knows Knockdown (2s delay) is too slow for short channels, Cursed Relic is not', () => {
+    const slam = ab('hero_lash', 'Death Slam');
+    expect(executionCheck('upgrade_target_stun', 'cancels', slam, 'hero_lash').issue).toBe('lateCancel');
+    expect(executionCheck('upgrade_glitch', 'cancels', slam, 'hero_lash').factor).toBe(1);
+    expect(executionCheck('upgrade_target_stun', 'cancels', ab('hero_bebop', 'Hyper Beam'), 'hero_bebop').factor).toBe(1);
+  });
+
+  it('ranks the late Knockdown below easier answers and says why on the card', () => {
+    const res = recommendCounters(
+      { myHeroClass: 'hero_inferno', enemyHeroClass: 'hero_lash', priceTier: '3200', damageProfile: 'spirit', modifiers: [], activeSlotsFull: false, language: 'de' } as never,
+      itemsByClass,
+      heroesByClass,
+    );
+    const knockdown = res.offense.find((r) => r.item.className === 'upgrade_target_stun');
+    if (knockdown) {
+      expect(knockdown.whenToUse).toMatch(/meist zu spät/);
+      expect(knockdown.rank).toBeGreaterThan(1);
+    }
   });
 });

@@ -52,6 +52,7 @@ import {
   threatChipAllowed,
   verbNamesAbilities,
 } from './abilityFit';
+import { cardExecution, executionNote } from './execution';
 
 export function getBaseKitTags(heroClassName: string, lang: Language = 'de'): string[] {
   const profile = getHeroProfile(heroClassName);
@@ -958,6 +959,8 @@ export function recommendCounters(
     matchedTriggers: string[];
     actionGroups: CounterActionGroup[];
     roleOverride?: CounterRole;
+    /** Why this item is hard to land against this enemy (null = easy) */
+    executionNote: string | null;
   }
 
   interface ScoredCandidate {
@@ -1110,11 +1113,14 @@ export function recommendCounters(
 
       // Nothing on the card would be true against this enemy: it is no counter for them
       const hasRealReason = actionGroups.length > 0;
+      // An answer you rarely land in a real fight is worth less (timing, stun lockout, late cancel)
+      const exec = cardExecution(rule.className, actionGroups);
 
       evals.push({
         heroClass: target.heroClass,
-        score: hasRealReason ? enemyScore : 0,
-        isHeroSpecific: hasRealReason && isHeroSpecific,
+        score: hasRealReason ? enemyScore * exec.factor : 0,
+        isHeroSpecific: hasRealReason && isHeroSpecific && exec.factor >= 0.6,
+        executionNote: executionNote(exec, rule.className, lang, itemLang),
         overrideTip,
         overrideUseTip,
         contextTip,
@@ -1222,10 +1228,13 @@ export function recommendCounters(
       }
     }
 
-    const matchupUseTip =
+    const baseUseTip =
       explainEvals.length === 1 && explainEvals[0].overrideUseTip
         ? explainEvals[0].overrideUseTip
         : deCopy?.whenToUse ?? rule.whenToUse;
+    const matchupUseTip = bestEval.executionNote
+      ? `${baseUseTip} ${bestEval.executionNote}`
+      : baseUseTip;
 
     scored.push({
       item,
