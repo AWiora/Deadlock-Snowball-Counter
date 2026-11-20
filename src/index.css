@@ -1540,6 +1540,13 @@ button {
   color: var(--text-parchment);
 }
 
+/* "Gegen Mirage": the hero is the target, the item does the verb below */
+.reason-hero-vs {
+  font-size: var(--text-sub);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
 .reason-trigger-pill {
   font-size: var(--text-sub);
   font-weight: 600;

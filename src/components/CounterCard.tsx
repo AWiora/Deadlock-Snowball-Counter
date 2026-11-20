@@ -21,6 +21,8 @@ interface CounterCardProps {
   totalSelectedEnemies?: number;
   heroesByClass?: Map<string, DeadlockHero>;
   myHero?: DeadlockHero | null;
+  /** Price only adds information when the souls filter shows every tier */
+  showCost?: boolean;
 }
 
 interface AbilityChipProps {
@@ -191,6 +193,7 @@ export function CounterCard({
   totalSelectedEnemies = 1,
   heroesByClass,
   myHero,
+  showCost = true,
 }: CounterCardProps) {
   const [copied, setCopied] = useState(false);
   const {
@@ -260,6 +263,7 @@ export function CounterCard({
 
     return (
       <span className="reason-hero-tag">
+        <span className="reason-hero-vs">{t.targetHeroPrefix}</span>
         <span className="reason-hero-avatars">
           {matchedHeroes.map(({ cls, hero }) =>
             hero?.iconSmall || hero?.iconCard ? (
@@ -323,10 +327,12 @@ export function CounterCard({
           </div>
 
           <div className="counter-card-meta">
-            <span className="soul-cost" title={t.soulTitle(item.tier, item.cost)}>
-              <SoulsIcon size={13} />
-              {formattedCost}
-            </span>
+            {showCost && (
+              <span className="soul-cost" title={t.soulTitle(item.tier, item.cost)}>
+                <SoulsIcon size={13} />
+                {formattedCost}
+              </span>
+            )}
           </div>
         </div>
 

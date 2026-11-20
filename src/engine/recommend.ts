@@ -1556,7 +1556,7 @@ export function recommendCounters(
   const enemyThreatHeadline =
     lang === 'de'
       ? HERO_HEADLINES_DE[primaryTarget.heroClass] ??
-        'Vielseitige Bedrohung — stell oben Damage-Fokus und „Stackt zusätzlich“ ein, um seinen Build gezielt zu kontern.'
+        'Vielseitige Bedrohung — stell oben Schadensfokus und „Stackt zusätzlich“ ein, um seinen Build gezielt zu kontern.'
       : primaryEnemyProfile.threatHeadline;
 
   return {

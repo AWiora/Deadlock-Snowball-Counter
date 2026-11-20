@@ -84,6 +84,7 @@ function StanceColumn({
               totalSelectedEnemies={totalSelectedEnemies}
               heroesByClass={heroesByClass}
               myHero={myHero}
+              showCost={priceTier === 'all'}
             />
           ))
         ) : (
