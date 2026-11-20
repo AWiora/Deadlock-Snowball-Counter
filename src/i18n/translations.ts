@@ -220,8 +220,8 @@ export const UI_TEXT = {
       equal: 'Hybrid-Schaden',
       spirit: 'Spirit-Schaden',
     } as Record<DamageProfile, string>,
-    upgradeFromBadge: (name: string, cost: string) => `↖ Aus: ${name} (${cost})`,
-    upgradeToBadge: (name: string, cost: string) => `→ Upgrade zu: ${name} (${cost})`,
+    upgradeFromLabel: 'Upgrade von',
+    upgradeToLabel: 'Upgrade zu',
 
     slots: {
       weapon: 'Weapon',
@@ -524,8 +524,8 @@ export const UI_TEXT = {
       equal: 'Mixed damage',
       spirit: 'Spirit damage',
     } as Record<DamageProfile, string>,
-    upgradeFromBadge: (name: string, cost: string) => `↖ From: ${name} (${cost})`,
-    upgradeToBadge: (name: string, cost: string) => `→ Upgrades to: ${name} (${cost})`,
+    upgradeFromLabel: 'Upgrade of',
+    upgradeToLabel: 'Upgrades to',
 
     slots: {
       weapon: 'Weapon',

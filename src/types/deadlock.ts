@@ -87,11 +87,33 @@ export interface DeadlockHero {
   counterLifts?: Partial<Record<string, number>>;
 }
 
+/** Stat glyph key; the tooltip maps it to the matching Deadlock Wiki icon */
+export type ItemStatIcon =
+  | 'spirit_damage'
+  | 'weapon_damage'
+  | 'damage'
+  | 'spirit_resist'
+  | 'bullet_resist'
+  | 'slow'
+  | 'duration'
+  | 'range'
+  | 'cast_range'
+  | 'cooldown'
+  | 'healing'
+  | 'health'
+  | 'move_speed'
+  | 'barrier'
+  | 'fire_rate'
+  | 'ammo'
+  | 'melee'
+  | 'souls';
+
 export interface DeadlockItemStat {
   label: string;
   value: string;
   important?: boolean;
   elevated?: boolean;
+  icon?: ItemStatIcon;
 }
 
 export interface DeadlockItemTooltipSection {
@@ -271,6 +293,7 @@ export interface UpgradeHint {
   itemClassName: string;
   itemName: string;
   cost: number;
+  icon?: string;
 }
 
 export interface MatchupInput {

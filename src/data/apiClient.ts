@@ -7,10 +7,44 @@ import type {
   DeadlockItemTooltipSection,
   DeadlockSnapshot,
   ItemSlot,
+  ItemStatIcon,
 } from '../types/deadlock';
 
 const API_BASE = 'https://api.deadlock-api.com/v1/assets';
-const CACHE_KEY = 'deadlock_counter_helper_assets_v6';
+const CACHE_KEY = 'deadlock_counter_helper_assets_v7';
+
+// API property glyph (file name of `prop.icon`) -> stat icon key the tooltip maps to a wiki icon.
+// Keep in sync with scripts/sync-deadlock-data.mjs.
+const STAT_ICON_BY_API_GLYPH: Record<string, ItemStatIcon> = {
+  damage_magic_color: 'spirit_damage',
+  spirit: 'spirit_damage',
+  icon_spirit: 'spirit_damage',
+  damage_bullet_color: 'weapon_damage',
+  damage_crit: 'damage',
+  armor_spirit_color: 'spirit_resist',
+  armor_bullet_color: 'bullet_resist',
+  condition_slow: 'slow',
+  duration: 'duration',
+  range: 'range',
+  property_range: 'cast_range',
+  cooldown: 'cooldown',
+  heal: 'healing',
+  health: 'health',
+  move_speed: 'move_speed',
+  armor_alt: 'barrier',
+  fire_rate: 'fire_rate',
+  ammo_clip_size: 'ammo',
+  melee: 'melee',
+  icon_soul: 'souls',
+};
+
+function statIconKey(prop: Record<string, any>): ItemStatIcon | undefined {
+  const glyph = String(prop?.icon ?? '')
+    .split('/')
+    .pop()
+    ?.replace(/\.(svg|png|webp)$/i, '');
+  return glyph ? STAT_ICON_BY_API_GLYPH[glyph] : undefined;
+}
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 const ABILITY_DESC_FALLBACK: Record<string, { en: string; de: string }> = {
@@ -127,11 +161,13 @@ function extractItemTooltip(it: Record<string, any> | undefined): DeadlockItemTo
       const value = formatPropertyValue(p);
       const label = cleanHtml(p.label || p.postvalue_label || '');
       if (!value || !label || label.startsWith('#')) return;
+      const icon = statIconKey(p);
       stats.push({
         label,
         value,
         ...(flags.important ? { important: true } : {}),
         ...(flags.elevated ? { elevated: true } : {}),
+        ...(icon ? { icon } : {}),
       });
     };
 

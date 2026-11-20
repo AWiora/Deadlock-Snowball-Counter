@@ -109,6 +109,7 @@ function resolveUpgradeHint(
         itemClassName: target.className,
         itemName: getItemDisplayName(target, lang),
         cost: target.cost,
+        icon: target.icon,
       };
     }
     if (idx > 0 && family[idx - 1]) {
@@ -119,6 +120,7 @@ function resolveUpgradeHint(
         itemClassName: base.className,
         itemName: getItemDisplayName(base, lang),
         cost: base.cost,
+        icon: base.icon,
       };
     }
   }
@@ -132,6 +134,7 @@ function resolveUpgradeHint(
       itemClassName: base.className,
       itemName: getItemDisplayName(base, lang),
       cost: base.cost,
+      icon: base.icon,
     };
   }
   return null;

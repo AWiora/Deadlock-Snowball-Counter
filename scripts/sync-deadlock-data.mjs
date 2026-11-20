@@ -31,6 +31,39 @@ function cleanHtml(html) {
     .trim();
 }
 
+// API property glyph (file name of `prop.icon`) -> stat icon key the tooltip maps to a wiki icon.
+// Keep in sync with src/data/apiClient.ts.
+const STAT_ICON_BY_API_GLYPH = {
+  damage_magic_color: 'spirit_damage',
+  spirit: 'spirit_damage',
+  icon_spirit: 'spirit_damage',
+  damage_bullet_color: 'weapon_damage',
+  damage_crit: 'damage',
+  armor_spirit_color: 'spirit_resist',
+  armor_bullet_color: 'bullet_resist',
+  condition_slow: 'slow',
+  duration: 'duration',
+  range: 'range',
+  property_range: 'cast_range',
+  cooldown: 'cooldown',
+  heal: 'healing',
+  health: 'health',
+  move_speed: 'move_speed',
+  armor_alt: 'barrier',
+  fire_rate: 'fire_rate',
+  ammo_clip_size: 'ammo',
+  melee: 'melee',
+  icon_soul: 'souls',
+};
+
+function statIconKey(prop) {
+  const glyph = String(prop?.icon ?? '')
+    .split('/')
+    .pop()
+    .replace(/\.(svg|png|webp)$/i, '');
+  return STAT_ICON_BY_API_GLYPH[glyph];
+}
+
 function formatPropertyValue(prop) {
   if (!prop || prop.value === undefined || prop.value === null) return null;
   let raw = String(prop.value).replace(/\u00A0/g, ' ').trim();
@@ -96,11 +129,13 @@ function extractItemTooltip(it) {
       const value = formatPropertyValue(p);
       const label = cleanHtml(p.label || p.postvalue_label || '');
       if (!value || !label || label.startsWith('#')) return;
+      const icon = statIconKey(p);
       stats.push({
         label,
         value,
         ...(flags.important ? { important: true } : {}),
         ...(flags.elevated ? { elevated: true } : {}),
+        ...(icon ? { icon } : {}),
       });
     };
 
@@ -386,7 +421,12 @@ async function main() {
   );
 }
 
-main().catch((err) => {
-  console.error('Sync failed:', err);
-  process.exit(1);
-});
+export { extractItemTooltip };
+
+// Run the sync only when called as a script, so helpers can be imported on their own
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error('Sync failed:', err);
+    process.exit(1);
+  });
+}
