@@ -124,7 +124,7 @@ interface TargetLine {
   /** null on the second verb of the same enemy: the portrait is already on the line above */
   heroClasses: string[] | null;
   verbLabel: string;
-  /** Same verb as the line above: said once, the cell stays empty so the columns line up */
+  /** Same verb as the line above: only narrow cards, where the verb is a heading over its lines, hide it */
   repeatsVerb: boolean;
   targets: CounterTargetChip[];
 }
@@ -255,7 +255,7 @@ export function CounterCard({
   const hasStructuredReasons =
     reasons && reasons.length > 0 && reasons.every((r) => (r.actionGroups?.length ?? 0) > 0);
 
-  // One line per enemy and verb, always [portrait] [verb] [targets]; a verb repeated on the next line is said once
+  // One line per enemy and verb, always [portrait] [verb] [targets]; every line names its verb
   const targetLines: TargetLine[] = [];
   let prevVerb: string | null = null;
   (reasons ?? []).forEach((reason, rIdx) => {
@@ -419,13 +419,7 @@ export function CounterCard({
                     {line.heroClasses && renderHeroPrefix(line.heroClasses)}
                   </span>
                 )}
-                <span className="counter-line-verb">
-                  {line.repeatsVerb ? (
-                    <span className="sr-only">{line.verbLabel}</span>
-                  ) : (
-                    line.verbLabel
-                  )}
-                </span>
+                <span className="counter-line-verb">{line.verbLabel}</span>
                 <span className="counter-line-targets">
                   {renderTargets(line.targets, language, effectiveInGameLang)}
                 </span>
