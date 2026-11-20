@@ -83,12 +83,13 @@ function renderActionGroups(
   groups: CounterActionGroup[],
   uiLang: Language,
   inGameLang: Language,
+  hideVerb = false,
 ) {
   return (
     <span className="counter-action-groups">
       {groups.map((group, gIdx) => (
         <span key={`${group.verb}-${gIdx}`} className="counter-action-group">
-          <span className="counter-action-verb">{group.verbLabel}</span>
+          {!hideVerb && <span className="counter-action-verb">{group.verbLabel}</span>}
           <span className="counter-action-targets">
             {group.targets.map((chip, cIdx) => {
               const prevChip = cIdx > 0 ? group.targets[cIdx - 1] : null;
@@ -252,6 +253,25 @@ export function CounterCard({
   const hasStructuredReasons =
     reasons && reasons.length > 0 && reasons.every((r) => (r.actionGroups?.length ?? 0) > 0);
 
+  // One row per enemy; with several enemies doing the same verb, the verb is said once on top
+  const targetRows = (reasons ?? []).flatMap((reason, rIdx) => {
+    const actionGroups = reason.actionGroups ?? [];
+    const rows = isKitAmplifier
+      ? splitKitGroupsByHero(reason.heroClasses, actionGroups)
+      : [{ heroClasses: reason.heroClasses, groups: actionGroups }];
+    return rows.map((row, sIdx) => ({
+      ...row,
+      key: `${row.heroClasses.join('-')}-${rIdx}-${sIdx}`,
+    }));
+  });
+  const sharedVerbLabel =
+    showEnemyPrefix &&
+    targetRows.length > 1 &&
+    targetRows.every((row) => row.groups.length === 1) &&
+    new Set(targetRows.map((row) => row.groups[0].verb)).size === 1
+      ? targetRows[0].groups[0].verbLabel
+      : null;
+
   const renderHeroPrefix = (heroClasses: string[]) => {
     const matchedHeroes = heroClasses.map((cls) => ({
       cls,
@@ -261,9 +281,9 @@ export function CounterCard({
       .map(({ cls, hero }) => (hero ? getHeroDisplayName(hero, language) : cls))
       .join(' + ');
 
+    // Portrait leads the row; the name stays available to hover and screen readers
     return (
-      <span className="reason-hero-tag">
-        <span className="reason-hero-vs">{t.targetHeroPrefix}</span>
+      <span className="reason-hero-tag" title={heroLabel}>
         <span className="reason-hero-avatars">
           {matchedHeroes.map(({ cls, hero }) =>
             hero?.iconSmall || hero?.iconCard ? (
@@ -277,7 +297,9 @@ export function CounterCard({
             ) : null,
           )}
         </span>
-        <strong className="reason-hero-name">{heroLabel}</strong>
+        <span className="sr-only">
+          {t.targetHeroPrefix} {heroLabel}
+        </span>
       </span>
     );
   };
@@ -366,31 +388,21 @@ export function CounterCard({
               </div>
             )}
 
-            {reasons.flatMap((reason, rIdx) => {
-              const actionGroups = reason.actionGroups ?? [];
-              if (isKitAmplifier) {
-                const splitRows = splitKitGroupsByHero(reason.heroClasses, actionGroups);
-                return splitRows.map((subRow, sIdx) => (
-                  <div
-                    key={`kit-${subRow.heroClasses.join('-')}-${rIdx}-${sIdx}`}
-                    className="counter-target-row"
-                  >
-                    {showEnemyPrefix && renderHeroPrefix(subRow.heroClasses)}
-                    {renderActionGroups(subRow.groups, language, effectiveInGameLang)}
-                  </div>
-                ));
-              }
-
-              return (
-                <div
-                  key={`${reason.heroClasses.join('-')}-${rIdx}`}
-                  className="counter-target-row"
-                >
-                  {showEnemyPrefix && renderHeroPrefix(reason.heroClasses)}
-                  {renderActionGroups(actionGroups, language, effectiveInGameLang)}
-                </div>
-              );
-            })}
+            {sharedVerbLabel && <div className="counter-shared-verb">{sharedVerbLabel}</div>}
+            {targetRows.map((row) => (
+              <div
+                key={row.key}
+                className={`counter-target-row ${showEnemyPrefix ? 'counter-target-row--hero' : ''}`}
+              >
+                {showEnemyPrefix && renderHeroPrefix(row.heroClasses)}
+                {renderActionGroups(
+                  row.groups,
+                  language,
+                  effectiveInGameLang,
+                  Boolean(sharedVerbLabel),
+                )}
+              </div>
+            ))}
           </div>
         ) : (
           <p className="counter-why">

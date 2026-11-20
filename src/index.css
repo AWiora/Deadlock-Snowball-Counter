@@ -1541,10 +1541,13 @@ button {
 }
 
 /* "Gegen Mirage": the hero is the target, the item does the verb below */
-.reason-hero-vs {
-  font-size: var(--text-sub);
-  font-weight: 600;
-  color: var(--text-muted);
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .reason-trigger-pill {
@@ -1749,6 +1752,46 @@ button {
   align-items: center;
   flex-wrap: wrap;
   gap: 6px 9px;
+}
+
+/* Several enemies: portrait column on the left, that enemy's abilities to its right */
+.counter-target-row--hero {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 10px;
+}
+
+.counter-target-row--hero .reason-hero-tag {
+  margin-top: 4px;
+}
+
+.counter-target-row--hero .reason-hero-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+/* Reason shared by several enemies: portraits overlap like a fanned hand */
+.counter-target-row--hero .reason-hero-avatars {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.counter-target-row--hero .reason-hero-avatar + .reason-hero-avatar {
+  margin-top: -16px;
+  box-shadow: 0 -2px 0 var(--bg-card, #16181d);
+}
+
+/* The verb said once for every enemy row below it */
+.counter-shared-verb {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: -1px;
 }
 
 .counter-action-groups {
