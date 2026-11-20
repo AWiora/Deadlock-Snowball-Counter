@@ -1,4 +1,5 @@
-import { Clock, Coins } from 'lucide-react';
+import { Clock } from 'lucide-react';
+import { SoulsIcon } from './SoulsIcon';
 import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getItemDisplayName, UI_TEXT } from '../i18n/translations';
@@ -141,7 +142,7 @@ export function ItemTooltip({
                 </div>
               </div>
               <span className="item-tooltip-cost">
-                <Coins size={12} />
+                <SoulsIcon size={13} />
                 {item.cost.toLocaleString(locale)}
               </span>
             </div>

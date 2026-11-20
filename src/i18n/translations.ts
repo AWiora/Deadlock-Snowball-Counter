@@ -60,13 +60,13 @@ export const UI_TEXT = {
       '1600': { label: '1.600', sub: 'Lane' },
       '3200': { label: '3.200', sub: 'Mid' },
       '6400': { label: '6.400', sub: 'Late' },
-      all: { label: 'Alle', sub: 'Top' },
+      all: { label: 'Alle', sub: 'Stufen' },
     } as Record<PriceTier, { label: string; sub: string }>,
 
     activeSlotsFullLabel: 'Active Slots',
     activeSlotsFullBtn: 'Active Slots voll',
     activeSlotsFullSub: 'Nur passive Items',
-    activeSlotsFullTitle: 'Active Items ausblenden, wenn alle 4 Active Slots belegt sind',
+    activeSlotsFullTitle: 'Für volle Active Slots: zeigt nur noch passive Items',
 
     baseKitLabel: 'Schon eingerechnet',
 
@@ -294,7 +294,7 @@ export const UI_TEXT = {
     tuningTitle: (name: string) => `Build von ${name}`,
     tuningOpenBtn: 'Anpassen',
     tuningCloseBtn: 'Einklappen',
-    passiveOnlyShort: 'Nur passive',
+    passiveOnlyShort: 'Actives ausblenden',
     tierKeysTitle: 'Tasten 1–5 wechseln die Souls-Stufe',
     removeEnemyAria: (name: string) => `${name} entfernen`,
     rosterToggleBtn: 'Roster',
@@ -355,13 +355,13 @@ export const UI_TEXT = {
       '1600': { label: '1,600', sub: 'Lane' },
       '3200': { label: '3,200', sub: 'Mid' },
       '6400': { label: '6,400', sub: 'Late' },
-      all: { label: 'All', sub: 'Top' },
+      all: { label: 'All', sub: 'Tiers' },
     } as Record<PriceTier, { label: string; sub: string }>,
 
     activeSlotsFullLabel: 'Active slots',
     activeSlotsFullBtn: 'Active Slots Full',
     activeSlotsFullSub: 'Passive items only',
-    activeSlotsFullTitle: 'Hide Active items when all 4 of your active slots are already full',
+    activeSlotsFullTitle: 'For full active slots: shows passive items only',
 
     baseKitLabel: 'Already factored in',
 
@@ -589,7 +589,7 @@ export const UI_TEXT = {
     tuningTitle: (name: string) => `${name}'s build`,
     tuningOpenBtn: 'Adjust',
     tuningCloseBtn: 'Collapse',
-    passiveOnlyShort: 'Passives only',
+    passiveOnlyShort: 'Hide actives',
     tierKeysTitle: 'Keys 1–5 switch the souls tier',
     removeEnemyAria: (name: string) => `Remove ${name}`,
     rosterToggleBtn: 'Roster',

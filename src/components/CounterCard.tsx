@@ -1,4 +1,5 @@
-import { Check, Coins, Copy, Zap } from 'lucide-react';
+import { Check, Copy, Zap } from 'lucide-react';
+import { SoulsIcon } from './SoulsIcon';
 import { Fragment, useMemo, useState } from 'react';
 import { getHeroDisplayName, getItemDisplayName, UI_TEXT } from '../i18n/translations';
 import type {
@@ -323,7 +324,7 @@ export function CounterCard({
 
           <div className="counter-card-meta">
             <span className="soul-cost" title={t.soulTitle(item.tier, item.cost)}>
-              <Coins size={12} />
+              <SoulsIcon size={13} />
               {formattedCost}
             </span>
           </div>

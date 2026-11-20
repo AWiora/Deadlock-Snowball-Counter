@@ -2906,17 +2906,17 @@ kbd {
 }
 
 .toolbar-enemy-avatar {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
-  border-radius: 6px;
+  border-radius: 7px;
   object-fit: cover;
   border: 1px solid rgba(217, 93, 93, 0.55);
 }
 
 .toolbar-enemy-name {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1rem;
+  font-size: 1.02rem;
   font-weight: 700;
   color: var(--text-parchment);
   white-space: nowrap;
@@ -2933,6 +2933,13 @@ kbd {
   border-radius: 10px;
   border: 1px solid rgba(114, 224, 206, 0.18);
   background: #0a0b0e;
+}
+
+/* White wiki glyph tinted to the soul teal (the CDN sends no CORS, so no mask) */
+.souls-icon {
+  width: auto;
+  flex-shrink: 0;
+  filter: brightness(0) saturate(100%) invert(86%) sepia(18%) saturate(1022%) hue-rotate(110deg) brightness(95%);
 }
 
 .souls-bar-glyph {
@@ -2992,7 +2999,10 @@ kbd {
   position: absolute;
   top: 3px;
   right: 3px;
+  min-width: 14px;
   padding: 0 3px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
   font-size: 0.58rem;
   border-bottom-width: 1px;
   opacity: 0.65;
@@ -3025,9 +3035,6 @@ kbd {
   color: #a9eba0;
 }
 
-.passive-toggle-icon {
-  flex-shrink: 0;
-}
 
 @container results (min-width: 760px) {
   .results-toolbar {
@@ -3198,6 +3205,13 @@ kbd {
 
 @container results (max-width: 559px) {
   .toolbar-enemies--multi .toolbar-enemy-name {
+    display: none;
+  }
+}
+
+/* Phone: portrait + name already say who you counter; give the name the room */
+@container results (max-width: 459px) {
+  .toolbar-context:has(.toolbar-enemies) .toolbar-context-label {
     display: none;
   }
 }

@@ -1,7 +1,7 @@
-import { Coins, Layers } from 'lucide-react';
 import { getHeroDisplayName, UI_TEXT } from '../i18n/translations';
 import { PRICE_TIER_IDS } from '../data/priceTiers';
 import type { DeadlockHero, Language, PriceTier } from '../types/deadlock';
+import { SoulsIcon } from './SoulsIcon';
 
 interface ResultsToolbarProps {
   language: Language;
@@ -54,7 +54,7 @@ export function ResultsToolbar({
 
       <div className="souls-bar" role="group" aria-label={t.priceTierLabel} title={t.tierKeysTitle}>
         <span className="souls-bar-glyph" aria-hidden="true">
-          <Coins size={14} />
+          <SoulsIcon size={18} />
         </span>
         {PRICE_TIER_IDS.map((id, idx) => {
           const active = priceTier === id;
@@ -83,7 +83,6 @@ export function ResultsToolbar({
         aria-pressed={activeSlotsFull}
         title={t.activeSlotsFullTitle}
       >
-        <Layers size={14} className="passive-toggle-icon" />
         <span className="passive-toggle-text">{t.passiveOnlyShort}</span>
         <span className={`toggle-switch ${activeSlotsFull ? 'toggle-switch--on' : ''}`} aria-hidden="true" />
       </button>
