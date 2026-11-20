@@ -1379,16 +1379,21 @@ button {
   border: 1px solid rgba(240, 120, 120, 0.8);
 }
 
+/* Condensed display face; two-word names may wrap once ("Lady / Geist") */
 .roster-cell-name {
   width: 100%;
-  font-size: var(--text-micro);
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
   color: var(--text-secondary);
   text-align: center;
-  white-space: nowrap;
+  line-height: 1.05;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.15;
+  overflow-wrap: normal;
 }
 
 .roster-cell--enemy .roster-cell-name,
