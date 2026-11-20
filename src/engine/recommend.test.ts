@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { getBundledSnapshot } from '../data/apiClient';
 import { COUNTER_ITEM_RULES, HERO_SPECIFIC_COUNTERS } from '../data/counterItems';
-import { HERO_ABILITY_TAGS, ITEM_ACTION_PROFILES } from '../data/heroAbilityTags';
+import { getItemDamageFocus, HERO_ABILITY_TAGS, ITEM_ACTION_PROFILES } from '../data/heroAbilityTags';
 import { HERO_PROFILES } from '../data/heroProfiles';
 import { KIT_AMPLIFIER_RULES } from '../data/kitAmplifiers';
 import { HERO_OVERRIDE_TIPS_DE, ITEM_COPY_DE } from '../i18n/contentDe';
-import { recommendCounters } from './recommend';
+import { abilityFitsDamageFocus, recommendCounters } from './recommend';
 import { segmentTextWithAbilities } from '../utils/abilities';
 import type { DeadlockHero, DeadlockItem, PriceTier } from '../types/deadlock';
 
@@ -1455,5 +1455,103 @@ describe('Deadlock counter recommendation engine', () => {
     expect(knockdown.cooldown).toBe('35s');
     expect(knockdown.tooltipEn?.some((s) => s.type === 'innate' && s.stats.length > 0)).toBe(true);
     expect(knockdown.tooltipEn?.some((s) => s.type === 'active' && Boolean(s.desc))).toBe(true);
+  });
+});
+
+describe('ability damage types from the game data', () => {
+  const ability = (heroClass: string, slot: number) =>
+    heroesByClass.get(heroClass)!.abilities!.find((a) => a.slot === slot)!;
+  const types = (heroClass: string, slot: number) =>
+    new Set((ability(heroClass, slot).damage ?? []).map((d) => d.type));
+  const tier = (enemy: string, priceTier: PriceTier) =>
+    recommendCounters(
+      {
+        myHeroClass: null,
+        enemyHeroClass: enemy,
+        priceTier,
+        damageProfile: heroesByClass.get(enemy)?.metaDamage ?? 'bullet',
+        modifiers: [],
+        activeSlotsFull: false,
+        language: 'de',
+      },
+      itemsByClass,
+      heroesByClass,
+    );
+  const card = (enemy: string, priceTier: PriceTier, className: string) => {
+    const res = tier(enemy, priceTier);
+    return [...res.offense, ...res.defense].find((r) => r.item.className === className);
+  };
+  const abilityChips = (rec: ReturnType<typeof card>) =>
+    (rec?.reasons ?? [])
+      .flatMap((r) => r.actionGroups ?? [])
+      .flatMap((g) => g.targets)
+      .flatMap((c) => (c.kind === 'ability' ? [c.ability.name] : []));
+
+  it('reads what each ability deals', () => {
+    expect([...types('hero_hornet', 4)]).toEqual(['spirit']); // Assassinate
+    expect(ability('hero_drifter', 4).damage).toEqual([]); // Eternal Night: no damage
+    const flight = ability('hero_hornet', 2);
+    expect(flight.damage?.[0]).toMatchObject({ type: 'spirit', perBullet: true });
+    expect(flight.empowersWeapon).toBe(true);
+    expect(ability('hero_haze', 4).empowersWeapon).toBe(true); // Bullet Dance
+    expect(ability('hero_hornet', 4).empowersWeapon).toBeFalsy(); // a kill bonus is no gun boost
+    expect(types('hero_drifter', 1)).toEqual(new Set(['spirit', 'melee'])); // Rend
+  });
+
+  it('shows weapon items only against abilities that deal weapon damage or boost the gun', () => {
+    // Eternal Night deals no damage: Metal Skin names Drifter's weapon damage instead
+    const metalSkinDrifter = card('hero_drifter', '3200', 'upgrade_metal_skin');
+    expect(metalSkinDrifter).toBeDefined();
+    expect(abilityChips(metalSkinDrifter)).not.toContain('Eternal Night');
+    expect(metalSkinDrifter?.reasons[0].actionGroups?.length).toBeGreaterThan(0);
+
+    // Assassinate is spirit damage: Weapon Shielding only keeps Flight (her gun from the air)
+    const shieldingVindicta = card('hero_hornet', '1600', 'upgrade_weapon_shielding');
+    expect(abilityChips(shieldingVindicta)).toEqual(['Flight']);
+
+    // Bullet Dance boosts Haze's gun, so Metal Skin still blocks it
+    expect(abilityChips(card('hero_haze', '3200', 'upgrade_metal_skin'))).toContain('Bullet Dance');
+  });
+
+  it('never pairs a damage-type item with an ability of another damage type', () => {
+    const all = snapshot.heroes.map((h) => h.className);
+    for (let a = 0; a < all.length; a++) {
+      const enemies = [all[a], all[(a + 7) % all.length]];
+      for (const priceTier of ['1600', '3200', '6400'] as PriceTier[]) {
+        const res = recommendCounters(
+          {
+            myHeroClass: null,
+            enemyHeroClass: enemies[0],
+            priceTier,
+            damageProfile: 'bullet',
+            modifiers: [],
+            enemyTargets: enemies.map((h) => ({
+              heroClass: h,
+              damageProfile: heroesByClass.get(h)?.metaDamage ?? 'equal',
+              modifiers: [],
+            })),
+            activeSlotsFull: false,
+            language: 'de',
+          },
+          itemsByClass,
+          heroesByClass,
+        );
+        for (const rec of [...res.offense, ...res.defense]) {
+          const focus = getItemDamageFocus(rec.item.className);
+          for (const reason of rec.reasons) {
+            for (const chip of (reason.actionGroups ?? []).flatMap((g) => g.targets)) {
+              if (rec.item.className === 'upgrade_headhunter' && chip.kind === 'mechanic') {
+                expect(chip.label, 'Headhunter has no air bonus').not.toMatch(/Luft/);
+              }
+              if (chip.kind !== 'ability' || !focus) continue;
+              expect(
+                abilityFitsDamageFocus(chip.ability, focus),
+                `${rec.item.name} vs ${chip.ability.name}`,
+              ).toBe(true);
+            }
+          }
+        }
+      }
+    }
   });
 });

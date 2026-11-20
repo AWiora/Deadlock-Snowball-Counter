@@ -60,6 +60,18 @@ export type ThreatMechanic =
   | 'close_range_dive'
   | 'long_range_poke';
 
+export type AbilityDamageType = 'weapon' | 'spirit' | 'melee';
+
+/** One damage value an ability deals itself, read from the game data */
+export interface AbilityDamageStat {
+  type: AbilityDamageType;
+  value: string;
+  labelEn: string;
+  labelDe: string;
+  /** Rides on the hero's bullets (e.g. Flight's spirit damage per bullet) */
+  perBullet?: boolean;
+}
+
 export interface DeadlockAbility {
   className: string;
   slot: 1 | 2 | 3 | 4;
@@ -69,6 +81,10 @@ export interface DeadlockAbility {
   descEn: string;
   descDe: string;
   isUltimate: boolean;
+  /** Damage the ability deals itself; [] = none, missing = unknown (old cache) */
+  damage?: AbilityDamageStat[];
+  /** Raises the hero's own gun output (fire rate, bullet damage, damage per bullet) */
+  empowersWeapon?: boolean;
 }
 
 export interface DeadlockHero {

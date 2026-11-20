@@ -1,7 +1,43 @@
 import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { UI_TEXT } from '../i18n/translations';
 import type { DeadlockAbility, Language } from '../types/deadlock';
 import { getAbilityDescription, getAbilityDisplayName } from '../utils/abilities';
+import { DAMAGE_TYPE_ICON, StatGlyph } from './StatGlyph';
+
+/** What the ability deals, from the game data: lets you check e.g. whether Metal Skin helps */
+function AbilityDamage({ ability, uiLang }: { ability: DeadlockAbility; uiLang: Language }) {
+  const t = UI_TEXT[uiLang];
+  // Unknown (data from an older cache): show nothing rather than a wrong "no damage"
+  if (!ability.damage) return null;
+  return (
+    <ul className="ability-tooltip-damage">
+      {ability.damage.length === 0 && (
+        <li className="ability-tooltip-damage-row ability-tooltip-damage-row--none">
+          {t.abilityNoDamage}
+        </li>
+      )}
+      {ability.damage.map((d, idx) => (
+        <li key={`${d.type}-${idx}`} className="ability-tooltip-damage-row">
+          <StatGlyph icon={DAMAGE_TYPE_ICON[d.type]} />
+          {d.value && <span className="ability-tooltip-damage-val">{d.value}</span>}
+          <span className="ability-tooltip-damage-label">
+            {uiLang === 'de' ? d.labelDe : d.labelEn}
+          </span>
+          <span className={`ability-tooltip-damage-type ability-tooltip-damage-type--${d.type}`}>
+            {t.abilityDamageType[d.type]}
+          </span>
+        </li>
+      ))}
+      {ability.empowersWeapon && (
+        <li className="ability-tooltip-damage-row">
+          <StatGlyph icon="fire_rate" />
+          <span className="ability-tooltip-damage-label">{t.abilityEmpowersWeapon}</span>
+        </li>
+      )}
+    </ul>
+  );
+}
 
 interface AbilityTooltipProps {
   ability: DeadlockAbility;
@@ -90,7 +126,7 @@ export function AbilityTooltip({
     };
   }, [open]);
 
-  if (!description) {
+  if (!description && !ability.damage) {
     return <span className={className}>{children}</span>;
   }
 
@@ -120,7 +156,8 @@ export function AbilityTooltip({
             style={{ top: `${coords.top}px`, left: `${coords.left}px` }}
           >
             <div className="ability-tooltip-title">{title}</div>
-            <p className="ability-tooltip-desc">{description}</p>
+            {description && <p className="ability-tooltip-desc">{description}</p>}
+            <AbilityDamage ability={ability} uiLang={uiLang} />
           </div>,
           document.body,
         )}

@@ -23,6 +23,28 @@ export interface ItemActionProfile {
   maxAbilityChips?: number;
 }
 
+/**
+ * Items that only help against one damage type (e.g. Metal Skin: bullets). Their ability chips
+ * show only abilities that, per the game data, deal that damage (or, for weapon, boost the gun).
+ */
+const DAMAGE_FOCUS: Record<string, 'weapon' | 'spirit'> = {
+  upgrade_metal_skin: 'weapon',
+  upgrade_weapon_shielding: 'weapon',
+  upgrade_deflecting_armor: 'weapon', // Plated Armor
+  upgrade_improved_bullet_armor: 'weapon', // Bullet Resilience
+  upgrade_regenerating_bullet_shield: 'weapon', // Battle Vest
+  upgrade_juggernaut: 'weapon',
+  upgrade_spirit_bubble: 'spirit', // Spirit Shielding
+  upgrade_tech_purge: 'spirit', // Spirit Resilience
+  upgrade_spellbreaker: 'spirit',
+  upgrade_absorbing_armor: 'spirit', // Witchmail
+  upgrade_magic_shield: 'spirit', // Enchanter's Emblem
+};
+
+export function getItemDamageFocus(className: string): 'weapon' | 'spirit' | undefined {
+  return DAMAGE_FOCUS[className];
+}
+
 export interface StructuredOverrideMeta {
   /** Explicit ability slots on this hero that this item counters */
   slots?: (1 | 2 | 3 | 4)[];

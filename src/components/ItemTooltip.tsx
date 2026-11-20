@@ -2,55 +2,10 @@ import { SoulsIcon } from './SoulsIcon';
 import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getItemDisplayName, UI_TEXT } from '../i18n/translations';
-import type {
-  DeadlockItem,
-  DeadlockItemStat,
-  ItemStatIcon,
-  Language,
-  UpgradeHint,
-} from '../types/deadlock';
-
-type StatTint = 'weapon' | 'vitality' | 'spirit' | 'souls' | 'none';
-
-// Deadlock Wiki glyphs per stat, tinted by stat family like the wiki's item boxes:
-// weapon stats orange, vitality stats green, ability stats purple; damage and resist
-// glyphs already carry their colour.
-const STAT_ICON: Record<ItemStatIcon, { file: string; tint: StatTint }> = {
-  spirit_damage: { file: 'Spirit_damage.png', tint: 'none' },
-  weapon_damage: { file: 'Bullet_damage.png', tint: 'none' },
-  damage: { file: 'Damage_heart.png', tint: 'none' },
-  spirit_resist: { file: 'Spirit_Armor.png', tint: 'none' },
-  bullet_resist: { file: 'Bullet_Armor.png', tint: 'none' },
-  slow: { file: 'MoveSlow.png', tint: 'spirit' },
-  duration: { file: 'AttributeIconTechDuration.png', tint: 'spirit' },
-  range: { file: 'AttributeIconTechRange.png', tint: 'spirit' },
-  cast_range: { file: 'CastRange.png', tint: 'spirit' },
-  cooldown: { file: 'AttributeIconTechCooldown.png', tint: 'spirit' },
-  healing: { file: 'Healing.png', tint: 'vitality' },
-  health: { file: 'Health.png', tint: 'vitality' },
-  move_speed: { file: 'Move_speed.png', tint: 'vitality' },
-  barrier: { file: 'Barrier.png', tint: 'vitality' },
-  fire_rate: { file: 'Fire_Rate.png', tint: 'weapon' },
-  ammo: { file: 'Clip_size_icon.png', tint: 'weapon' },
-  melee: { file: 'Melee_damage.png', tint: 'weapon' },
-  souls: { file: 'Souls_icon.png', tint: 'souls' },
-};
+import type { DeadlockItem, DeadlockItemStat, Language, UpgradeHint } from '../types/deadlock';
+import { StatGlyph } from './StatGlyph';
 
 const isMainStat = (st: DeadlockItemStat) => Boolean(st.important || st.elevated);
-
-function StatGlyph({ icon }: { icon?: ItemStatIcon }) {
-  const glyph = icon ? STAT_ICON[icon] : undefined;
-  if (!glyph) return null;
-  return (
-    <img
-      className={`item-stat-glyph item-stat-glyph--${glyph.tint}`}
-      src={`https://cdn.deadlock.wiki/${glyph.file}`}
-      alt=""
-      aria-hidden="true"
-      referrerPolicy="no-referrer"
-    />
-  );
-}
 
 interface ItemTooltipProps {
   item: DeadlockItem;

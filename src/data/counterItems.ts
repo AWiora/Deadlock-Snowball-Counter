@@ -794,7 +794,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stance: 'offense',
     role: 'Burst',
     stageFit: { lane: 0.14, mid: 0.96, late: 0.56 },
-    threatCounters: { fragile_glass_cannon: 34, airborne: 16, long_range_poke: 14 },
+    threatCounters: { fragile_glass_cannon: 34, long_range_poke: 14 },
     playerSynergy: { preferDamageStyle: 'gun' },
     why: 'Huge headshot burst damage + sustain — punishes fragile low-HP carries so hard they cannot stay in fights.',
     whenToUse: 'Passive — open skirmishes with a headshot to immediately force low-HP threats out.',

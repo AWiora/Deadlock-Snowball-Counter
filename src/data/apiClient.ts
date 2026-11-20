@@ -1,5 +1,7 @@
 import snapshotData from './snapshot.json';
 import type {
+  AbilityDamageStat,
+  AbilityDamageType,
   DeadlockAbility,
   DeadlockHero,
   DeadlockItem,
@@ -11,7 +13,7 @@ import type {
 } from '../types/deadlock';
 
 const API_BASE = 'https://api.deadlock-api.com/v1/assets';
-const CACHE_KEY = 'deadlock_counter_helper_assets_v7';
+const CACHE_KEY = 'deadlock_counter_helper_assets_v8';
 
 // API property glyph (file name of `prop.icon`) -> stat icon key the tooltip maps to a wiki icon.
 // Keep in sync with scripts/sync-deadlock-data.mjs.
@@ -105,6 +107,78 @@ function formatPropertyValue(prop: Record<string, any> | undefined): string | nu
 
   const spacer = postfix && postfix.length > 2 && !postfix.startsWith('%') ? ' ' : '';
   return `${prefix}${raw}${spacer}${postfix}`.trim();
+}
+
+// Ability damage from the game data: css_class gives the type, buffs to the hero
+// (provided_property_type, per kill, plain percent bonuses) don't count as damage dealt.
+// Keep in sync with scripts/sync-deadlock-data.mjs.
+const ABILITY_DAMAGE_TYPE: Record<string, AbilityDamageType> = {
+  tech_damage: 'spirit',
+  bullet_damage: 'weapon',
+  melee_damage: 'melee',
+};
+const MAX_ABILITY_DAMAGE_STATS = 4;
+
+function isDirectDamageProp(key: string, p: Record<string, any>): boolean {
+  const num = Number.parseFloat(String(p?.value ?? ''));
+  if (!ABILITY_DAMAGE_TYPE[p?.css_class] || !num || num < 0) return false;
+  if (p.provided_property_type) return false;
+  const label = String(p.label || p.postvalue_label || '');
+  if (/per\s*kill/i.test(`${key} ${label}`)) return false;
+  const postfix = String(p.postfix ?? '').trim();
+  if (postfix.startsWith('%') && !/dps/i.test(postfix) && !/as damage|health damage/i.test(label)) {
+    return false;
+  }
+  return true;
+}
+
+function isWeaponBuffProp(key: string, p: Record<string, any>): boolean {
+  const num = Number.parseFloat(String(p?.value ?? ''));
+  if (!num || num < 0 || /slow|npc|ally|friendly|per\s*kill/i.test(`${key} ${p.label ?? ''}`)) return false;
+  if (p.css_class === 'fire_rate') return true;
+  return p.css_class === 'bullet_damage' && Boolean(p.provided_property_type);
+}
+
+export function extractAbilityDamage(
+  abEn: Record<string, any> | undefined,
+  abDe: Record<string, any> | undefined,
+): Pick<DeadlockAbility, 'damage' | 'empowersWeapon'> {
+  const propsEn: Record<string, any> = abEn?.properties ?? {};
+  const propsDe: Record<string, any> = abDe?.properties ?? {};
+  const damage: AbilityDamageStat[] = [];
+  let empowersWeapon = false;
+  for (const [key, p] of Object.entries(propsEn)) {
+    if (isWeaponBuffProp(key, p)) empowersWeapon = true;
+    // A melee hit using the hero's own melee damage is listed with value 0: keep it as a typed line
+    if (p?.css_class === 'melee_damage' && !Number.parseFloat(String(p.value ?? '0'))) {
+      const label = cleanHtml(p.label || p.postvalue_label || '');
+      if (label && !damage.some((d) => d.type === 'melee' && !d.value)) {
+        const pDe = propsDe[key];
+        const labelDe = cleanHtml(pDe?.label || pDe?.postvalue_label || '');
+        damage.push({ type: 'melee', value: '', labelEn: label, labelDe: labelDe && !labelDe.startsWith('#') ? labelDe : label });
+      }
+      continue;
+    }
+    if (!isDirectDamageProp(key, p)) continue;
+    const labelEn = cleanHtml(p.label || p.postvalue_label || '');
+    const value = formatPropertyValue(p);
+    if (!labelEn || labelEn.startsWith('#') || !value) continue;
+    const pDe = propsDe[key];
+    const labelDe = cleanHtml(pDe?.label || pDe?.postvalue_label || '') || labelEn;
+    const perBullet = /per\s*bullet/i.test(`${key} ${labelEn}`);
+    if (perBullet) empowersWeapon = true;
+    damage.push({
+      type: ABILITY_DAMAGE_TYPE[p.css_class],
+      value,
+      labelEn,
+      labelDe: labelDe.startsWith('#') ? labelEn : labelDe,
+      ...(perBullet ? { perBullet: true } : {}),
+    });
+  }
+  return {
+    damage: damage.slice(0, MAX_ABILITY_DAMAGE_STATS),
+    ...(empowersWeapon ? { empowersWeapon: true } : {}),
+  };
 }
 
 function extractItemCooldown(it: Record<string, any> | undefined): string | undefined {
@@ -328,6 +402,7 @@ export async function fetchLiveDeadlockData(): Promise<{
             descEn: extractAbilityDesc(abEn, 'en'),
             descDe: extractAbilityDesc(abDe, 'de') || extractAbilityDesc(abEn, 'en'),
             isUltimate: slot === 4 || abEn.ability_type === 'ultimate',
+            ...extractAbilityDamage(abEn, abDe),
           });
         }
         return {

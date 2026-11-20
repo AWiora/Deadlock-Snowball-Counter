@@ -1,5 +1,6 @@
 import { COUNTER_ITEM_RULES, HERO_SPECIFIC_COUNTERS } from '../data/counterItems';
 import {
+  getItemDamageFocus,
   HERO_ABILITY_TAGS,
   HERO_OVERRIDE_STRUCTURED,
   ITEM_ACTION_PROFILES,
@@ -449,6 +450,19 @@ function pushChipToGroup(
   }
 }
 
+/**
+ * Does an item that only works against one damage type (Metal Skin: bullets) actually help
+ * against this ability? Uses the game data; without data (old cache) the ability passes.
+ */
+export function abilityFitsDamageFocus(
+  ability: DeadlockAbility,
+  focus: 'weapon' | 'spirit' | undefined,
+): boolean {
+  if (!focus || !ability.damage) return true;
+  if (focus === 'weapon' && ability.empowersWeapon) return true;
+  return ability.damage.some((d) => d.type === focus);
+}
+
 function resolveEnemyActionGroups(
   rule: CounterItemRule,
   target: EnemyTargetConfig,
@@ -468,6 +482,9 @@ function resolveEnemyActionGroups(
   );
   const heroTags = HERO_ABILITY_TAGS[target.heroClass] ?? [];
   const tagBySlot = new Map(heroTags.map((tag) => [tag.slot, tag]));
+  // Only abilities the item really helps against, e.g. no Metal Skin vs a spirit-damage ult
+  const damageFocus = getItemDamageFocus(rule.className);
+  const abilityFits = (ab: DeadlockAbility) => abilityFitsDamageFocus(ab, damageFocus);
 
   const groups: CounterActionGroup[] = [];
   const coveredModifiers = new Set<EnemyModifier>();
@@ -501,7 +518,7 @@ function resolveEnemyActionGroups(
     const primaryVerb = overrideMeta.verb ?? defaultVerb;
     for (const slot of overrideMeta.slots ?? []) {
       const ab = abilityBySlot.get(slot);
-      if (!ab) continue;
+      if (!ab || !abilityFits(ab)) continue;
       pushChipToGroup(groups, primaryVerb, t.actionVerbs[primaryVerb], {
         kind: 'ability',
         ability: ab,
@@ -528,7 +545,7 @@ function resolveEnemyActionGroups(
       const extraVerb = overrideMeta.extraGroup.verb;
       for (const slot of overrideMeta.extraGroup.slots) {
         const ab = abilityBySlot.get(slot);
-        if (!ab) continue;
+        if (!ab || !abilityFits(ab)) continue;
         pushChipToGroup(groups, extraVerb, t.actionVerbs[extraVerb], {
           kind: 'ability',
           ability: ab,
@@ -562,7 +579,7 @@ function resolveEnemyActionGroups(
 
     for (const tag of heroTags) {
       const ab = abilityBySlot.get(tag.slot);
-      if (!ab) continue;
+      if (!ab || !abilityFits(ab)) continue;
       if (profile.skipUltimatesForCleanse && (ab.isUltimate || tag.cleanseable === false)) {
         continue;
       }

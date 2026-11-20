@@ -1,4 +1,5 @@
 import type {
+  AbilityDamageType,
   CounterActionVerb,
   CounterRole,
   DamageProfile,
@@ -114,6 +115,13 @@ export const UI_TEXT = {
     topBadge: 'TOP',
     activeTag: 'AKTIV',
     passiveTag: 'PASSIV',
+    abilityDamageType: {
+      weapon: 'Weapon',
+      spirit: 'Spirit',
+      melee: 'Nahkampf',
+    } as Record<AbilityDamageType, string>,
+    abilityNoDamage: 'Kein direkter Schaden',
+    abilityEmpowersWeapon: 'Verstärkt die eigene Waffe',
     hardCounterBadge: 'Hard Counter',
     hardCounterTitle: 'Spezifischer mechanischer Hard-Counter gegen diesen Helden',
     kitSynergyBadge: 'Kit-Synergie',
@@ -418,6 +426,13 @@ export const UI_TEXT = {
     topBadge: 'TOP',
     activeTag: 'ACTIVE',
     passiveTag: 'PASSIVE',
+    abilityDamageType: {
+      weapon: 'Weapon',
+      spirit: 'Spirit',
+      melee: 'Melee',
+    } as Record<AbilityDamageType, string>,
+    abilityNoDamage: 'No direct damage',
+    abilityEmpowersWeapon: 'Boosts own weapon',
     hardCounterBadge: 'Hard Counter',
     hardCounterTitle: 'Specific mechanical hard-counter for this hero',
     kitSynergyBadge: 'Kit Synergy',

@@ -1727,6 +1727,64 @@ button {
   color: var(--text-parchment);
 }
 
+/* Damage the ability deals, from the game data: glyph, value, label, damage type */
+.ability-tooltip-damage {
+  margin: 8px 0 0;
+  padding: 7px 0 0;
+  list-style: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 4px;
+}
+
+.ability-tooltip-damage-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  line-height: 1.3;
+}
+
+.ability-tooltip-damage-row .item-stat-glyph {
+  width: 15px;
+  height: 15px;
+}
+
+.ability-tooltip-damage-row--none {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.ability-tooltip-damage-val {
+  font-weight: 700;
+  color: var(--text-parchment);
+  white-space: nowrap;
+}
+
+.ability-tooltip-damage-label {
+  color: var(--text-secondary);
+}
+
+.ability-tooltip-damage-type {
+  margin-left: auto;
+  padding-left: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ability-tooltip-damage-type--spirit {
+  color: var(--spirit);
+}
+
+.ability-tooltip-damage-type--weapon {
+  color: var(--weapon);
+}
+
+.ability-tooltip-damage-type--melee {
+  color: var(--weapon);
+}
+
 .my-hero-abilities-bar {
   margin-top: 4px;
   display: flex;
