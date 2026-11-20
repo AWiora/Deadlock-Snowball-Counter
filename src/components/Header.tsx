@@ -1,5 +1,5 @@
-import { Check, Link2 } from 'lucide-react';
-import { useState } from 'react';
+import { Check, ChevronDown, Link2 } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { DataSourceStatus } from '../hooks/useDeadlockData';
 import { UI_TEXT } from '../i18n/translations';
 import type { Language } from '../types/deadlock';
@@ -75,54 +75,12 @@ export function Header({
         </div>
 
         <div className="header-actions">
-          <div className="lang-switcher" role="group" aria-label="UI Text Language" title={language === 'de' ? 'Sprache für Oberfläche & Tipps' : 'UI & tips language'}>
-            <span className="lang-prefix">UI</span>
-            <button
-              type="button"
-              className={`lang-btn ${language === 'de' ? 'lang-btn--active' : ''}`}
-              onClick={() => onChangeLanguage('de')}
-              aria-pressed={language === 'de'}
-            >
-              DE
-            </button>
-            <button
-              type="button"
-              className={`lang-btn ${language === 'en' ? 'lang-btn--active' : ''}`}
-              onClick={() => onChangeLanguage('en')}
-              aria-pressed={language === 'en'}
-            >
-              EN
-            </button>
-          </div>
-
-          <div
-            className="lang-switcher"
-            role="group"
-            aria-label="In-Game Names Language"
-            title={
-              language === 'de'
-                ? 'Sprache für Item- & Fähigkeitsnamen (passend zu deinem Deadlock-Client)'
-                : 'Language for item & ability names (matching your Deadlock client)'
-            }
-          >
-            <span className="lang-prefix">In-Game</span>
-            <button
-              type="button"
-              className={`lang-btn ${itemLanguage === 'en' ? 'lang-btn--active' : ''}`}
-              onClick={() => onChangeItemLanguage('en')}
-              aria-pressed={itemLanguage === 'en'}
-            >
-              EN
-            </button>
-            <button
-              type="button"
-              className={`lang-btn ${itemLanguage === 'de' ? 'lang-btn--active' : ''}`}
-              onClick={() => onChangeItemLanguage('de')}
-              aria-pressed={itemLanguage === 'de'}
-            >
-              DE
-            </button>
-          </div>
+          <LanguageMenu
+            language={language}
+            itemLanguage={itemLanguage}
+            onChangeLanguage={onChangeLanguage}
+            onChangeItemLanguage={onChangeItemLanguage}
+          />
 
           <button
             type="button"
@@ -137,5 +95,91 @@ export function Header({
         </div>
       </div>
     </header>
+  );
+}
+
+const LANGUAGE_NAMES: Record<Language, string> = { de: 'Deutsch', en: 'English' };
+const LANGUAGES: Language[] = ['de', 'en'];
+
+interface LanguageMenuProps {
+  language: Language;
+  itemLanguage: Language;
+  onChangeLanguage: (lang: Language) => void;
+  onChangeItemLanguage: (lang: Language) => void;
+}
+
+/** One set-once menu for both languages: UI text, and item/ability names as in the game client. */
+function LanguageMenu({
+  language,
+  itemLanguage,
+  onChangeLanguage,
+  onChangeItemLanguage,
+}: LanguageMenuProps) {
+  const t = UI_TEXT[language];
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const panelId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (e: PointerEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const renderRow = (label: string, value: Language, onChange: (lang: Language) => void) => (
+    <div className="lang-row" role="group" aria-label={label}>
+      <span className="lang-row-label">{label}</span>
+      <span className="lang-row-options">
+        {LANGUAGES.map((code) => (
+          <button
+            key={code}
+            type="button"
+            lang={code}
+            className={`lang-btn ${value === code ? 'lang-btn--active' : ''}`}
+            onClick={() => onChange(code)}
+            aria-pressed={value === code}
+          >
+            {LANGUAGE_NAMES[code]}
+          </button>
+        ))}
+      </span>
+    </div>
+  );
+
+  return (
+    <div className="lang-menu" ref={rootRef}>
+      <button
+        type="button"
+        className={`lang-menu-btn ${open ? 'lang-menu-btn--open' : ''}`}
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        aria-label={t.langMenuTitle}
+        title={t.langMenuTitle}
+      >
+        <span className="lang-menu-code">{language.toUpperCase()}</span>
+        {itemLanguage !== language && (
+          <span className="lang-menu-sub">{t.langNamesShort(itemLanguage.toUpperCase())}</span>
+        )}
+        <ChevronDown size={14} className="lang-menu-chevron" />
+      </button>
+      {open && (
+        <div className="lang-menu-panel" id={panelId}>
+          {renderRow(t.langRowText, language, onChangeLanguage)}
+          {renderRow(t.langRowNames, itemLanguage, onChangeItemLanguage)}
+          <p className="lang-menu-hint">{t.langNamesHint}</p>
+        </div>
+      )}
+    </div>
   );
 }

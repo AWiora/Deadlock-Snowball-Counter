@@ -166,24 +166,100 @@ button {
   gap: 10px;
 }
 
-.lang-switcher {
+/* Language: one set-once menu instead of two always-visible switchers */
+.lang-menu {
+  position: relative;
+}
+
+.lang-menu-btn {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 7px;
   height: 38px;
-  padding: 3px 4px 3px 9px;
+  padding: 0 10px 0 12px;
+  border-radius: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-parchment);
+  transition: border-color 0.14s ease;
+}
+
+.lang-menu-btn:hover,
+.lang-menu-btn--open {
+  border-color: var(--border-brass);
+}
+
+.lang-menu-code {
+  font-size: var(--text-sub);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.lang-menu-sub {
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.lang-menu-chevron {
+  color: var(--text-muted);
+  transition: transform 0.14s ease;
+}
+
+.lang-menu-btn--open .lang-menu-chevron {
+  transform: rotate(180deg);
+}
+
+.lang-menu-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 60;
+  width: min(300px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-brass);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+
+.lang-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lang-row-label {
+  font-size: var(--text-sub);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.lang-row-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 3px;
   border-radius: 10px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
 }
 
-.lang-prefix {
+.lang-menu-hint {
+  margin: -6px 0 0;
   font-size: var(--text-micro);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--text-muted);
-  margin-right: 4px;
+}
+
+/* Phone: the button wraps to the left edge, so the panel opens to the right */
+@media (max-width: 640px) {
+  .lang-menu-panel {
+    left: 0;
+    right: auto;
+  }
 }
 
 .lang-btn {
@@ -3270,7 +3346,7 @@ kbd {
     gap: 6px;
   }
 
-  .lang-switcher,
+  .lang-menu-btn,
   .share-btn {
     height: 34px;
   }
