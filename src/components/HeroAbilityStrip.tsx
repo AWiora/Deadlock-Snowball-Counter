@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import type { DeadlockHero, Language } from '../types/deadlock';
 import { getAbilityDisplayName } from '../utils/abilities';
 import { AbilityTooltip } from './AbilityTooltip';
@@ -23,30 +24,38 @@ export function HeroAbilityStrip({
       className={`hero-ability-strip ${compact ? 'hero-ability-strip--compact' : ''}`}
       aria-label={uiLang === 'de' ? 'Fähigkeiten' : 'Abilities'}
     >
-      {abilities.map((ab) => {
+      {abilities.map((ab, idx) => {
         const displayName = getAbilityDisplayName(ab, inGameLang);
+        const firstForm = Boolean(ab.formOf) && !abilities[idx - 1]?.formOf;
         return (
-          <AbilityTooltip
-            key={ab.className}
-            ability={ab}
-            uiLang={uiLang}
-            inGameLang={inGameLang}
-            className={`hero-ability-chip ${ab.isUltimate ? 'hero-ability-chip--ult' : ''}`}
-          >
-            <span className="hero-ability-tile">
-              {ab.icon ? (
-                <img
-                  src={ab.icon}
-                  alt={displayName}
-                  className="hero-ability-icon"
-                  loading="lazy"
-                />
-              ) : (
-                <span className="hero-ability-fallback">{displayName.slice(0, 2)}</span>
-              )}
-            </span>
-            <span className="hero-ability-key">{ab.slot}</span>
-          </AbilityTooltip>
+          <Fragment key={ab.className}>
+            {firstForm && (
+              <span
+                className="hero-ability-form-divider"
+                title={uiLang === 'de' ? 'Fähigkeiten in der Ult-Form' : 'Abilities in ult form'}
+              />
+            )}
+            <AbilityTooltip
+              ability={ab}
+              uiLang={uiLang}
+              inGameLang={inGameLang}
+              className={`hero-ability-chip ${ab.isUltimate || ab.formOf ? 'hero-ability-chip--ult' : ''}`}
+            >
+              <span className="hero-ability-tile">
+                {ab.icon ? (
+                  <img
+                    src={ab.icon}
+                    alt={displayName}
+                    className="hero-ability-icon"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="hero-ability-fallback">{displayName.slice(0, 2)}</span>
+                )}
+              </span>
+              <span className="hero-ability-key">{ab.formOf ?? ab.slot}</span>
+            </AbilityTooltip>
+          </Fragment>
         );
       })}
     </div>

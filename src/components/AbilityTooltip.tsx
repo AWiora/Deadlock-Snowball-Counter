@@ -156,6 +156,13 @@ export function AbilityTooltip({
             style={{ top: `${coords.top}px`, left: `${coords.left}px` }}
           >
             <div className="ability-tooltip-title">{title}</div>
+            {ability.formOf && (
+              <div className="ability-tooltip-form">
+                {uiLang === 'de'
+                  ? `Nur in der Ult-Form, ersetzt Fähigkeit ${ability.formOf}`
+                  : `Ult form only, replaces ability ${ability.formOf}`}
+              </div>
+            )}
             {description && <p className="ability-tooltip-desc">{description}</p>}
             <AbilityDamage ability={ability} uiLang={uiLang} />
           </div>,

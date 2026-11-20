@@ -605,8 +605,11 @@ export const HERO_OVERRIDE_TIPS_DE: Record<string, Record<string, string>> = {
     upgrade_withering_whip: 'Senkt die Feuerrate von Silvers Slam Fire schon für 800 Souls. Wird zu Disarming Hex.',
     upgrade_greater_withering_whip: 'Entwaffnet Silver während Slam Fire oder Lycan Curse und senkt ihre Kugelresistenz.',
     upgrade_metal_skin: 'Blockt Silvers Kugeln aus Slam Fire und in Werwolf-Form. Ihre Nahkampfschläge blockt es nicht.',
-    upgrade_reduce_debuff_duration: 'Entfernt ihre Entangling Bola sofort, damit Silver dich nicht festhält.',
+    upgrade_reduce_debuff_duration: 'Entfernt Entangling Bola sofort, in Werwolf-Form auch die Entwaffnung von Tail Whack und den Schaden über Zeit und die Kugelresistenz-Senkung von Mauling Leap.',
     upgrade_deflecting_armor: 'Wehrt Silvers Salven aus Slam Fire passiv ab, ohne Aktiv-Slot.',
+    upgrade_healbane: 'Senkt die Heilung, die Silver beim Start von Lycan Curse bekommt, und den Lebensraub von Go For The Throat.',
+    upgrade_toxic_bullets: 'Deine Kugeln senken die Heilung aus Lycan Curse und den Lebensraub von Go For The Throat. Der Werwolf heilt sich nicht mehr durch den Kampf.',
+    upgrade_unstoppable: 'Tail Whack entwaffnet und verlangsamt dich nicht, Entangling Bola hält dich nicht fest. Du kannst in ihrer Ult kämpfen oder weglaufen.',
   },
   hero_chessmaster: {
     upgrade_cardio_calibrator: 'Mit viel Schutz gegen Verlangsamung läufst du einfach aus Solomons Bishop-Feldern heraus.',

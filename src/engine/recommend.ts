@@ -21,6 +21,7 @@ import {
   resolveHeroAbility,
 } from '../utils/abilities';
 import type {
+  AbilitySlot,
   CounterActionGroup,
   CounterActionVerb,
   CounterItemRule,
@@ -632,7 +633,7 @@ function resolveEnemyActionGroups(
   ) {
     interface AbilityCandidate {
       ability: DeadlockAbility;
-      slot: 1 | 2 | 3 | 4;
+      slot: AbilitySlot;
       score: number;
       verb: CounterActionVerb;
       modifiers: EnemyModifier[];

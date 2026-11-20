@@ -2097,13 +2097,31 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_reduce_debuff_duration',
       bonus: 28,
       stages: ['mid', 'late'],
-      tip: 'Purges Entangling Bola movement lock so Silver cannot trap and maul you.',
+      tip: 'Purges Entangling Bola, and in Lycan Curse form the Tail Whack disarm and the Mauling Leap bleed and Bullet Resist cut.',
     },
     {
       itemClassName: 'upgrade_deflecting_armor',
       bonus: 32,
       stages: ['late'],
       tip: 'Passively deflects Silver\'s rapid-fire bursts during Lycan Curse dives.',
+    },
+    {
+      itemClassName: 'upgrade_healbane',
+      bonus: 24,
+      stages: ['mid', 'late'],
+      tip: 'Cuts the heal Silver gets when Lycan Curse starts and the lifesteal of Go For The Throat.',
+    },
+    {
+      itemClassName: 'upgrade_toxic_bullets',
+      bonus: 28,
+      stages: ['mid', 'late'],
+      tip: 'Your bullets cut the heal from Lycan Curse and the lifesteal of Go For The Throat, so the wolf can\'t heal through the fight.',
+    },
+    {
+      itemClassName: 'upgrade_unstoppable',
+      bonus: 30,
+      stages: ['late'],
+      tip: 'Tail Whack can\'t disarm or slow you and Entangling Bola can\'t lock you, so you can fight or leave her ult.',
     },
   ],
   hero_chessmaster: [

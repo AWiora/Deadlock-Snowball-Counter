@@ -45,7 +45,8 @@ export type AbilityTrait =
   | 'dodge'
   | 'gun';
 
-type Slots = [AbilityTrait[], AbilityTrait[], AbilityTrait[], AbilityTrait[]];
+/** Slots 1-4; heroes with a transformed form (Silver) add slots 5-7 */
+type Slots = [AbilityTrait[], AbilityTrait[], AbilityTrait[], AbilityTrait[], ...AbilityTrait[][]];
 
 export const ABILITY_TRAITS: Record<string, Slots> = {
   hero_inferno: [
@@ -272,9 +273,13 @@ export const ABILITY_TRAITS: Record<string, Slots> = {
   ],
   hero_werewolf: [
     ['gun', 'buff'], // Slam Fire
-    ['mobility', 'knock', 'dodge'], // Boot Kick
+    ['mobility', 'knock', 'disarm', 'dodge'], // Boot Kick (wiki: disarms)
     ['slow', 'moveLock', 'dodge'], // Entangling Bola
-    ['gun', 'buff'], // Lycan Curse
+    ['gun', 'buff', 'heal'], // Lycan Curse (heals missing health on transform)
+    // Lycan Curse form (slot 5-7 replace 1-3 while transformed)
+    ['heal'], // Go For The Throat (melee cone, 40% lifesteal)
+    ['mobility', 'debuff', 'dot', 'dodge'], // Mauling Leap (melee leap, Bullet Resist cut, spirit DoT)
+    ['disarm', 'slow', 'debuff'], // Tail Whack
   ],
   hero_unicorn: [
     ['debuff', 'heal', 'dodge'], // Light Eater
@@ -316,6 +321,6 @@ export const ABILITY_TRAITS: Record<string, Slots> = {
 
 export function getAbilityTraits(heroClass: string, slot: number): ReadonlySet<AbilityTrait> | undefined {
   const slots = ABILITY_TRAITS[heroClass];
-  if (!slots || slot < 1 || slot > 4) return undefined;
+  if (!slots || slot < 1 || slot > slots.length) return undefined;
   return new Set(slots[slot - 1]);
 }

@@ -255,6 +255,9 @@ export const ABILITY_WIKI: Record<string, Partial<Record<number, WikiInteraction
     2: ['debuffResist', 'reactiveBarrier', 'dispel', 'indomitable', 'unstoppable', 'slowingHex'],
     3: ['debuffResist', 'dispel', 'unstoppable'],
     4: ['healingReduction'],
+    5: ['healingReduction'], // Go For The Throat
+    6: ['debuffResist', 'dispel', 'slowingHex'], // Mauling Leap
+    7: ['debuffResist', 'dispel', 'unstoppable'], // Tail Whack
   },
   hero_wraith: {
     1: ['debuffResist', 'healingReduction', 'dispel', 'platedArmor', 'unstoppable'],

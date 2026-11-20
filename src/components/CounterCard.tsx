@@ -58,7 +58,7 @@ function CounterAbilityChip({
   const displayName = getAbilityDisplayName(ability, inGameLang);
   const chipClasses = [
     'counter-ability-chip',
-    ability.isUltimate ? 'counter-ability-chip--ult' : '',
+    ability.isUltimate || ability.formOf ? 'counter-ability-chip--ult' : '',
     variant === 'own' ? 'counter-ability-chip--own' : '',
   ]
     .filter(Boolean)
@@ -82,7 +82,7 @@ function CounterAbilityChip({
         ) : (
           <span className="counter-ability-chip-fallback">{displayName.slice(0, 2)}</span>
         )}
-        <span className="counter-ability-chip-slot">{ability.slot}</span>
+        <span className="counter-ability-chip-slot">{ability.formOf ?? ability.slot}</span>
       </span>
       <span className="counter-ability-chip-name">{displayName}</span>
     </AbilityTooltip>

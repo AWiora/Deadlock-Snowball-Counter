@@ -1712,6 +1712,13 @@ button {
   transform: translate(-50%, 0);
 }
 
+.ability-tooltip-form {
+  margin: -2px 0 4px;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  color: var(--brass-bright);
+}
+
 .ability-tooltip-title {
   font-size: 0.84rem;
   font-weight: 700;
@@ -1866,6 +1873,14 @@ button {
 
 .hero-ability-chip--ult .hero-ability-key {
   color: var(--brass-bright);
+}
+
+/* Separates the normal abilities from the ones the ult transforms them into (Silver) */
+.hero-ability-form-divider {
+  align-self: stretch;
+  width: 1px;
+  margin: 2px 3px 12px;
+  background: rgba(214, 165, 86, 0.45);
 }
 
 /* ==================== STRUCTURED COUNTER TARGETS (CHIPS = ABILITIES ONLY) ==================== */

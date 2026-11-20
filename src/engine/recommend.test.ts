@@ -983,7 +983,8 @@ describe('Deadlock counter recommendation engine', () => {
 
   it('provides all 4 official EN + DE abilities with descriptions on every hero and segments inline mentions cleanly', () => {
     for (const hero of snapshot.heroes) {
-      expect(hero.abilities?.length, `Expected 4 abilities for ${hero.name}`).toBe(4);
+      const normal = (hero.abilities ?? []).filter((a) => !a.formOf);
+      expect(normal.length, `Expected 4 abilities for ${hero.name}`).toBe(4);
       for (const ab of hero.abilities ?? []) {
         expect(ab.name.length).toBeGreaterThan(0);
         expect(ab.nameDe.length).toBeGreaterThan(0);
@@ -1690,5 +1691,28 @@ describe('every claim on a card is mechanically true', () => {
     // Wiki: Grapple Arm triggers Reactive Barrier, Plated Armor does not stop Djinn's Mark
     expect(chipsOf('hero_bebop', '1600', 'upgrade_vex_barrier').join(' ')).toMatch(/Grapple Arm/);
     expect(chipsOf('hero_mirage', '6400', 'upgrade_deflecting_armor').join(' ')).not.toMatch(/Djinn/);
+  });
+
+  it("knows Silver's Lycan Curse form abilities and counters them", () => {
+    const silver = heroesByClass.get('hero_werewolf')!;
+    const forms = (silver.abilities ?? []).filter((a) => a.formOf);
+    expect(forms.map((a) => [a.slot, a.formOf, a.name])).toEqual([
+      [5, 1, 'Go For The Throat'],
+      [6, 2, 'Mauling Leap'],
+      [7, 3, 'Tail Whack'],
+    ]);
+    expect(forms.every((a) => !a.descDe.includes('{s:hero_name}'))).toBe(true);
+    expect(forms.find((a) => a.slot === 6)!.damage!.some((d) => d.type === 'melee')).toBe(true);
+    const chipsOf = (priceTier: PriceTier, cls: string) => {
+      const res = run('hero_werewolf', priceTier, null);
+      const rec = [...res.offense, ...res.defense].find((r) => r.item.className === cls);
+      return (rec?.reasons ?? []).flatMap((r) => r.actionGroups ?? []).flatMap((g) =>
+        g.targets.map((c) => `${g.verb}:${c.kind === 'ability' ? c.ability.name : c.label}`),
+      );
+    };
+    // Wiki: Go For The Throat lifesteal and the Lycan Curse heal are cut by healing reduction
+    expect(chipsOf('1600', 'upgrade_healbane')).toEqual(['cuts_heal:Lycan Curse', 'cuts_heal:Go For The Throat']);
+    // Wiki: Unstoppable suppresses Tail Whack and Entangling Bola
+    expect(chipsOf('6400', 'upgrade_unstoppable')).toContain('blocks:Tail Whack');
   });
 });

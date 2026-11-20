@@ -1,4 +1,5 @@
 import type {
+  AbilitySlot,
   CounterActionVerb,
   EnemyModifier,
   HeroAbilityThreatTag,
@@ -63,13 +64,13 @@ export function getItemDamageFocus(className: string): 'weapon' | 'spirit' | und
 
 export interface StructuredOverrideMeta {
   /** Explicit ability slots on this hero that this item counters */
-  slots?: (1 | 2 | 3 | 4)[];
+  slots?: AbilitySlot[];
   /** Explicit action verb override */
   verb?: CounterActionVerb;
   /** Optional secondary verb group (e.g. Cursed Relic: Cancels [Ult] + Strips [Shield]) */
   extraGroup?: {
     verb: CounterActionVerb;
-    slots: (1 | 2 | 3 | 4)[];
+    slots: AbilitySlot[];
   };
   /** Optional explicit mechanic pill to include alongside or instead of abilities */
   mechanicFallback?: 'melee' | 'bullet_dps' | 'spirit_dps' | 'tanky' | 'healing' | 'low_hp';
@@ -270,7 +271,11 @@ export const HERO_ABILITY_TAGS: Record<string, HeroAbilityThreatTag[]> = {
     { slot: 1, threats: ['rapid_fire', 'bullet_ult'] },
     { slot: 2, threats: ['melee_brawler', 'close_range_dive', 'high_mobility'], modifiers: ['melee', 'mobility'], parryableMelee: true },
     { slot: 3, threats: ['cleanseable_debuff', 'hard_cc'], modifiers: ['cc'], cleanseable: true },
-    { slot: 4, threats: ['rapid_fire', 'close_range_dive', 'melee_brawler'], modifiers: ['melee'] },
+    { slot: 4, threats: ['rapid_fire', 'bullet_ult', 'heavy_healing'], modifiers: ['healing'] },
+    // Lycan Curse form: these replace Slam Fire, Boot Kick and Entangling Bola while transformed
+    { slot: 5, threats: ['melee_brawler', 'heavy_healing'], modifiers: ['melee', 'healing'] },
+    { slot: 6, threats: ['close_range_dive', 'melee_brawler', 'high_mobility', 'cleanseable_debuff'], modifiers: ['melee', 'mobility'], cleanseable: true },
+    { slot: 7, threats: ['hard_cc', 'cleanseable_debuff'], modifiers: ['cc'], cleanseable: true },
   ],
   hero_magician: [
     { slot: 1, threats: ['telegraphed_burst', 'long_range_poke', 'ability_spam'] },
@@ -1672,11 +1677,23 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
       verb: 'blocks',
     },
     upgrade_reduce_debuff_duration: {
-      slots: [3],
+      slots: [3, 7, 6],
       verb: 'cleanses',
     },
     upgrade_deflecting_armor: {
       slots: [1, 4],
+      verb: 'blocks',
+    },
+    upgrade_healbane: {
+      slots: [4, 5],
+      verb: 'cuts_heal',
+    },
+    upgrade_toxic_bullets: {
+      slots: [4, 5],
+      verb: 'cuts_heal',
+    },
+    upgrade_unstoppable: {
+      slots: [7, 3],
       verb: 'blocks',
     },
   },

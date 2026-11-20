@@ -2,6 +2,7 @@ import snapshotData from './snapshot.json';
 import type {
   AbilityDamageStat,
   AbilityDamageType,
+  AbilitySlot,
   DeadlockAbility,
   DeadlockHero,
   DeadlockItem,
@@ -13,7 +14,7 @@ import type {
 } from '../types/deadlock';
 
 const API_BASE = 'https://api.deadlock-api.com/v1/assets';
-const CACHE_KEY = 'deadlock_counter_helper_assets_v9';
+const CACHE_KEY = 'deadlock_counter_helper_assets_v10';
 
 // API property glyph (file name of `prop.icon`) -> stat icon key the tooltip maps to a wiki icon.
 // Keep in sync with scripts/sync-deadlock-data.mjs.
@@ -174,6 +175,14 @@ export function extractAbilityDamage(
       labelDe: labelDe.startsWith('#') ? labelEn : labelDe,
       ...(perBullet ? { perBullet: true } : {}),
     });
+  }
+  // A Damage value of 0 that the text calls melee (Mauling Leap): a hit scaled from the hero's melee damage
+  if (
+    !damage.some((d) => d.type === 'melee') &&
+    Number.parseFloat(String(propsEn.Damage?.value ?? '1')) === 0 &&
+    /melee damage/i.test(extractAbilityDesc(abEn, 'en'))
+  ) {
+    damage.unshift({ type: 'melee', value: '', labelEn: 'Damage', labelDe: 'Schaden' });
   }
   if (damage.length === 0) damage.push(...extractUntypedDamage(abEn, propsEn, propsDe));
   return {
@@ -435,6 +444,36 @@ export async function fetchLiveDeadlockData(): Promise<{
             isUltimate: slot === 4 || abEn.ability_type === 'ultimate',
             ...extractAbilityDamage(abEn, abDe),
           });
+        }
+        // Transformed form (Silver's Lycan Curse): sub-abilities that replace slot 1-3 during the ult
+        for (const base of [...abilities]) {
+          const deps = (enAbilityByClass.get(base.className)?.dependent_abilities ?? {}) as Record<
+            string,
+            { flags?: string[] }
+          >;
+          for (const [cls, dep] of Object.entries(deps)) {
+            if (!dep?.flags?.includes('DisplayAsSubAbility')) continue;
+            const abEn = enAbilityByClass.get(cls);
+            const abDe = deAbilityByClass.get(cls);
+            if (!abEn || base.slot > 3) continue;
+            abilities.push({
+              className: cls,
+              slot: (base.slot + 4) as AbilitySlot,
+              formOf: base.slot as 1 | 2 | 3,
+              name: abEn.name,
+              nameDe: abDe?.name || abEn.name,
+              icon: abEn.image_webp || abEn.image || '',
+              descEn: extractAbilityDesc(abEn, 'en'),
+              descDe: extractAbilityDesc(abDe, 'de') || extractAbilityDesc(abEn, 'en'),
+              isUltimate: false,
+              ...extractAbilityDamage(abEn, abDe),
+            });
+          }
+        }
+        // Some German texts keep the {s:hero_name} placeholder
+        for (const ab of abilities) {
+          ab.descEn = ab.descEn.replace(/{s:hero_name}/g, h.name);
+          ab.descDe = ab.descDe.replace(/{s:hero_name}/g, deHeroByClass.get(h.class_name) || h.name);
         }
         return {
           id: h.id,

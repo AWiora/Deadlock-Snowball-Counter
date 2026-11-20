@@ -3500,6 +3500,75 @@
           "isUltimate": true,
           "damage": [],
           "empowersWeapon": true
+        },
+        {
+          "className": "ability_werewolf_frenzy",
+          "slot": 5,
+          "formOf": 1,
+          "name": "Go For The Throat",
+          "nameDe": "Kehlbiss",
+          "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/abilities/werewolf/werewolf_bite.webp",
+          "descEn": "Deal melee damage to all enemies in front of you, receiving a heal for a portion of the damage dealt. The damage is increased the lower health they have.",
+          "descDe": "Silver fügt allen Gegnern im Blickfeld Nahkampfschaden zu und heilt sich um einen Prozentsatz des zugefügten Schadens. Je niedriger die Lebenspunkte der Gegner sind, umso höher ist der zugefügte Schaden.",
+          "isUltimate": false,
+          "damage": [
+            {
+              "type": "melee",
+              "value": "",
+              "labelEn": "Damage",
+              "labelDe": "Schaden"
+            },
+            {
+              "type": "melee",
+              "value": "6%",
+              "labelEn": "Missing Health as Damage",
+              "labelDe": "fehlende LP als Schaden"
+            }
+          ]
+        },
+        {
+          "className": "ability_werewolf_maulingleap",
+          "slot": 6,
+          "formOf": 2,
+          "name": "Mauling Leap",
+          "nameDe": "Wolfssprung",
+          "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/abilities/werewolf/werewolf_wolfforward.webp",
+          "descEn": "Leap forward, mauling the first enemy hit for melee damage. They suffer from reduced bullet resist and take spirit damage over time.",
+          "descDe": "Silver springt vorwärts und zerfleischt den ersten Gegner auf dem Weg, was diesem Nahkampfschaden zufügt. Außerdem wird dessen Kugelresistenz reduziert und der Gegner erleidet kontinuierlich Magieschaden.",
+          "isUltimate": false,
+          "damage": [
+            {
+              "type": "melee",
+              "value": "",
+              "labelEn": "Damage",
+              "labelDe": "Schaden"
+            },
+            {
+              "type": "spirit",
+              "value": "15",
+              "labelEn": "Damage Per Second",
+              "labelDe": "Schaden pro Sek."
+            }
+          ]
+        },
+        {
+          "className": "ability_werewolf_cripplingslash",
+          "slot": 7,
+          "formOf": 3,
+          "name": "Tail Whack",
+          "nameDe": "Schwanzschlag",
+          "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/abilities/werewolf/werewolf_tailwhack.webp",
+          "descEn": "Smash enemies around you, dealing spirit damage. They suffer from disarm and a brief slow.",
+          "descDe": "Silver führt einen Rundumschlag aus, der Gegnern Magieschaden zufügt, diese entwaffnet und für kurze Zeit verlangsamt.",
+          "isUltimate": false,
+          "damage": [
+            {
+              "type": "spirit",
+              "value": "45",
+              "labelEn": "Damage",
+              "labelDe": "Schaden"
+            }
+          ]
         }
       ],
       "metaWeaponPct": 78,

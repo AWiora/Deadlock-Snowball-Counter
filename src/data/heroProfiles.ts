@@ -856,7 +856,7 @@ export const HERO_PROFILES: Record<string, HeroProfile> = {
     defaultDamage: 'bullet',
     defaultModifiers: ['tanky', 'melee', 'cc'],
     threats: ['rapid_fire', 'close_range_dive', 'melee_brawler', 'hard_cc'],
-    secondaryThreats: ['high_mobility', 'buff_shield_stacker'],
+    secondaryThreats: ['high_mobility', 'heavy_healing'],
     playerAffinity: { damageStyle: 'gun', range: 'close', fastFirerate: true, spiritProccer: false },
     kitCounters: [
       {
@@ -871,7 +871,7 @@ export const HERO_PROFILES: Record<string, HeroProfile> = {
         effectDe: 'verlangsamt sehr bewegliche Gegner, sperrt Bewegungsfähigkeiten und Ausdauer und kann Flight oder Rain of Arrows unterbrechen',
       },
     ],
-    threatHeadline: 'Feral skirmisher bursting with Slam Fire, Entangling Bola movement lock, and Lycan Curse transformations.',
+    threatHeadline: 'Feral skirmisher bursting with Slam Fire and Entangling Bola, then mauling, disarming and lifestealing in Lycan Curse form.',
   },
   hero_magician: {
     className: 'hero_magician',

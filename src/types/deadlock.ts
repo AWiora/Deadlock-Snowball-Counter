@@ -74,9 +74,17 @@ export interface AbilityDamageStat {
   perBullet?: boolean;
 }
 
+/**
+ * 1-4: the hero's normal abilities. 5-7: abilities that replace slot 1-3 while the hero's
+ * ult transforms them (Silver's Lycan Curse), slot = base slot + 4.
+ */
+export type AbilitySlot = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
 export interface DeadlockAbility {
   className: string;
-  slot: 1 | 2 | 3 | 4;
+  slot: AbilitySlot;
+  /** Set on transformed-form abilities: the normal slot (1-3) this one replaces during the ult */
+  formOf?: 1 | 2 | 3 | 4;
   name: string;
   nameDe: string;
   icon: string;
@@ -237,8 +245,8 @@ export interface HeroProfile {
 }
 
 export interface HeroAbilityThreatTag {
-  /** Official Deadlock ability slot (1-4) on this hero */
-  slot: 1 | 2 | 3 | 4;
+  /** Ability slot on this hero (1-4, 5-7 = transformed form of 1-3) */
+  slot: AbilitySlot;
   /** Threat mechanics directly produced by this ability */
   threats: ThreatMechanic[];
   /** Optional explicit modifiers this ability directly embodies */
@@ -256,7 +264,7 @@ export interface HeroCounterOverride {
   roleOverride?: CounterRole;
   tip: string;
   /** Optional explicit countered ability slots on this hero for nuanced Deadlock edge cases */
-  counteredSlots?: (1 | 2 | 3 | 4)[];
+  counteredSlots?: AbilitySlot[];
   /** Optional explicit action verb override */
   verbOverride?: CounterActionVerb;
   /** Optional matchup-specific English timing/interaction caveat for the "Use:" line */
