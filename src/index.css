@@ -1902,21 +1902,6 @@ button {
   border-radius: 6px;
 }
 
-/* Reason shared by several enemies: portraits stack in the portrait column */
-.counter-line-who .reason-hero-avatars {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-
-/* Several portraits share one line: shrink them so every face stays visible */
-.counter-line-who .reason-hero-avatars:has(.reason-hero-avatar + .reason-hero-avatar) .reason-hero-avatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-}
-
 /*
  * Phone-width cards with portraits can't fit a chip next to a verb column, so the verb
  * sits above its line instead (said once for repeats); portrait and chips stay side by side.

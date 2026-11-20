@@ -342,7 +342,7 @@ export interface KitAmplifierMeta {
 }
 
 export interface EnemyCounterReason {
-  /** Enemy hero className(s) covered by this line (1 per enemy, or multiple when collapsed into a shared general reason) */
+  /** Enemy hero covered by this line; always one per enemy so each portrait owns its targets */
   heroClasses: string[];
   /** Concise matched mechanics/toggles for general picks (e.g. "Kugeln · Hohe Feuerrate") */
   triggerSummary?: string;

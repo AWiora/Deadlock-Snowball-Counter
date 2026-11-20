@@ -3,7 +3,6 @@ import { SoulsIcon } from './SoulsIcon';
 import { Fragment, useMemo, useState } from 'react';
 import { getHeroDisplayName, getItemDisplayName, UI_TEXT } from '../i18n/translations';
 import type {
-  CounterActionGroup,
   CounterRecommendation,
   CounterTargetChip,
   DeadlockAbility,
@@ -131,66 +130,6 @@ interface TargetLine {
   targets: CounterTargetChip[];
 }
 
-/**
- * Splits a Kit-Amplifier's merged enemy action groups into clean per-enemy rows
- * when 2-3 enemies are selected, so every countered enemy displays its own avatar + targets.
- */
-function splitKitGroupsByHero(
-  heroClasses: string[],
-  groups: CounterActionGroup[],
-): { heroClasses: string[]; groups: CounterActionGroup[] }[] {
-  if (heroClasses.length <= 1) {
-    return [{ heroClasses, groups }];
-  }
-
-  const perHero = new Map<string, CounterActionGroup[]>();
-  const sharedNonAbility: CounterActionGroup[] = [];
-
-  for (const g of groups) {
-    for (const chip of g.targets) {
-      if (chip.kind === 'ability') {
-        const list = perHero.get(chip.heroClass) ?? [];
-        let existing = list.find((item) => item.verb === g.verb);
-        if (!existing) {
-          existing = { verb: g.verb, verbLabel: g.verbLabel, targets: [] };
-          list.push(existing);
-        }
-        existing.targets.push(chip);
-        perHero.set(chip.heroClass, list);
-      } else {
-        let existing = sharedNonAbility.find((item) => item.verb === g.verb);
-        if (!existing) {
-          existing = { verb: g.verb, verbLabel: g.verbLabel, targets: [] };
-          sharedNonAbility.push(existing);
-        }
-        existing.targets.push(chip);
-      }
-    }
-  }
-
-  if (perHero.size === 0) {
-    return [{ heroClasses, groups }];
-  }
-
-  const rows: { heroClasses: string[]; groups: CounterActionGroup[] }[] = [];
-  const uncoveredHeroes: string[] = [];
-
-  for (const cls of heroClasses) {
-    const heroGroups = perHero.get(cls);
-    if (heroGroups && heroGroups.length > 0) {
-      rows.push({ heroClasses: [cls], groups: heroGroups });
-    } else {
-      uncoveredHeroes.push(cls);
-    }
-  }
-
-  if (uncoveredHeroes.length > 0 && sharedNonAbility.length > 0) {
-    rows.push({ heroClasses: uncoveredHeroes, groups: sharedNonAbility });
-  }
-
-  return rows.length > 0 ? rows : [{ heroClasses, groups }];
-}
-
 export function CounterCard({
   rec,
   language,
@@ -257,25 +196,20 @@ export function CounterCard({
   const hasStructuredReasons =
     reasons && reasons.length > 0 && reasons.every((r) => (r.actionGroups?.length ?? 0) > 0);
 
-  // One line per enemy and verb, always [portrait] [verb] [targets]; every line names its verb
+  // One line per enemy and verb, always [portrait] [verb] [targets]; every line names its verb.
+  // The engine gives every enemy its own reason, so each portrait owns the targets beside it.
   const targetLines: TargetLine[] = [];
   let prevVerb: string | null = null;
   (reasons ?? []).forEach((reason, rIdx) => {
-    const actionGroups = reason.actionGroups ?? [];
-    const rows = isKitAmplifier
-      ? splitKitGroupsByHero(reason.heroClasses, actionGroups)
-      : [{ heroClasses: reason.heroClasses, groups: actionGroups }];
-    rows.forEach((row, sIdx) => {
-      row.groups.forEach((group, gIdx) => {
-        targetLines.push({
-          key: `${row.heroClasses.join('-')}-${rIdx}-${sIdx}-${gIdx}`,
-          heroClasses: gIdx === 0 ? row.heroClasses : null,
-          verbLabel: group.verbLabel,
-          repeatsVerb: group.verb === prevVerb,
-          targets: group.targets,
-        });
-        prevVerb = group.verb;
+    (reason.actionGroups ?? []).forEach((group, gIdx) => {
+      targetLines.push({
+        key: `${reason.heroClasses.join('-')}-${rIdx}-${gIdx}`,
+        heroClasses: gIdx === 0 ? reason.heroClasses : null,
+        verbLabel: group.verbLabel,
+        repeatsVerb: group.verb === prevVerb,
+        targets: group.targets,
       });
+      prevVerb = group.verb;
     });
   });
   const myHeroIcon = myHero ? myHero.iconSmall || myHero.iconCard : undefined;

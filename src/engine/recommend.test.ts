@@ -477,7 +477,7 @@ describe('Deadlock counter recommendation engine', () => {
     expect(infernoReason?.text).toContain('Nachbrennen');
   });
 
-  it('collapses shared generic counters across 2 enemies without repeating boilerplate text', () => {
+  it('gives each of 2 enemies its own line for shared generic counters, so targets stay attributed', () => {
     const res = recommendCounters(
       {
         myHeroClass: 'hero_gigawatt',
@@ -500,11 +500,12 @@ describe('Deadlock counter recommendation engine', () => {
       (r) => r.item.className === 'upgrade_improved_bullet_armor',
     );
     expect(bulletRes).toBeDefined();
-    // Neither Haze nor Wraith has a hero-specific override for Bullet Resilience -> collapsed into 1 clean shared line
-    expect(bulletRes?.reasons.length).toBe(1);
-    expect(bulletRes?.reasons[0].heroClasses).toContain('hero_haze');
-    expect(bulletRes?.reasons[0].heroClasses).toContain('hero_wraith');
-    expect(bulletRes?.reasons[0].triggerSummary).toBeTruthy();
+    // Neither Haze nor Wraith has a hero-specific override for Bullet Resilience: still one line
+    // per enemy, each with its own mechanic targets (a shared line can't say what belongs to whom)
+    expect(bulletRes?.reasons.map((r) => r.heroClasses)).toEqual([['hero_haze'], ['hero_wraith']]);
+    for (const reason of bulletRes?.reasons ?? []) {
+      expect(reason.actionGroups?.length).toBeGreaterThan(0);
+    }
   });
 
   it('attaches upgradeHint build paths (from/to component) on upgrade-family items', () => {
@@ -740,8 +741,12 @@ describe('Deadlock counter recommendation engine', () => {
     expect(kitPick).toBeDefined();
     expect(kitPick?.counteredEnemies).toContain('hero_hornet');
     expect(kitPick?.counteredEnemies).toContain('hero_gigawatt');
-    expect(kitPick?.reasons.length).toBe(1); // collapsed cleanly onto shared Grapple Arm ability
-    expect(kitPick?.reasons[0].text).toContain('Greifarm');
+    // One line per countered enemy, both answered by the same boosted Grapple Arm
+    expect(kitPick?.reasons.map((r) => r.heroClasses)).toEqual([
+      ['hero_hornet'],
+      ['hero_gigawatt'],
+    ]);
+    expect(kitPick?.reasons.every((r) => r.text.includes('Greifarm'))).toBe(true);
   });
 
   it('respects activeSlotsFull for active Kit-Amplifiers (Majestic Leap / Echo Shard / Refresher)', () => {
@@ -1411,18 +1416,18 @@ describe('Deadlock counter recommendation engine', () => {
     expect(kitPick.kitAmplifier?.ability?.slot).toBe(3); // Grapple Arm
     expect(kitPick.kitAmplifier?.boostLabel).toBe('more range');
 
-    const groups = kitPick.reasons[0].actionGroups!;
-    const allChips = groups.flatMap((g) => g.targets);
-    expect(
-      allChips.some(
-        (c) => c.kind === 'ability' && c.heroClass === 'hero_hornet' && c.ability.slot === 2,
-      ),
-    ).toBe(true);
-    expect(
-      allChips.some(
-        (c) => c.kind === 'ability' && c.heroClass === 'hero_gigawatt' && c.ability.slot === 4,
-      ),
-    ).toBe(true);
+    // Each enemy has its own line, holding only that enemy's abilities
+    const chipsOf = (heroClass: string) =>
+      kitPick.reasons
+        .filter((r) => r.heroClasses.length === 1 && r.heroClasses[0] === heroClass)
+        .flatMap((r) => r.actionGroups ?? [])
+        .flatMap((g) => g.targets);
+    const hornetChips = chipsOf('hero_hornet');
+    const sevenChips = chipsOf('hero_gigawatt');
+    expect(hornetChips.some((c) => c.kind === 'ability' && c.ability.slot === 2)).toBe(true);
+    expect(sevenChips.some((c) => c.kind === 'ability' && c.ability.slot === 4)).toBe(true);
+    expect(hornetChips.every((c) => c.kind !== 'ability' || c.heroClass === 'hero_hornet')).toBe(true);
+    expect(sevenChips.every((c) => c.kind !== 'ability' || c.heroClass === 'hero_gigawatt')).toBe(true);
   });
 
   it('provides clean EN and DE in-game item tooltips for all curated counter and kit-amplifier items', () => {

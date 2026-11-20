@@ -812,10 +812,6 @@ function resolveKitEnemyActionGroups(
   return groups;
 }
 
-function hasAnyAbilityChip(groups: CounterActionGroup[]): boolean {
-  return groups.some((g) => g.targets.some((t) => t.kind === 'ability'));
-}
-
 export function recommendCounters(
   input: MatchupInput,
   itemsByClass: Map<string, DeadlockItem>,
@@ -1045,11 +1041,8 @@ export function recommendCounters(
     const anyHeroSpecific = evals.some((e) => e.isHeroSpecific);
     const uiDict = UI_TEXT[lang];
 
-    // Build smart per-enemy reasons so multi-enemy picks explain EVERY countered hero without repeating boilerplate
+    // One reason per countered enemy, so multi-enemy picks explain EVERY countered hero
     const explainEvals = counteredEvals.length > 0 ? counteredEvals : [bestEval];
-    const hasAnySpecificReason = explainEvals.some(
-      (e) => Boolean(e.overrideTip || e.contextTip || hasAnyAbilityChip(e.actionGroups)),
-    );
     const reasons: EnemyCounterReason[] = [];
 
     if (explainEvals.length === 1) {
@@ -1078,39 +1071,10 @@ export function recommendCounters(
           actionGroups: e.actionGroups,
         });
       }
-    } else if (!hasAnySpecificReason) {
-      // Collapse shared general mechanics into one crisp line across all countered heroes (no duplicate text)
-      const sharedTriggers = Array.from(
-        new Set(explainEvals.flatMap((e) => e.matchedTriggers)),
-      ).slice(0, 3);
-      const mergedActionGroups: CounterActionGroup[] = [];
-      for (const e of explainEvals) {
-        for (const g of e.actionGroups) {
-          for (const chip of g.targets) {
-            pushChipToGroup(mergedActionGroups, g.verb, g.verbLabel, chip);
-          }
-        }
-      }
-      // Keep shared mechanic chips concise (max 3 total across merged groups)
-      let remaining = 3;
-      const trimmedMergedGroups: CounterActionGroup[] = [];
-      for (const g of mergedActionGroups) {
-        if (remaining <= 0) break;
-        const sliced = g.targets.slice(0, remaining);
-        remaining -= sliced.length;
-        if (sliced.length > 0) {
-          trimmedMergedGroups.push({ ...g, targets: sliced });
-        }
-      }
-      reasons.push({
-        heroClasses: explainEvals.map((e) => e.heroClass),
-        triggerSummary: sharedTriggers.join(' · ') || undefined,
-        text: baseWhy,
-        isHeroSpecific: false,
-        actionGroups: trimmedMergedGroups,
-      });
     } else {
-      // One crisp reason per countered enemy: curated override/context tip where available, dynamic mechanics otherwise
+      // One reason per countered enemy, so every enemy line shows its own portrait and its own
+      // targets (a merged line can't say which mechanic belongs to whom). Curated override /
+      // context tip where available, dynamic mechanics otherwise.
       for (const e of explainEvals) {
         if (e.overrideTip) {
           reasons.push({
@@ -1349,15 +1313,13 @@ export function recommendCounters(
           return itemLang === 'de' ? ab.abilityNameDe : ab.abilityName;
         };
 
+        // One reason per enemy (grouped by the own ability it answers), each with its own targets
         const reasons: EnemyCounterReason[] = [];
         for (const group of abilityGroups.values()) {
           const ab = group[0].ability;
           const abName = resolveKitAbilityName(ab);
           const effect = lang === 'de' ? ab.effectDe : ab.effectEn;
-          const triggers = Array.from(
-            new Set(group.flatMap((g) => g.matchedTriggers)),
-          ).slice(0, 3);
-          const combinedActionGroups: CounterActionGroup[] = [];
+          const text = uiDict.kitAmplifierReason(ampRule.axis, abName, myHeroDisplayName, effect);
           for (const g of group) {
             const enemyGroups = resolveKitEnemyActionGroups(
               ab,
@@ -1367,19 +1329,20 @@ export function recommendCounters(
               g.matchedTriggers,
               lang,
             );
+            const actionGroups: CounterActionGroup[] = [];
             for (const eg of enemyGroups) {
               for (const chip of eg.targets) {
-                pushChipToGroup(combinedActionGroups, eg.verb, eg.verbLabel, chip);
+                pushChipToGroup(actionGroups, eg.verb, eg.verbLabel, chip);
               }
             }
+            reasons.push({
+              heroClasses: [g.heroClass],
+              triggerSummary: g.matchedTriggers.slice(0, 3).join(' · ') || undefined,
+              text,
+              isHeroSpecific: false,
+              actionGroups,
+            });
           }
-          reasons.push({
-            heroClasses: group.map((g) => g.heroClass),
-            triggerSummary: triggers.join(' · ') || undefined,
-            text: uiDict.kitAmplifierReason(ampRule.axis, abName, myHeroDisplayName, effect),
-            isHeroSpecific: false,
-            actionGroups: combinedActionGroups,
-          });
         }
 
         const primaryAbility = enemyMatches[0].ability;
