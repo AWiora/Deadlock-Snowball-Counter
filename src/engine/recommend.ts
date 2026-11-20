@@ -26,6 +26,7 @@ import type {
   CounterRole,
   CounterStance,
   CounterTargetChip,
+  DamageProfile,
   DeadlockAbility,
   DeadlockHero,
   DeadlockItem,
@@ -514,6 +515,7 @@ function resolveEnemyActionGroups(
         kind: 'mechanic',
         label: t.mechanicFallbacks[fb],
         tone,
+        damageType: fb === 'bullet_dps' ? 'bullet' : fb === 'spirit_dps' ? 'spirit' : undefined,
       });
       if (fb === 'melee') coveredModifiers.add('melee');
       if (fb === 'tanky') coveredModifiers.add('tanky');
@@ -662,7 +664,7 @@ function resolveEnemyActionGroups(
             : t.damageReasonLabel.equal;
       fallbackChips.push({
         verb: defaultVerb,
-        chip: { kind: 'mechanic', label: dmgLabel, tone: 'damage' },
+        chip: { kind: 'mechanic', label: dmgLabel, tone: 'damage', damageType: target.damageProfile },
         weight: dmgW * 1.15,
       });
     }
@@ -691,7 +693,12 @@ function resolveEnemyActionGroups(
           const verb = profile?.verbByThreat?.[threat] ?? defaultVerb;
           fallbackChips.push({
             verb,
-            chip: { kind: 'mechanic', label: t.threats[threat], tone: 'threat' },
+            chip: {
+              kind: 'mechanic',
+              label: t.threats[threat],
+              tone: 'threat',
+              damageType: threat === 'sustained_spirit' ? 'spirit' : undefined,
+            },
             weight: w,
           });
         }
@@ -703,10 +710,19 @@ function resolveEnemyActionGroups(
 
   fallbackChips.sort((a, b) => b.weight - a.weight);
   const usedLabels = new Set<string>();
+  // "Spirit-Schaden" and "Konstanter Spirit-Schaden" say the same thing twice: keep the stronger one
+  const usedDamageTypes = new Set<DamageProfile>();
+  for (const g of groups) {
+    for (const c of g.targets) {
+      if (c.kind === 'mechanic' && c.damageType) usedDamageTypes.add(c.damageType);
+    }
+  }
   let totalAdded = 0;
   for (const fc of fallbackChips) {
     if (fc.chip.kind === 'mechanic' && usedLabels.has(fc.chip.label)) continue;
+    if (fc.chip.kind === 'mechanic' && fc.chip.damageType && usedDamageTypes.has(fc.chip.damageType)) continue;
     if (fc.chip.kind === 'mechanic') usedLabels.add(fc.chip.label);
+    if (fc.chip.kind === 'mechanic' && fc.chip.damageType) usedDamageTypes.add(fc.chip.damageType);
     pushChipToGroup(groups, fc.verb, t.actionVerbs[fc.verb], fc.chip);
     totalAdded++;
     if (totalAdded >= 2) break;
@@ -717,6 +733,7 @@ function resolveEnemyActionGroups(
       kind: 'mechanic',
       label: t.damageReasonLabel[target.damageProfile],
       tone: 'damage',
+      damageType: target.damageProfile,
     });
   }
 
@@ -784,6 +801,7 @@ function resolveKitEnemyActionGroups(
         kind: 'mechanic',
         label,
         tone: 'threat',
+        damageType: label === t.threats.sustained_spirit ? 'spirit' : undefined,
       });
     }
   }

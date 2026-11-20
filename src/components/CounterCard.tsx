@@ -13,6 +13,7 @@ import type {
 } from '../types/deadlock';
 import { getAbilityDisplayName } from '../utils/abilities';
 import { AbilityTooltip } from './AbilityTooltip';
+import { DamageTypeIcon } from './DamageTypeIcon';
 import { ItemTooltip } from './ItemTooltip';
 import { RichAbilityText } from './RichAbilityText';
 
@@ -111,6 +112,7 @@ function renderTargets(targets: CounterTargetChip[], uiLang: Language, inGameLan
           </span>
         )}
         <span className={`counter-mechanic-text counter-mechanic-text--${chip.tone ?? 'threat'}`}>
+          {chip.damageType && <DamageTypeIcon type={chip.damageType} />}
           {chip.label}
         </span>
       </Fragment>

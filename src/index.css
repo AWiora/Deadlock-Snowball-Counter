@@ -2076,10 +2076,25 @@ button {
 
 /* Non-ability targets: clean highlighted typography (no competing box/pill) */
 .counter-mechanic-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 0.86rem;
   font-weight: 650;
   line-height: 1.3;
   color: var(--text-parchment);
+}
+
+/* Damage glyph in full colour next to "Spirit-Schaden" / "Weapon-Schaden" */
+.counter-mechanic-text .dmg-icon-glyph {
+  width: 16px;
+  height: 16px;
+  opacity: 1;
+  filter: none;
+}
+
+.counter-mechanic-text .dmg-icon--equal .dmg-icon-glyph + .dmg-icon-glyph {
+  margin-left: -5px;
 }
 
 .counter-mechanic-text--modifier {

@@ -297,6 +297,8 @@ export type CounterTargetChip =
       kind: 'mechanic';
       label: string;
       tone?: 'modifier' | 'damage' | 'threat';
+      /** Weapon / spirit damage targets carry the in-game damage glyph; one chip per damage type */
+      damageType?: DamageProfile;
     };
 
 export interface CounterActionGroup {
