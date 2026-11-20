@@ -312,7 +312,7 @@ export interface KitAmplifierMeta {
   abilityName: string;
   /** Amplifier axis (cooldown, range, duration, charges, echo, refresher, gap_close) */
   axis: KitAmplifierAxis;
-  /** Concise localized boost badge (e.g. "+Range", "-CD", "Double Cast") */
+  /** Short localized boost text (e.g. "more range", "shorter cooldown") */
   boostLabel: string;
 }
 

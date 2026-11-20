@@ -7,6 +7,7 @@ import type {
   CounterRecommendation,
   DeadlockAbility,
   DeadlockHero,
+  KitAmplifierAxis,
   Language,
 } from '../types/deadlock';
 import { getAbilityDisplayName } from '../utils/abilities';
@@ -31,6 +32,14 @@ interface AbilityChipProps {
   inGameLang: Language;
   variant?: 'enemy' | 'own';
 }
+
+// Deadlock Wiki stat glyphs for the boosted stat; axes without a glyph show words only
+const KIT_AXIS_ICON: Partial<Record<KitAmplifierAxis, string>> = {
+  cooldown: 'https://cdn.deadlock.wiki/AttributeIconTechCooldown.png',
+  range: 'https://cdn.deadlock.wiki/AttributeIconTechRange.png',
+  duration: 'https://cdn.deadlock.wiki/AttributeIconTechDuration.png',
+  charges: 'https://cdn.deadlock.wiki/AttributeIconMaxChargesIncrease.png',
+};
 
 function cleanDisplayUseTip(text: string, isActive: boolean): string {
   if (isActive) return text;
@@ -384,7 +393,17 @@ export function CounterCard({
                     {kitAmplifier.abilityName}
                   </span>
                 )}
-                <span className="kit-boost-axis-text">{kitAmplifier.boostLabel}</span>
+                <span className="kit-boost-axis-text">
+                  {KIT_AXIS_ICON[kitAmplifier.axis] && (
+                    <img
+                      className="kit-boost-axis-icon"
+                      src={KIT_AXIS_ICON[kitAmplifier.axis]}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
+                  {kitAmplifier.boostLabel}
+                </span>
               </div>
             )}
 

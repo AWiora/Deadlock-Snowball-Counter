@@ -1772,16 +1772,19 @@ button {
   border-radius: 6px;
 }
 
-/* Reason shared by several enemies: portraits overlap like a fanned hand */
+/* Reason shared by several enemies: portraits stack in the portrait column */
 .counter-target-row--hero .reason-hero-avatars {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  align-items: center;
+  gap: 3px;
 }
 
-.counter-target-row--hero .reason-hero-avatar + .reason-hero-avatar {
-  margin-top: -16px;
-  box-shadow: 0 -2px 0 var(--bg-card, #16181d);
+/* Several portraits share one row: shrink them so every face stays visible */
+.counter-target-row--hero .reason-hero-avatars:has(.reason-hero-avatar + .reason-hero-avatar) .reason-hero-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
 }
 
 /* The verb said once for every enemy row below it */
@@ -1991,10 +1994,20 @@ button {
 }
 
 .kit-boost-axis-text {
-  font-size: 0.8rem;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 600;
   color: #9ec8ff;
   white-space: nowrap;
+}
+
+.kit-boost-axis-icon {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  opacity: 0.85;
 }
 
 /* ==================== IN-GAME ITEM HOVER TOOLTIP ==================== */

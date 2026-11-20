@@ -1409,7 +1409,7 @@ describe('Deadlock counter recommendation engine', () => {
     const kitPick = res.offense.find((r) => r.isKitAmplifier)!;
     expect(kitPick.kitAmplifier).toBeDefined();
     expect(kitPick.kitAmplifier?.ability?.slot).toBe(3); // Grapple Arm
-    expect(kitPick.kitAmplifier?.boostLabel).toBe('+Range');
+    expect(kitPick.kitAmplifier?.boostLabel).toBe('more range');
 
     const groups = kitPick.reasons[0].actionGroups!;
     const allChips = groups.flatMap((g) => g.targets);
