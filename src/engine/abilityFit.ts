@@ -1,4 +1,5 @@
 import { getAbilityTraits, type AbilityTrait } from '../data/abilityTraits';
+import { getWikiInteractions, type WikiInteraction } from '../data/abilityWiki';
 import type {
   CounterActionVerb,
   DamageProfile,
@@ -8,9 +9,10 @@ import type {
 } from '../types/deadlock';
 
 /**
- * What an enemy ability has to do for a counter item to work on it. Checked against the game
- * data (damage types) and ABILITY_TRAITS, so a card never claims e.g. that Metal Skin blocks a
- * spirit ult or that a barrier absorbs an ability without damage.
+ * What an enemy ability has to do for a counter item to work on it. Checked against the
+ * deadlock.wiki item interactions (ABILITY_WIKI) first, then the game data (damage types) and
+ * ABILITY_TRAITS, so a card never claims e.g. that Metal Skin blocks a spirit ult or that a
+ * barrier absorbs an ability without damage.
  */
 export type AbilityFit =
   | 'damage' // deals damage (any type, incl. buffing the gun)
@@ -31,7 +33,16 @@ export type AbilityFit =
   | 'holds' // locks a target in place, so an ally pull or heal saves them
   | 'slow' // movement slow
   | 'targetsYou' // hits you with damage or an effect (a spell parry blocks it)
-  | 'anyNegative'; // any negative effect at all (debuff duration items)
+  | 'anyNegative' // any negative effect at all (fallback for debuff duration items)
+  // Item-specific, from the wiki interaction hints (fallback: ABILITY_TRAITS)
+  | 'reactiveBarrier' // triggers Reactive Barrier
+  | 'indomitable' // its disable is prevented by Indomitable
+  | 'unstoppable' // its CC is suppressed by Unstoppable
+  | 'dispel' // Dispel Magic removes it
+  | 'divineBarrier' // Divine Barrier removes / prevents it
+  | 'debuffResist' // Debuff Resist shortens it
+  | 'slowingHex' // Slowing Hex disables it
+  | 'platedArmor'; // Plated Armor deflects it or prevents its on-shot effect
 
 const CC_HARD: AbilityTrait[] = ['stun', 'sleep', 'silence', 'immobilize', 'chain', 'fear'];
 const CC_UNSTOPPABLE: AbilityTrait[] = ['stun', 'sleep', 'silence', 'immobilize', 'disarm'];
@@ -61,7 +72,7 @@ const ANY_NEGATIVE: AbilityTrait[] = [
 const VERB_FIT: Record<CounterActionVerb, AbilityFit[] | null> = {
   cancels: ['channel'],
   grounds: ['airborne'],
-  cleanses: ['debuff'],
+  cleanses: ['dispel'],
   parries: ['targetsYou'],
   blocks: ['damage'],
   absorbs: ['damage'],
@@ -69,7 +80,7 @@ const VERB_FIT: Record<CounterActionVerb, AbilityFit[] | null> = {
   silences: ['active'],
   disarms: ['weapon'],
   cuts_heal: ['heals'],
-  shortens: ['anyNegative'],
+  shortens: ['debuffResist'],
   shreds: null,
   punishes: ['damage'],
   controls: ['mobility'],
@@ -92,11 +103,38 @@ export function abilityHasFit(
   ability: DeadlockAbility,
   traits: ReadonlySet<AbilityTrait>,
   fit: AbilityFit,
+  wiki?: readonly WikiInteraction[],
 ): boolean {
   // Without damage data (old cache) damage checks pass, like before
   const dmg = ability.damage;
   const hasDamage = dmg === undefined || dmg.length > 0;
+  // The wiki says it directly for these items; without wiki hints use our own traits
+  const fromWiki = (key: WikiInteraction, fallback: () => boolean) =>
+    wiki ? wiki.includes(key) : fallback();
   switch (fit) {
+    case 'reactiveBarrier':
+      return fromWiki('reactiveBarrier', () => hasAny(traits, CC_HARD));
+    case 'indomitable':
+      return fromWiki('indomitable', () => hasAny(traits, CC_HARD));
+    case 'unstoppable':
+      return fromWiki('unstoppable', () => hasAny(traits, CC_UNSTOPPABLE));
+    case 'dispel':
+      return fromWiki('dispel', () => hasAny(traits, CLEANSEABLE));
+    case 'divineBarrier':
+      return wiki
+        ? wiki.includes('dispel') || wiki.includes('divineBarrier')
+        : hasAny(traits, CLEANSEABLE);
+    case 'debuffResist':
+      return fromWiki('debuffResist', () => hasAny(traits, ANY_NEGATIVE));
+    case 'slowingHex':
+      return fromWiki('slowingHex', () => traits.has('mobility'));
+    case 'platedArmor':
+      // deflected bullets: weapon damage or a gun buff; on-shot effects only where the wiki says so
+      return (
+        Boolean(wiki?.includes('platedArmor')) ||
+        Boolean(ability.empowersWeapon) ||
+        (dmg?.some((d) => d.type === 'weapon') ?? !wiki)
+      );
     case 'damage':
       return hasDamage || Boolean(ability.empowersWeapon) || hasAny(traits, ['dot', 'gun']);
     case 'weapon':
@@ -124,7 +162,8 @@ export function abilityHasFit(
     case 'active':
       return !traits.has('passive');
     case 'heals':
-      return traits.has('heal');
+      // the wiki marks every ability whose healing is cut by healing reduction
+      return fromWiki('healingReduction', () => traits.has('heal'));
     case 'buff':
       return traits.has('buff') && !ability.isUltimate;
     case 'debuff':
@@ -156,14 +195,19 @@ export function abilityFitsCounter(
   ability: DeadlockAbility,
   heroClass: string,
   verb: CounterActionVerb,
-  options: { fits?: AbilityFit[]; focus?: 'weapon' | 'spirit' } = {},
+  options: {
+    fits?: AbilityFit[];
+    fitsByVerb?: Partial<Record<CounterActionVerb, AbilityFit[]>>;
+    focus?: 'weapon' | 'spirit';
+  } = {},
 ): boolean {
-  const required = options.fits ?? VERB_FIT[verb];
+  const required = options.fitsByVerb?.[verb] ?? options.fits ?? VERB_FIT[verb];
   if (!required) return false;
   const traits = getAbilityTraits(heroClass, ability.slot);
   if (!traits) return true;
-  if (!required.some((f) => abilityHasFit(ability, traits, f))) return false;
-  if (options.focus && !abilityHasFit(ability, traits, options.focus)) return false;
+  const wiki = getWikiInteractions(heroClass, ability.slot);
+  if (!required.some((f) => abilityHasFit(ability, traits, f, wiki))) return false;
+  if (options.focus && !abilityHasFit(ability, traits, options.focus, wiki)) return false;
   return true;
 }
 

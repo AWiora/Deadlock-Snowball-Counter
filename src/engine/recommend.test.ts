@@ -1680,10 +1680,15 @@ describe('every claim on a card is mechanically true', () => {
     expect(chipsOf('hero_hornet', '800', 'upgrade_health_stimpak').join(' ')).not.toMatch(/Assassinate/);
     // Close Quarters doesn't "punish spirit damage"
     expect(chipsOf('hero_baba', '800', 'upgrade_close_range')).toEqual([]);
-    // Infernus has no self-heal in his kit
-    expect(chipsOf('hero_inferno', '1600', 'upgrade_healbane')).toEqual([]);
-    // Battle Vest / Enchanter's Emblem are no counters in the current game data
-    expect(COUNTER_ITEM_RULES.some((r) => r.className === 'upgrade_magic_shield')).toBe(false);
-    expect(COUNTER_ITEM_RULES.some((r) => r.className === 'upgrade_regenerating_bullet_shield')).toBe(false);
+    // Infernus heals only through upgraded Napalm / Concussive Combustion lifesteal, not Afterburn
+    const healbaneInfernus = chipsOf('hero_inferno', '1600', 'upgrade_healbane').join(' ');
+    expect(healbaneInfernus).toMatch(/Napalm/);
+    expect(healbaneInfernus).not.toMatch(/Afterburn|Flame Dash/);
+    // Battle Vest (+18% Bullet Resist) and Enchanter's Emblem (+18% Spirit Resist) are real counters
+    expect(COUNTER_ITEM_RULES.some((r) => r.className === 'upgrade_magic_shield')).toBe(true);
+    expect(COUNTER_ITEM_RULES.some((r) => r.className === 'upgrade_regenerating_bullet_shield')).toBe(true);
+    // Wiki: Grapple Arm triggers Reactive Barrier, Plated Armor does not stop Djinn's Mark
+    expect(chipsOf('hero_bebop', '1600', 'upgrade_vex_barrier').join(' ')).toMatch(/Grapple Arm/);
+    expect(chipsOf('hero_mirage', '6400', 'upgrade_deflecting_armor').join(' ')).not.toMatch(/Djinn/);
   });
 });

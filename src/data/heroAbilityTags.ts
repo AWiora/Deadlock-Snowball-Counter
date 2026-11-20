@@ -28,6 +28,8 @@ export interface ItemActionProfile {
    * triggers on hard CC, not on damage.
    */
   fits?: AbilityFit[];
+  /** Like fits, but only for one verb (e.g. Divine Barrier: cleanses vs absorbs) */
+  fitsByVerb?: Partial<Record<CounterActionVerb, AbilityFit[]>>;
   /** false: never label the enemy's damage type ("Weapon-Schaden") as this item's target */
   damageChip?: false;
 }
@@ -41,6 +43,7 @@ const DAMAGE_FOCUS: Record<string, 'weapon' | 'spirit'> = {
   upgrade_weapon_shielding: 'weapon',
   upgrade_deflecting_armor: 'weapon', // Plated Armor
   upgrade_improved_bullet_armor: 'weapon', // Bullet Resilience
+  upgrade_regenerating_bullet_shield: 'weapon', // Battle Vest: +18% Bullet Resist
   upgrade_withering_whip: 'weapon', // Rusted Barrel: Fire Rate & Bullet Resist
   upgrade_greater_withering_whip: 'weapon', // Disarming Hex
   upgrade_suppressor: 'weapon', // Fire Rate cut
@@ -50,6 +53,7 @@ const DAMAGE_FOCUS: Record<string, 'weapon' | 'spirit'> = {
   upgrade_tech_purge: 'spirit', // Spirit Resilience
   upgrade_spellbreaker: 'spirit',
   upgrade_absorbing_armor: 'spirit', // Witchmail
+  upgrade_magic_shield: 'spirit', // Enchanter's Emblem: +18% Spirit Resist
   upgrade_spirit_sap: 'spirit', // Spirit Power & Spirit Resist cut
 };
 
@@ -403,6 +407,14 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
     defaultVerb: 'absorbs',
     abilityMatchThreats: ['telegraphed_burst', 'sustained_spirit', 'ability_spam', 'long_range_poke'],
   },
+  upgrade_regenerating_bullet_shield: {
+    defaultVerb: 'mitigates',
+    preferMechanicFallback: true,
+  },
+  upgrade_magic_shield: {
+    defaultVerb: 'mitigates',
+    preferMechanicFallback: true,
+  },
   upgrade_return_fire: {
     defaultVerb: 'reflects',
     abilityMatchThreats: ['bullet_ult', 'rapid_fire'],
@@ -410,11 +422,12 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   upgrade_vex_barrier: {
     defaultVerb: 'absorbs',
     abilityMatchThreats: ['hard_cc'],
-    fits: ['hardCc'], // triggers on Stun, Chain, Immobilize, Sleep, Silence
+    fits: ['reactiveBarrier'], // wiki: abilities that trigger Reactive Barrier
     damageChip: false,
   },
   upgrade_debuff_reducer: {
     defaultVerb: 'shortens',
+    fits: ['debuffResist'], // wiki: shortened by Debuff Resist
     abilityMatchThreats: ['cleanseable_debuff', 'hard_cc'],
   },
   upgrade_healbane: {
@@ -429,6 +442,7 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   },
   upgrade_containment: {
     defaultVerb: 'controls',
+    fits: ['slowingHex'], // wiki: disabled by Slowing Hex
     abilityMatchThreats: ['high_mobility', 'airborne', 'close_range_dive'],
   },
   upgrade_suppressor: {
@@ -511,6 +525,7 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   },
   upgrade_reduce_debuff_duration: {
     defaultVerb: 'cleanses',
+    fits: ['dispel'], // wiki: effect can be dispelled
     abilityMatchThreats: ['cleanseable_debuff'],
     skipUltimatesForCleanse: true,
   },
@@ -570,6 +585,7 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   // Tier 4 (6400)
   upgrade_deflecting_armor: {
     defaultVerb: 'blocks',
+    fits: ['platedArmor'], // wiki: deflected bullets / prevented on-shot effects
     abilityMatchThreats: ['on_hit_procs', 'bullet_ult', 'rapid_fire'],
   },
   upgrade_juggernaut: {
@@ -598,13 +614,13 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   upgrade_unstoppable: {
     defaultVerb: 'blocks',
     abilityMatchThreats: ['hard_cc', 'channeled_ult', 'cleanseable_debuff'],
-    fits: ['ccImmune'], // immune to Stun, Silence, Sleep, Root, Disarm
+    fits: ['unstoppable'], // wiki: CC suppressed by Unstoppable
     damageChip: false,
   },
   upgrade_auto_cleanse: {
     defaultVerb: 'cleanses',
     abilityMatchThreats: ['hard_cc', 'cleanseable_debuff'],
-    fits: ['hardCc'], // next Stun, Chain, Immobilize, Sleep, Silence or Fear
+    fits: ['indomitable'], // wiki: disable prevented by Indomitable
   },
   upgrade_self_bubble: {
     defaultVerb: 'blocks',
@@ -640,6 +656,7 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   },
   upgrade_capacitor: {
     defaultVerb: 'controls',
+    fits: ['slowingHex'], // silences movement abilities like Slowing Hex
     abilityMatchThreats: ['high_mobility', 'airborne', 'close_range_dive'],
   },
   upgrade_phantom_strike: {
@@ -665,12 +682,14 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   },
   upgrade_aoe_root: {
     defaultVerb: 'controls',
+    fits: ['slowingHex'], // applies Slowing Hex
     abilityMatchThreats: ['high_mobility', 'airborne', 'close_range_dive'],
   },
   upgrade_divine_barrier: {
     defaultVerb: 'cleanses',
     abilityMatchThreats: ['cleanseable_debuff', 'telegraphed_burst'],
     verbByThreat: { telegraphed_burst: 'absorbs' },
+    fitsByVerb: { cleanses: ['divineBarrier'] },
   },
   upgrade_colossus: {
     defaultVerb: 'mitigates',
@@ -680,7 +699,7 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
     defaultVerb: 'mitigates',
     abilityMatchThreats: ['sustained_spirit', 'close_range_dive'],
     verbByModifier: { tanky: 'shreds' },
-    fits: ['spirit', 'debuff'], // Spirit Resist + Debuff Resist
+    fits: ['spirit', 'debuffResist'], // Spirit Resist + Debuff Resist
   },
   upgrade_arctic_blast: {
     defaultVerb: 'controls',
@@ -698,6 +717,7 @@ export const ITEM_ACTION_PROFILES: Record<string, ItemActionProfile> = {
   },
   upgrade_fervor: {
     defaultVerb: 'shortens',
+    fits: ['debuffResist'], // reduces existing debuffs
     abilityMatchThreats: ['cleanseable_debuff', 'hard_cc'],
     damageChip: false,
   },
@@ -788,8 +808,8 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
     upgrade_reduce_debuff_duration: {
       slots: [2],
       verb: 'cleanses',
-      useTip: 'Press right after Sticky Bomb attaches to erase it completely (no damage, no stacks).',
-      useTipDe: 'Direkt nachdem Sticky Bomb an dir klebt drücken. Schaden und Stacks sind dann weg.',
+      useTip: 'Press right after Sticky Bomb attaches, then run: it drops to the ground and still explodes.',
+      useTipDe: 'Direkt nachdem Sticky Bomb an dir klebt drücken und weglaufen: Sie fällt zu Boden und explodiert dort trotzdem.',
     },
     upgrade_counterspell: {
       slots: [2, 3],
@@ -806,6 +826,12 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
       verb: 'cleanses',
       useTip: 'Cleanses Sticky Bomb off yourself or a hooked teammate while granting a huge barrier.',
       useTipDe: 'Entfernt Sticky Bomb von dir oder einem gehookten Teammate und gibt eine starke Barriere.',
+    },
+    upgrade_vex_barrier: {
+      slots: [3, 1],
+      verb: 'absorbs',
+      useTip: 'Passive — Grapple Arm triggers the barrier automatically to soak Uppercut + Sticky Bomb.',
+      useTipDe: 'Passiv — Grapple Arm löst die Barriere automatisch aus und fängt Uppercut und Sticky Bomb ab.',
     },
   },
   hero_gigawatt: {
@@ -913,6 +939,10 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
     upgrade_spirit_bubble: {
       slots: [3],
       verb: 'absorbs',
+    },
+    upgrade_healbane: {
+      slots: [1, 4],
+      verb: 'cuts_heal',
     },
   },
   hero_ghost: {
@@ -1280,6 +1310,10 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
       slots: [4, 1],
       verb: 'escapes',
     },
+    upgrade_unstoppable: {
+      slots: [4, 2],
+      verb: 'blocks',
+    },
   },
   hero_vampirebat: {
     upgrade_containment: {
@@ -1394,6 +1428,10 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
       slots: [1, 3],
       verb: 'mitigates',
     },
+    upgrade_vex_barrier: {
+      slots: [3],
+      verb: 'absorbs',
+    },
   },
   hero_deadpack: {
     upgrade_target_stun: {
@@ -1418,6 +1456,10 @@ export const HERO_OVERRIDE_STRUCTURED: Record<string, Partial<Record<string, Str
     upgrade_spellbreaker: {
       slots: [1, 4],
       verb: 'mitigates',
+    },
+    upgrade_vex_barrier: {
+      slots: [3, 4],
+      verb: 'absorbs',
     },
   },
   hero_priest: {

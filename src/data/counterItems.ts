@@ -141,8 +141,28 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     why: 'Procs a hefty protective barrier the moment heavy spirit burst lands — #1 early anti-spirit lane stabilizer.',
     whenToUse: 'Passive — absorbs their poke/combo burst so you cannot be forced out of lane.',
   },
-  // Battle Vest and Enchanter's Emblem are no counters any more: in the current game data they
-  // only give your own weapon damage / fire rate or Spirit / cooldowns above 65% health.
+  {
+    className: 'upgrade_regenerating_bullet_shield', // Battle Vest
+    stance: 'defense',
+    role: 'Anti-Gun',
+    stageFit: { lane: 0.92, mid: 0.62, late: 0.14 },
+    damageCounters: { bullet: 20, equal: 10 },
+    threatCounters: { rapid_fire: 10 },
+    playerSynergy: { preferDamageStyle: 'gun' },
+    why: 'Combines early Bullet Resist with bonus weapon damage & fire rate so gun heroes can trade back hard.',
+    whenToUse: 'Passive — keep yourself above 65% HP to hold the offensive bonus while shrugging off bullets.',
+  },
+  {
+    className: 'upgrade_magic_shield', // Enchanter's Emblem
+    stance: 'defense',
+    role: 'Anti-Spirit',
+    stageFit: { lane: 0.92, mid: 0.62, late: 0.14 },
+    damageCounters: { spirit: 20, equal: 10 },
+    threatCounters: { ability_spam: 10, sustained_spirit: 8 },
+    playerSynergy: { preferDamageStyle: 'spirit', preferSpiritProccer: true },
+    why: 'Gives early Spirit Resist plus Spirit Power & Cooldown Reduction — defensive stats without slowing your scaling.',
+    whenToUse: 'Passive — ideal defensive tempo buy for spirit heroes trading into heavy ability damage.',
+  },
   {
     className: 'upgrade_return_fire', // Return Fire
     stance: 'defense',
@@ -481,7 +501,7 @@ export const COUNTER_ITEM_RULES: CounterItemRule[] = [
     stageFit: { lane: 0.02, mid: 0.32, late: 1.0 },
     damageCounters: { bullet: 36, equal: 16 },
     threatCounters: { on_hit_procs: 36, rapid_fire: 34, bullet_ult: 28 },
-    why: 'Best passive anti-gun item in Deadlock: deflects incoming bullets AND blocks on-hit stacks (Fixation, Afterburn, Djinn\'s Mark).',
+    why: 'Best passive anti-gun item in Deadlock: deflects incoming bullets AND blocks on-hit stacks (Fixation, Afterburn, Love Bites).',
     whenToUse: 'Passive — deflects a share of incoming bullets and blocks many on-hit stacks without taking an active slot.',
   },
   {
@@ -957,7 +977,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_reduce_debuff_duration',
       bonus: 42,
       stages: ['mid', 'late'],
-      tip: '#1 counter to Bomb Bebop: press right after he attaches Sticky Bomb to completely erase it (no damage, no stacks).',
+      tip: '#1 counter to Bomb Bebop: press right after Sticky Bomb attaches — it drops off you onto the ground, and the speed boost gets you out of the blast.',
     },
     {
       itemClassName: 'upgrade_counterspell',
@@ -976,6 +996,12 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       bonus: 26,
       stages: ['late'],
       tip: 'Cleanses Sticky Bombs off yourself OR a hooked teammate while granting a huge barrier.',
+    },
+    {
+      itemClassName: 'upgrade_vex_barrier',
+      bonus: 34,
+      stages: ['lane', 'mid'],
+      tip: '#1 lane counter to Bebop: Grapple Hook triggers the barrier automatically, absorbing his Uppercut + Bomb combo.',
     },
   ],
   hero_gigawatt: [
@@ -1098,6 +1124,12 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       bonus: 22,
       stages: ['lane', 'mid'],
       tip: 'Absorbs early Afterburn ticks in lane so you can survive his all-in.',
+    },
+    {
+      itemClassName: 'upgrade_healbane',
+      bonus: 22,
+      stages: ['lane', 'mid'],
+      tip: 'Cuts the lifesteal Infernus gets from upgraded Napalm and Concussive Combustion.',
     },
   ],
   hero_ghost: [
@@ -1443,13 +1475,13 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_deflecting_armor',
       bonus: 38,
       stages: ['late'],
-      tip: 'Blocks bullet on-hit procs so Mirage struggles to stack Djinn\'s Mark on you at all.',
+      tip: 'Deflects part of Mirage\'s bullets passively (it does not stop Djinn\'s Mark).',
     },
     {
       itemClassName: 'upgrade_withering_whip',
       bonus: 24,
       stages: ['lane'],
-      tip: 'Slows Mirage\'s Fire Rate in lane so he cannot build high Djinn\'s Mark stacks.',
+      tip: 'Cuts Mirage\'s Fire Rate and Bullet Resist in lane trades.',
     },
   ],
   hero_frank: [
@@ -1495,7 +1527,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_containment',
       bonus: 28,
       stages: ['lane', 'mid'],
-      tip: 'Silences Goo Ball and slows Viscous so he can\'t roll away after The Cube.',
+      tip: 'Slows Viscous so he can\'t get away after The Cube (Goo Ball itself isn\'t silenced).',
     },
     {
       itemClassName: 'upgrade_glitch',
@@ -1507,7 +1539,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_capacitor',
       bonus: 28,
       stages: ['late'],
-      tip: 'Locks Viscous\'s movement abilities & stamina so he cannot escape after Cube ends.',
+      tip: 'Locks Viscous\'s stamina and slows him hard so he cannot escape after The Cube ends.',
     },
   ],
   hero_nano: [
@@ -1554,6 +1586,12 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       bonus: 28,
       stages: ['mid', 'late'],
       tip: 'Breaks distance from Billy\'s melee swings while giving Bullet Resist.',
+    },
+    {
+      itemClassName: 'upgrade_unstoppable',
+      bonus: 30,
+      stages: ['late'],
+      tip: 'Chain Gang\'s chains can\'t hold or pull you while Unstoppable is active.',
     },
   ],
   hero_vampirebat: [
@@ -1705,6 +1743,12 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       stages: ['late'],
       tip: 'Blunts Sinclair\'s massive long-distance Vexing Bolt burst AND passively cuts Rabbit Hex duration by 25%.',
     },
+    {
+      itemClassName: 'upgrade_vex_barrier',
+      bonus: 30,
+      stages: ['lane', 'mid'],
+      tip: 'Rabbit Hex triggers Reactive Barrier so you survive the follow-up Vexing Bolt burst.',
+    },
   ],
   hero_deadpack: [
     {
@@ -1744,6 +1788,12 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       bonus: 20,
       stages: ['mid', 'late'],
       tip: 'Purges Call Bell\x27s slow and weapon-accuracy debuff right away.',
+    },
+    {
+      itemClassName: 'upgrade_vex_barrier',
+      bonus: 28,
+      stages: ['lane', 'mid'],
+      tip: 'Soaks Doorman\'s Luggage Cart pull & Call Bell burst combo in lane.',
     },
   ],
   hero_priest: [
@@ -2009,7 +2059,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_unstoppable',
       bonus: 30,
       stages: ['late'],
-      tip: 'Walks straight through wall-piercing Naptime sleep.',
+      tip: 'Walks straight through wall-piercing Naptime sleep and Pillow knockbacks.',
     },
     {
       itemClassName: 'upgrade_auto_cleanse',
@@ -2155,7 +2205,7 @@ export const HERO_SPECIFIC_COUNTERS: Record<string, HeroCounterOverride[]> = {
       itemClassName: 'upgrade_unstoppable',
       bonus: 30,
       stages: ['late'],
-      tip: 'Baba\'s Brew Silence can\'t lock your abilities in teamfights.',
+      tip: 'Ignores Feed The Birds slow/pigeon hex and Baba\'s Brew Silence completely in teamfights.',
     },
   ],
 };

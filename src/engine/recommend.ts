@@ -153,6 +153,7 @@ const BULLET_ONLY_ITEMS = new Set([
   'upgrade_withering_whip',
   'upgrade_greater_withering_whip',
   'upgrade_weapon_shielding',
+  'upgrade_regenerating_bullet_shield',
   'upgrade_return_fire',
   'upgrade_metal_skin',
   'upgrade_improved_bullet_armor',
@@ -163,6 +164,7 @@ const BULLET_ONLY_ITEMS = new Set([
 
 const SPIRIT_ONLY_ITEMS = new Set([
   'upgrade_spirit_bubble',
+  'upgrade_magic_shield',
   'upgrade_spirit_sap',
   'upgrade_tech_purge',
   'upgrade_spellbreaker',
@@ -479,6 +481,7 @@ export function itemFitsAbility(
 ): boolean {
   return abilityFitsCounter(ability, heroClass, verb, {
     fits: ITEM_ACTION_PROFILES[itemClassName]?.fits,
+    fitsByVerb: ITEM_ACTION_PROFILES[itemClassName]?.fitsByVerb,
     focus: getItemDamageFocus(itemClassName),
   });
 }
@@ -531,7 +534,10 @@ function resolveEnemyActionGroups(
     // enemy ends up, not about the damage type of the dive
     return tagged.some((tag) => {
       const ab = abilityBySlot.get(tag.slot);
-      return ab ? abilityFitsCounter(ab, target.heroClass, verb, { fits: profile?.fits }) : false;
+      return ab ? abilityFitsCounter(ab, target.heroClass, verb, {
+        fits: profile?.fits,
+        fitsByVerb: profile?.fitsByVerb,
+      }) : false;
     });
   };
 
@@ -803,7 +809,6 @@ function resolveEnemyActionGroups(
 const KIT_VERB_OVERRIDE: Record<string, CounterActionVerb> = {
   'Riposte:defense': 'parries',
   'Time Wall:defense': 'blocks',
-  'Dust Devil:defense': 'mitigates',
   'Soul Exchange:defense': 'punishes',
 };
 

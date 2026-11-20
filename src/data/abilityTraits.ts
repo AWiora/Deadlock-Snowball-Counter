@@ -153,7 +153,7 @@ export const ABILITY_TRAITS: Record<string, Slots> = {
   hero_tengu: [
     ['slow', 'dot', 'dodge', 'poke'], // Entangling Thorns
     ['heal', 'buff', 'gun'], // Kudzu Connection
-    ['stun', 'heal', 'buff', 'dodge'], // Stone Form
+    ['stun', 'heal', 'buff', 'dodge'], // Stone Form (drags airborne enemies down)
     ['mobility', 'airborne', 'dodge'], // Air Drop
   ],
   hero_warden: [
@@ -188,8 +188,8 @@ export const ABILITY_TRAITS: Record<string, Slots> = {
   ],
   hero_mirage: [
     ['dot', 'heal', 'debuff'], // Fire Scarabs
-    ['mobility', 'slow', 'knock', 'dodge'], // Dust Devil
-    ['gun', 'debuff'], // Djinn's Mark
+    ['mobility', 'slow', 'knock', 'buff', 'dodge'], // Dust Devil (invincible while casting)
+    ['debuff'], // Djinn's Mark (per-target cooldown; wiki: Plated Armor doesn't stop it)
     ['mobility', 'teleport', 'buff', 'channel'], // Traveler
   ],
   hero_viper: [
