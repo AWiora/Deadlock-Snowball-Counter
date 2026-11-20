@@ -5,6 +5,7 @@ import { getHeroDisplayName, getItemDisplayName, UI_TEXT } from '../i18n/transla
 import type {
   CounterActionGroup,
   CounterRecommendation,
+  CounterTargetChip,
   DeadlockAbility,
   DeadlockHero,
   KitAmplifierAxis,
@@ -88,52 +89,44 @@ function CounterAbilityChip({
   );
 }
 
-function renderActionGroups(
-  groups: CounterActionGroup[],
-  uiLang: Language,
-  inGameLang: Language,
-  hideVerb = false,
-) {
-  return (
-    <span className="counter-action-groups">
-      {groups.map((group, gIdx) => (
-        <span key={`${group.verb}-${gIdx}`} className="counter-action-group">
-          {!hideVerb && <span className="counter-action-verb">{group.verbLabel}</span>}
-          <span className="counter-action-targets">
-            {group.targets.map((chip, cIdx) => {
-              const prevChip = cIdx > 0 ? group.targets[cIdx - 1] : null;
-              const needsDot =
-                chip.kind === 'mechanic' && prevChip && prevChip.kind === 'mechanic';
-              if (chip.kind === 'ability') {
-                return (
-                  <CounterAbilityChip
-                    key={`${chip.heroClass}-${chip.ability.className}-${cIdx}`}
-                    ability={chip.ability}
-                    uiLang={uiLang}
-                    inGameLang={inGameLang}
-                  />
-                );
-              }
-              return (
-                <Fragment key={`${chip.label}-${cIdx}`}>
-                  {needsDot && (
-                    <span className="counter-mechanic-sep" aria-hidden="true">
-                      ·
-                    </span>
-                  )}
-                  <span
-                    className={`counter-mechanic-text counter-mechanic-text--${chip.tone ?? 'threat'}`}
-                  >
-                    {chip.label}
-                  </span>
-                </Fragment>
-              );
-            })}
+function renderTargets(targets: CounterTargetChip[], uiLang: Language, inGameLang: Language) {
+  return targets.map((chip, cIdx) => {
+    const prevChip = cIdx > 0 ? targets[cIdx - 1] : null;
+    const needsDot = chip.kind === 'mechanic' && prevChip && prevChip.kind === 'mechanic';
+    if (chip.kind === 'ability') {
+      return (
+        <CounterAbilityChip
+          key={`${chip.heroClass}-${chip.ability.className}-${cIdx}`}
+          ability={chip.ability}
+          uiLang={uiLang}
+          inGameLang={inGameLang}
+        />
+      );
+    }
+    return (
+      <Fragment key={`${chip.label}-${cIdx}`}>
+        {needsDot && (
+          <span className="counter-mechanic-sep" aria-hidden="true">
+            ·
           </span>
+        )}
+        <span className={`counter-mechanic-text counter-mechanic-text--${chip.tone ?? 'threat'}`}>
+          {chip.label}
         </span>
-      ))}
-    </span>
-  );
+      </Fragment>
+    );
+  });
+}
+
+/** One line of the card's target grid: [portrait] [verb] [abilities / mechanics] */
+interface TargetLine {
+  key: string;
+  /** null on the second verb of the same enemy: the portrait is already on the line above */
+  heroClasses: string[] | null;
+  verbLabel: string;
+  /** Same verb as the line above: said once, the cell stays empty so the columns line up */
+  repeatsVerb: boolean;
+  targets: CounterTargetChip[];
 }
 
 /**
@@ -262,24 +255,30 @@ export function CounterCard({
   const hasStructuredReasons =
     reasons && reasons.length > 0 && reasons.every((r) => (r.actionGroups?.length ?? 0) > 0);
 
-  // One row per enemy; with several enemies doing the same verb, the verb is said once on top
-  const targetRows = (reasons ?? []).flatMap((reason, rIdx) => {
+  // One line per enemy and verb, always [portrait] [verb] [targets]; a verb repeated on the next line is said once
+  const targetLines: TargetLine[] = [];
+  let prevVerb: string | null = null;
+  (reasons ?? []).forEach((reason, rIdx) => {
     const actionGroups = reason.actionGroups ?? [];
     const rows = isKitAmplifier
       ? splitKitGroupsByHero(reason.heroClasses, actionGroups)
       : [{ heroClasses: reason.heroClasses, groups: actionGroups }];
-    return rows.map((row, sIdx) => ({
-      ...row,
-      key: `${row.heroClasses.join('-')}-${rIdx}-${sIdx}`,
-    }));
+    rows.forEach((row, sIdx) => {
+      row.groups.forEach((group, gIdx) => {
+        targetLines.push({
+          key: `${row.heroClasses.join('-')}-${rIdx}-${sIdx}-${gIdx}`,
+          heroClasses: gIdx === 0 ? row.heroClasses : null,
+          verbLabel: group.verbLabel,
+          repeatsVerb: group.verb === prevVerb,
+          targets: group.targets,
+        });
+        prevVerb = group.verb;
+      });
+    });
   });
-  const sharedVerbLabel =
-    showEnemyPrefix &&
-    targetRows.length > 1 &&
-    targetRows.every((row) => row.groups.length === 1) &&
-    new Set(targetRows.map((row) => row.groups[0].verb)).size === 1
-      ? targetRows[0].groups[0].verbLabel
-      : null;
+  const myHeroIcon = myHero ? myHero.iconSmall || myHero.iconCard : undefined;
+  const showKitLine = isKitAmplifier && Boolean(kitAmplifier);
+  const hasPortraitColumn = showEnemyPrefix || (showKitLine && Boolean(myHeroIcon));
 
   const renderHeroPrefix = (heroClasses: string[]) => {
     const matchedHeroes = heroClasses.map((cls) => ({
@@ -367,59 +366,69 @@ export function CounterCard({
           </div>
         </div>
 
-        {/* Structured counter targets: [Kit Boost Header] + [Verb + Ability Chips / Mechanic Text] */}
+        {/* Counter targets as one grid: [portrait] [verb] [ability chips / mechanic text] */}
         {hasStructuredReasons ? (
-          <div className="counter-targets-stack">
-            {isKitAmplifier && kitAmplifier && (
-              <div className="kit-boost-row">
-                {myHero && (myHero.iconSmall || myHero.iconCard) && (
-                  <img
-                    src={myHero.iconSmall || myHero.iconCard}
-                    alt=""
-                    className="kit-boost-hero-avatar"
-                    loading="lazy"
-                  />
-                )}
-                <span className="kit-boost-verb">{t.kitBoostPrefix}</span>
-                {kitAmplifier.ability ? (
-                  <CounterAbilityChip
-                    ability={kitAmplifier.ability}
-                    uiLang={language}
-                    inGameLang={effectiveInGameLang}
-                    variant="own"
-                  />
-                ) : (
-                  <span className="kit-boost-ability-fallback">
-                    {kitAmplifier.abilityName}
+          <div
+            className={`counter-targets-stack ${
+              hasPortraitColumn ? 'counter-targets-stack--portraits' : ''
+            }`}
+          >
+            {showKitLine && kitAmplifier && (
+              <div className="counter-line counter-line--kit">
+                {hasPortraitColumn && (
+                  <span className="counter-line-who">
+                    {myHeroIcon && (
+                      <img src={myHeroIcon} alt="" className="kit-boost-hero-avatar" loading="lazy" />
+                    )}
                   </span>
                 )}
-                <span className="kit-boost-axis-text">
-                  {KIT_AXIS_ICON[kitAmplifier.axis] && (
-                    <img
-                      className="kit-boost-axis-icon"
-                      src={KIT_AXIS_ICON[kitAmplifier.axis]}
-                      alt=""
-                      referrerPolicy="no-referrer"
+                <span className="counter-line-verb counter-line-verb--kit">{t.kitBoostPrefix}</span>
+                <span className="counter-line-targets">
+                  {kitAmplifier.ability ? (
+                    <CounterAbilityChip
+                      ability={kitAmplifier.ability}
+                      uiLang={language}
+                      inGameLang={effectiveInGameLang}
+                      variant="own"
                     />
+                  ) : (
+                    <span className="kit-boost-ability-fallback">{kitAmplifier.abilityName}</span>
                   )}
-                  {kitAmplifier.boostLabel}
+                  <span className="kit-boost-axis-text">
+                    {KIT_AXIS_ICON[kitAmplifier.axis] && (
+                      <img
+                        className="kit-boost-axis-icon"
+                        src={KIT_AXIS_ICON[kitAmplifier.axis]}
+                        alt=""
+                        referrerPolicy="no-referrer"
+                      />
+                    )}
+                    {kitAmplifier.boostLabel}
+                  </span>
                 </span>
               </div>
             )}
 
-            {sharedVerbLabel && <div className="counter-shared-verb">{sharedVerbLabel}</div>}
-            {targetRows.map((row) => (
+            {targetLines.map((line) => (
               <div
-                key={row.key}
-                className={`counter-target-row ${showEnemyPrefix ? 'counter-target-row--hero' : ''}`}
+                key={line.key}
+                className={`counter-line ${line.repeatsVerb ? 'counter-line--same-verb' : ''}`}
               >
-                {showEnemyPrefix && renderHeroPrefix(row.heroClasses)}
-                {renderActionGroups(
-                  row.groups,
-                  language,
-                  effectiveInGameLang,
-                  Boolean(sharedVerbLabel),
+                {hasPortraitColumn && (
+                  <span className="counter-line-who">
+                    {line.heroClasses && renderHeroPrefix(line.heroClasses)}
+                  </span>
                 )}
+                <span className="counter-line-verb">
+                  {line.repeatsVerb ? (
+                    <span className="sr-only">{line.verbLabel}</span>
+                  ) : (
+                    line.verbLabel
+                  )}
+                </span>
+                <span className="counter-line-targets">
+                  {renderTargets(line.targets, language, effectiveInGameLang)}
+                </span>
               </div>
             ))}
           </div>

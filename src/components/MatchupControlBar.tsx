@@ -109,7 +109,7 @@ export function MatchupControlBar({
   const [isPickingMyHero, setIsPickingMyHero] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIdx, setActiveIdx] = useState(0);
-  // Only affects narrow layouts: the roster folds away once an enemy is picked so results are on screen.
+  // The roster folds away once an enemy is picked (wide layouts: once all three are), so results are on screen.
   const [rosterOpen, setRosterOpen] = useState(false);
   const [tuningOpen, setTuningOpen] = useState(() => matchesMedia(WIDE_QUERY));
   const searchRef = useRef<HTMLInputElement | null>(null);
@@ -143,6 +143,8 @@ export function MatchupControlBar({
       ? enterCandidates[Math.min(activeIdx, enterCandidates.length - 1)]
       : null;
 
+  // Narrow layouts fold the roster once an enemy is picked; wide ones only at 3/3, when nobody can be added
+  const rosterFull = enemyCount >= MAX_ENEMIES;
   const rosterCollapsed =
     enemyCount > 0 && !rosterOpen && !isPickingMyHero && trimmedQuery === '';
 
@@ -152,7 +154,7 @@ export function MatchupControlBar({
   };
 
   /**
-   * source 'click' keeps the roster's existing toggle semantics (click a focused enemy again to remove it);
+   * source 'click' toggles: a marked enemy in the roster is taken out with one click;
    * source 'search' only ever adds or focuses, so a stray Enter can't drop an enemy.
    */
   const pickHero = (heroClass: string, source: 'click' | 'search') => {
@@ -164,12 +166,12 @@ export function MatchupControlBar({
     }
     if (heroClass === myHero?.className) return;
 
-    const isEnemy = enemyIndexMap.has(heroClass);
-    if (isEnemy && source === 'search') {
-      onFocusEnemy(heroClass);
+    if (enemyIndexMap.has(heroClass)) {
+      if (source === 'search') onFocusEnemy(heroClass);
+      else onRemoveEnemy(heroClass);
     } else {
       onToggleEnemy(heroClass);
-      if (!isEnemy) setRosterOpen(false);
+      setRosterOpen(false);
     }
     resetSearch();
   };
@@ -326,17 +328,13 @@ export function MatchupControlBar({
               const hero = heroesByClass.get(target.heroClass);
               if (!hero) return null;
               const name = getHeroDisplayName(hero, language);
-              const isFocused = focusedEnemy?.className === hero.className;
               return (
-                <div
-                  key={hero.className}
-                  className={`enemy-chip ${isFocused && enemyCount > 1 ? 'enemy-chip--focused' : ''}`}
-                >
+                <div key={hero.className} className="enemy-chip">
+                  {/* Which enemy's build is open shows only in the "Build von" tabs, not here */}
                   <button
                     type="button"
                     className="enemy-chip-main"
                     onClick={() => onFocusEnemy(hero.className)}
-                    aria-pressed={isFocused}
                     title={name}
                   >
                     {(hero.iconSmall || hero.iconCard) && (
@@ -376,7 +374,7 @@ export function MatchupControlBar({
       <div
         className={`roster ${isPickingMyHero ? 'roster--picking-my' : ''} ${
           rosterCollapsed ? 'roster--collapsed' : ''
-        }`}
+        } ${rosterFull ? 'roster--full' : ''}`}
       >
         <div className="roster-search-row">
           <label className="roster-search">
@@ -421,7 +419,11 @@ export function MatchupControlBar({
               }}
               aria-expanded={!rosterCollapsed}
             >
-              {rosterCollapsed ? t.rosterToggleBtn : t.rosterDoneBtn}
+              {rosterCollapsed
+                ? rosterFull
+                  ? t.rosterSwapBtn
+                  : t.rosterToggleBtn
+                : t.rosterDoneBtn}
               {rosterCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
             </button>
           )}
@@ -438,7 +440,6 @@ export function MatchupControlBar({
               const isMy = hero.className === myHero?.className;
               const enemyIdx = enemyIndexMap.get(hero.className);
               const isEnemy = enemyIdx !== undefined;
-              const isFocusedEnemy = hero.className === focusedEnemy?.className;
               const isActive = activeHero?.className === hero.className;
 
               return (
@@ -450,9 +451,7 @@ export function MatchupControlBar({
                   title={name}
                   className={`roster-cell ${isMy ? 'roster-cell--my' : ''} ${
                     isEnemy ? 'roster-cell--enemy' : ''
-                  } ${isFocusedEnemy && enemyCount > 1 ? 'roster-cell--focused' : ''} ${
-                    isActive ? 'roster-cell--active' : ''
-                  }`}
+                  } ${isActive ? 'roster-cell--active' : ''}`}
                 >
                   <div className="roster-cell-img-wrap">
                     {hero.iconSmall || hero.iconCard ? (
