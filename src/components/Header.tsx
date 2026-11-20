@@ -1,4 +1,4 @@
-import { Check, Globe, Link2, Shield, Sparkles, Tag } from 'lucide-react';
+import { Check, Link2 } from 'lucide-react';
 import { useState } from 'react';
 import type { DataSourceStatus } from '../hooks/useDeadlockData';
 import { UI_TEXT } from '../i18n/translations';
@@ -53,14 +53,21 @@ export function Header({
       <div className="top-header-inner">
         <div className="brand-block">
           <div className="brand-emblem" aria-hidden="true">
-            <Shield size={18} />
+            <svg viewBox="12 6 40 52" width="18" height="22">
+              <path
+                d="M32 8L52 16V31C52 43.5 43.2 52.8 32 56C20.8 52.8 12 43.5 12 31V16L32 8Z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3.5"
+              />
+              <path d="M32 22L36 32L32 42L28 32L32 22Z" fill="currentColor" />
+            </svg>
           </div>
           <div>
             <h1 className="brand-title">{t.brandTitle}</h1>
             <div className="brand-sub">
               <span>{t.brandSub}</span>
               <span className={`api-dot api-dot--${dataStatus}`}>
-                <Sparkles size={10} />
                 {statusLabel}
               </span>
             </div>
@@ -69,7 +76,6 @@ export function Header({
 
         <div className="header-actions">
           <div className="lang-switcher" role="group" aria-label="UI Text Language" title={language === 'de' ? 'Sprache für Oberfläche & Tipps' : 'UI & tips language'}>
-            <Globe size={13} className="lang-globe" aria-hidden="true" />
             <span className="lang-prefix">UI</span>
             <button
               type="button"
@@ -99,7 +105,6 @@ export function Header({
                 : 'Language for item & ability names (matching your Deadlock client)'
             }
           >
-            <Tag size={13} className="lang-globe" aria-hidden="true" />
             <span className="lang-prefix">In-Game</span>
             <button
               type="button"

@@ -1,4 +1,3 @@
-import { Clock } from 'lucide-react';
 import { SoulsIcon } from './SoulsIcon';
 import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -163,7 +162,12 @@ export function ItemTooltip({
                         </span>
                         {sec.cooldown && (
                           <span className="item-tooltip-cd">
-                            <Clock size={11} />
+                            <img
+                              className="item-tooltip-cd-icon"
+                              src="https://cdn.deadlock.wiki/AttributeIconTechCooldown.png"
+                              alt=""
+                              referrerPolicy="no-referrer"
+                            />
                             {sec.cooldown}
                           </span>
                         )}

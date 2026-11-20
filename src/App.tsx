@@ -1,4 +1,3 @@
-import { Crosshair, Layers, Shield, Sparkles, Swords } from 'lucide-react';
 import { useMemo } from 'react';
 import { CounterCard } from './components/CounterCard';
 import { Header } from './components/Header';
@@ -14,6 +13,12 @@ import type {
   Language,
   PriceTier,
 } from './types/deadlock';
+
+// Deadlock Wiki stat glyphs: Health for surviving, Stun for locking the enemy down
+const STANCE_ICON = {
+  defense: 'https://cdn.deadlock.wiki/Health.png',
+  offense: 'https://cdn.deadlock.wiki/Status_Stun.png',
+};
 
 interface StanceColumnProps {
   stance: 'offense' | 'defense';
@@ -51,7 +56,12 @@ function StanceColumn({
       <div className="stance-group-header">
         <div className="stance-title-wrap">
           <span className={`stance-icon stance-icon--${stance}`}>
-            {isOffense ? <Swords size={15} /> : <Shield size={15} />}
+            <img
+              className="stance-icon-glyph"
+              src={isOffense ? STANCE_ICON.offense : STANCE_ICON.defense}
+              alt=""
+              referrerPolicy="no-referrer"
+            />
           </span>
           <h3 className="stance-heading">
             {isOffense ? t.offenseSectionTitle : t.defenseSectionTitle}
@@ -59,7 +69,6 @@ function StanceColumn({
         </div>
         {isRecommended && (
           <span className={`stance-rec-pill stance-rec-pill--${stance}`} title={stanceReason}>
-            <Sparkles size={11} />
             {t.recommendedStanceBadge}
           </span>
         )}
@@ -209,7 +218,6 @@ export function App() {
 
           {!focusedEnemy || !result ? (
             <div className="results-empty">
-              <Crosshair size={22} className="results-empty-icon" aria-hidden="true" />
               <h2 className="results-empty-title">{t.emptyHeading}</h2>
               <p className="results-empty-sub">{t.emptySub}</p>
               <ul className="key-legend" aria-label="Keyboard shortcuts">
@@ -235,9 +243,7 @@ export function App() {
             <div className="results-body" key={resultsKey}>
               {matchup.activeSlotsFull && result.hiddenActiveCount > 0 && (
                 <div className="passive-filter-banner">
-                  <Layers size={14} />
                   <span>
-                    <strong>{t.passiveBannerLead}</strong>{' '}
                     {t.passiveBannerBody(result.hiddenActiveCount)}
                   </span>
                   <button

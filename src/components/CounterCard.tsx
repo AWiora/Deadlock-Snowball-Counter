@@ -1,4 +1,4 @@
-import { Check, Copy, Zap } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import { SoulsIcon } from './SoulsIcon';
 import { Fragment, useMemo, useState } from 'react';
 import { getHeroDisplayName, getItemDisplayName, UI_TEXT } from '../i18n/translations';
@@ -399,7 +399,6 @@ export function CounterCard({
 
         <div className="counter-footer-row">
           <div className="when-to-use">
-            <Zap size={13} className="when-icon" />
             <span className="when-to-use-text">
               <strong className="when-to-use-label">{t.useLabel}</strong>{' '}
               <RichAbilityText

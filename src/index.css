@@ -176,11 +176,6 @@ button {
   border: 1px solid var(--border-subtle);
 }
 
-.lang-globe {
-  color: var(--text-muted);
-  margin-right: 4px;
-}
-
 .lang-prefix {
   font-size: var(--text-micro);
   font-weight: 700;
@@ -541,6 +536,12 @@ button {
   display: grid;
   place-items: center;
   flex-shrink: 0;
+}
+
+.stance-icon-glyph {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
 }
 
 .stance-icon--offense {
@@ -951,11 +952,6 @@ button {
   font-weight: 700;
 }
 
-.when-icon {
-  color: var(--brass);
-  flex-shrink: 0;
-  margin-top: 3px;
-}
 
 .synergy-pill {
   align-self: flex-start;
@@ -2109,6 +2105,13 @@ button {
   color: #b9c3d4;
 }
 
+.item-tooltip-cd-icon {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+  opacity: 0.8;
+}
+
 .item-tooltip-desc {
   margin: 0;
   font-size: 0.79rem;
@@ -3084,10 +3087,6 @@ kbd {
   background: linear-gradient(155deg, #1b1a18, var(--bg-surface) 60%);
 }
 
-.results-empty-icon {
-  margin-bottom: 4px;
-  color: var(--brass-bright);
-}
 
 .results-empty-title {
   max-width: 26ch;
@@ -3135,8 +3134,7 @@ kbd {
     gap: 8px;
   }
 
-  .brand-sub > span:first-child,
-  .lang-globe {
+  .brand-sub > span:first-child {
     display: none;
   }
 

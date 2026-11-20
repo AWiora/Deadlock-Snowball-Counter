@@ -101,10 +101,9 @@ export const UI_TEXT = {
     vsWord: 'vs',
     asWord: 'als',
 
-    passiveBannerLead: 'Passive-Only-Modus:',
     passiveBannerBody: (count: number) =>
-      `${count} Top-Active-${count === 1 ? 'Counter ausgeblendet' : 'Counter ausgeblendet'}, da deine Active Slots voll sind.`,
-    showActivesBtn: 'Actives zeigen',
+      `${count} Active ${count === 1 ? 'Item' : 'Items'} ausgeblendet, weil deine Active Slots voll sind.`,
+    showActivesBtn: 'Wieder einblenden',
 
     topBadge: 'TOP',
     activeTag: 'ACTIVE',
@@ -396,10 +395,9 @@ export const UI_TEXT = {
     vsWord: 'vs',
     asWord: 'as',
 
-    passiveBannerLead: 'Passive-only mode:',
     passiveBannerBody: (count: number) =>
-      `Hiding ${count} top Active ${count === 1 ? 'counter' : 'counters'} because your active slots are full.`,
-    showActivesBtn: 'Show Actives',
+      `${count} active ${count === 1 ? 'item' : 'items'} hidden because your active slots are full.`,
+    showActivesBtn: 'Show them again',
 
     topBadge: 'TOP',
     activeTag: 'ACTIVE',
